@@ -2,6 +2,7 @@
 // Kick on every beat, a riser into the last full bar, a hit on each scene change,
 // and every number on screen is also a note (sonification).
 const SCENE_HITS = [4, 8, 16, 20, 28, 31, 36, 40, 48, 52, 60, 66, 68, 72, 80, 86, 88, 92, 100, 102, 104, 108, 112, 116, 120, 128, 132];
+const SCENE_HITS_N = [36, 76, 124, 148];   // the inserted bars (real beats)
 const PROG = [[38, [62, 66, 69]], [35, [59, 62, 66]], [31, [55, 59, 62]], [33, [57, 61, 64]]]; // D  Bm  G  A
 const PENTA = [0, 2, 4, 7, 9];
 const degMidi = d => 62 + 12 * Math.floor(d / 5) + PENTA[((d % 5) + 5) % 5];
@@ -19,6 +20,15 @@ function sonicEvents() {
   [23, 22, 20, 17].forEach((v, i) => ev.push([B(94 + i), Math.round(v / 3) - 1, 0.55, 'pluck']));
   [0, 1, 2, 3].forEach(i => ev.push([B(98 + Math.floor(i / 2)) + (i % 2) * 0.15, 8 + i, 0.5, 'pluck']));
   DAY_T.forEach((tt, d) => ev.push([tt, 2 + (d % 15), 0.42, 'pluck']));
+  // the inserted bars
+  for (let d = 0; d < 30; d++) ev.push([BN(36.6) + d * BN(1) / 30, 2 + (d % 10), 0.22, 'pluck']);
+  ev.push([BN(38), 0, 0.6, 'pluck']);
+  [0, 1, 2].forEach(k => ev.push([BN(76) + k * 0.12, 7 + k * 2, 0.45, 'pluck']));
+  [0, 1, 2, 3, 4, 5].forEach(i => ev.push([BN(113 + Math.floor(i / 2)) + (i % 2) * 0.1, 5 + i, 0.4, 'pluck']));
+  [120, 122, 124].forEach((n, i) => ev.push([BN(n), 3 + i * 3, 0.55, 'pluck']));
+  [121, 123, 125].forEach(n => [0, 1, 2].forEach(i => ev.push([BN(n) + i * 0.18, 0, 0.25, 'tick'])));
+  ev.push([BN(126.6), 0, 0.5, 'whoosh'], [BN(147), 10, 0.6, 'pluck'], [BN(147.5), 12, 0.6, 'pluck']);
+  [0, 1, 2, 3].forEach(i => ev.push([BN(150) + i * BEAT * 0.25, 11 + i, 0.35, 'pluck']));
   // soft UI ticks on cards and tiles
   [10, 11, 12, 13, 14, 29, 30, 42, 43, 44, 45, 46, 90, 91, 103, 105, 106, 108, 109, 110, 116, 117, 118, 119].forEach(n => ev.push([B(n) + 0.02, 0, 0.25, 'tick']));
   return ev;
@@ -41,7 +51,7 @@ window.renderAudio = async function () {
   const duck = ac.createGain(); duck.connect(center);
   const nBeats = Math.round(DUR / BEAT);
   for (let n = 0; n < nBeats; n++) {
-    const t = B(n);
+    const t = BN(n);
     duck.gain.setValueAtTime(0.35, t); duck.gain.setTargetAtTime(1, t + 0.02, 0.09);
     // kick
     const o = ac.createOscillator(), g = ac.createGain();
@@ -53,7 +63,7 @@ window.renderAudio = async function () {
     c.connect(cf); cf.connect(cg); cg.connect(center);
     // hats from Act II, 16ths from Act IV
     if (n >= 28) {
-      const steps = n >= 80 ? [0.25, 0.5, 0.75] : [0.5];
+      const steps = n >= 88 ? [0.25, 0.5, 0.75] : [0.5];
       steps.forEach(s => {
         const ht = t + s * BEAT, h = noise(ht, 0.06), hf = ac.createBiquadFilter(), hg = ac.createGain();
         hf.type = 'highpass'; hf.frequency.value = 7500;
@@ -62,23 +72,23 @@ window.renderAudio = async function () {
       });
     }
     // bass (8ths), from bar 2
-    if (n >= 4 && n < 133) {
+    if (n >= 4 && n < nBeats - 1) {
       const [root] = PROG[Math.floor(n / 4) % 4];
       const subs = n >= 28 ? [0, 0.5] : [0];
       subs.forEach(s => {
         const bt = t + s * BEAT, bo = ac.createOscillator(), bf = ac.createBiquadFilter(), bg = ac.createGain();
-        bo.type = 'sawtooth'; bo.frequency.value = mtof(root + (s ? 12 : 0) * (n >= 80 ? 1 : 0));
-        bf.type = 'lowpass'; bf.frequency.setValueAtTime(n >= 80 ? 900 : 480, bt); bf.frequency.exponentialRampToValueAtTime(160, bt + 0.25); bf.Q.value = 4;
+        bo.type = 'sawtooth'; bo.frequency.value = mtof(root + (s ? 12 : 0) * (n >= 88 ? 1 : 0));
+        bf.type = 'lowpass'; bf.frequency.setValueAtTime(n >= 88 ? 900 : 480, bt); bf.frequency.exponentialRampToValueAtTime(160, bt + 0.25); bf.Q.value = 4;
         bg.gain.setValueAtTime(0.0001, bt); bg.gain.exponentialRampToValueAtTime(0.32, bt + 0.01); bg.gain.exponentialRampToValueAtTime(0.0001, bt + BEAT * 0.48);
         bo.connect(bf); bf.connect(bg); bg.connect(duck); bo.start(bt); bo.stop(bt + BEAT * 0.5);
       });
     }
   }
   // pad: enters at the strategy house, opens at the EAI orb
-  for (let bar = 13; bar < 33; bar++) {
+  for (let bar = 14; bar < 38; bar++) {
     const t = bar * BAR, [, chord] = PROG[bar % 4];
-    const lvl = bar < 17 ? 0.035 : bar < 20 ? 0.05 : 0.06;
-    const cutoff = bar < 17 ? 900 : bar < 20 ? 1800 : 2600;
+    const lvl = bar < 18 ? 0.035 : bar < 22 ? 0.05 : 0.06;
+    const cutoff = bar < 18 ? 900 : bar < 22 ? 1800 : 2600;
     chord.forEach((m, i) => [-7, 7].forEach(dt => {
       const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
       o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = dt;
@@ -88,8 +98,8 @@ window.renderAudio = async function () {
     }));
   }
   // scene-change hits
-  SCENE_HITS.forEach(n => {
-    const t = B(n);
+  SCENE_HITS.map(B).concat(SCENE_HITS_N.map(BN)).forEach(t => {
+    const n = Math.round(t / BEAT);
     const o = ac.createOscillator(), g = ac.createGain();
     o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(38, t + 0.6);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
@@ -119,8 +129,16 @@ window.renderAudio = async function () {
     og.gain.setValueAtTime(0.0001, t0); og.gain.exponentialRampToValueAtTime(0.09, t1 - 0.02); og.gain.linearRampToValueAtTime(0, t1);
     o.connect(of); of.connect(og); og.connect(center); o.start(t0); o.stop(t1);
   }
+  // a short second riser into the last full bar ("the joy of technology")
+  {
+    const t0 = BN(146), t1 = BN(148);
+    const s2 = noise(t0, t1 - t0), f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = 'bandpass'; f.Q.value = 2; f.frequency.setValueAtTime(500, t0); f.frequency.exponentialRampToValueAtTime(8000, t1);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t1 - 0.02); g.gain.linearRampToValueAtTime(0, t1);
+    s2.connect(f); f.connect(g); g.connect(center);
+  }
   // the final resolve on the end title
-  [[B(128), 1.6, 0.06], [B(132), 1.1, 0.05]].forEach(([t, d, l]) => {
+  [[B(128), 1.6, 0.06], [BN(148), 2.2, 0.07], [B(132), 1.1, 0.05]].forEach(([t, d, l]) => {
     [50, 57, 62, 66, 69, 74].forEach((m, i) => {
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = mtof(m);
@@ -130,6 +148,13 @@ window.renderAudio = async function () {
   });
   // sonification
   sonicEvents().forEach(([t, d, l, kind], i) => {
+    if (kind === 'whoosh') {
+      const n = noise(t, 0.9), f = ac.createBiquadFilter(), g = ac.createGain();
+      f.type = 'bandpass'; f.Q.value = 3; f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(6000, t + 0.8);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(l, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      n.connect(f); f.connect(g); g.connect(center);
+      return;
+    }
     if (kind === 'tick') {
       const s = noise(t, 0.03), f = ac.createBiquadFilter(), g = ac.createGain();
       f.type = 'bandpass'; f.frequency.value = 2400; f.Q.value = 6;

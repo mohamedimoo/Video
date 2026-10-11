@@ -13,6 +13,35 @@ function rotPts(pts, cx, cy, a) {
   const c = Math.cos(a), s = Math.sin(a);
   return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
 }
+// during the inserted bar the loop shrinks up and makes room for the 30-day comparison
+function ringXf(t) {
+  const sh = eInOut(P(t, BN(36), 0.5)) - eInOut(P(t, BN(39), 0.5));
+  const k = 1 - 0.45 * sh, dy = -250 * sh;
+  return pts => pts.map(([x, y]) => [RING.cx + (x - RING.cx) * k, RING.cy + (y - RING.cy) * k + dy]);
+}
+ringXf.k = t => 1 - 0.45 * (eInOut(P(t, BN(36), 0.5)) - eInOut(P(t, BN(39), 0.5)));
+function habitDays(ctx, t) {
+  if (t < BN(36) || t > BN(40)) return;
+  const rows = [
+    { lab: 'Winning apps', y: 600, tIn: BN(36) + 0.15, lit: d => BN(36.6) + d * BN(1) / 30, right: 'every day', rc: C.neon },
+    { lab: 'Telco app', y: 760, tIn: BN(37), lit: d => d === 29 ? BN(38) : 1e9, right: 'once a month', rc: C.fog },
+  ];
+  const gone = eIn(P(t, BN(39), 0.5));
+  rows.forEach((r, ri) => {
+    rise(ctx, t, r.lab, 150, r.y + 12, { size: 34, w: 700, c: C.mist }, r.tIn, BN(39));
+    for (let d = 0; d < 30; d++) {
+      const k = spr(t, r.tIn + d * 0.012, 18, 0.8);
+      if (k <= 0.01) continue;
+      const x0 = 470 + d * 36, y0 = r.y;
+      const x = lerp(x0, RING.cx, gone), y = lerp(y0, RING.cy, gone);
+      const on = t >= r.lit(d);
+      const pop = on ? 1 + 0.35 * Math.max(0, 1 - (t - r.lit(d)) * 5) : 1;
+      circ(ctx, x, y, 12 * k * pop * (1 - gone)); ctx.fillStyle = on ? (ri ? C.leaf : C.neon) : C.teal; ctx.fill();
+    }
+    const rk = ri ? BN(38) + 0.1 : BN(37.6);
+    rise(ctx, t, r.right, 1770, r.y + 12, { size: 34, w: 700, c: r.rc, align: 'right' }, rk, BN(39));
+  });
+}
 const sectorCanon = i => sectorPts(RING.cx, RING.cy, RING.r0, RING.r1, i * 2 * Math.PI / 3 + GAP, (i + 1) * 2 * Math.PI / 3 - GAP, NM);
 
 let _M2 = null;
@@ -70,10 +99,29 @@ scene(27.5, 40.2, (ctx, t) => {
       ctx.fillStyle = C.mist; ctx.fill('nonzero');
     });
   } else if (t < B(36)) {
-    // 2) circles -> 3) rotating ring sectors
+    // 2) circles -> 3) the habit loop: rotating sectors with direction arrows around a 24-hour dial
+    const xf = ringXf(t);
+    if (toSector > 0.3) {
+      ctx.strokeStyle = C.line; ctx.lineCap = 'round';
+      for (let h = 0; h < 24; h++) {
+        const a = h / 24 * Math.PI * 2 - Math.PI / 2, major = h % 6 === 0;
+        const r0 = (major ? 136 : 148) * toSector, r1 = 162 * toSector;
+        ctx.lineWidth = major ? 4 : 2;
+        const p0 = xf([[RING.cx + Math.cos(a) * r0, RING.cy + Math.sin(a) * r0]])[0], p1 = xf([[RING.cx + Math.cos(a) * r1, RING.cy + Math.sin(a) * r1]])[0];
+        ctx.beginPath(); ctx.moveTo(...p0); ctx.lineTo(...p1); ctx.stroke();
+      }
+    }
     M.circles.forEach((c, i) => {
       const s = rotPts(M.sectors[i], RING.cx, RING.cy, rot);
-      poly(ctx, mixPts(c, s, toSector)); ctx.fillStyle = i === 1 ? mixC(C.mist, C.leaf, toSector) : C.mist; ctx.fill();
+      const col = [C.mist, C.leaf, C.neon][i];
+      poly(ctx, xf(mixPts(c, s, toSector))); ctx.fillStyle = mixC(C.mist, col, toSector); ctx.fill();
+      // arrowhead on the leading end of each sector: it reads as a loop
+      const ar = eOut(P(t, B(31) + 0.4, 0.35));
+      if (ar > 0) {
+        const a1 = (i + 1) * 2 * Math.PI / 3 - GAP + rot, rm = (RING.r0 + RING.r1) / 2;
+        const tri = [[Math.cos(a1) * (RING.r0 - 14), Math.sin(a1) * (RING.r0 - 14)], [Math.cos(a1) * (RING.r1 + 14), Math.sin(a1) * (RING.r1 + 14)], [Math.cos(a1 + 0.2 * ar) * rm, Math.sin(a1 + 0.2 * ar) * rm]];
+        poly(ctx, xf(tri.map(([x, y]) => [RING.cx + x, RING.cy + y]))); ctx.fillStyle = col; ctx.fill();
+      }
     });
   } else if (t < B(39.2)) {
     // 4) sectors -> "15×"
@@ -89,12 +137,21 @@ scene(27.5, 40.2, (ctx, t) => {
       if (exit > 0) ctx.restore();
     });
   }
-  // real 3D icons sit inside the circles, labels underneath
-  const HAB_IC = ['i_bulb', 'i_info', 'i_gift'];
+  // real 3D icons: inside the circles first, then riding the loop's sectors
+  const HAB_IC = ['ContentWriting', 'UserGroup', 'ShoppingBag01'];
   ['Content', 'Community', 'Commerce'].forEach((lab, i) => {
-    const q = spr(t, B(29) + i * 0.08, 15, 0.8) * (1 - eIn(P(t, B(31) - 0.15, 0.25)));
-    if (q > 0.01) pic(ctx, HAB_IC[i], CIRC[i][0], CIRC[i][1], 190 * q);
-    rise(ctx, t, lab, CIRC[i][0], CIRC[i][1] + CR + 70, { size: 38, w: 700, c: C.mist, align: 'center' }, B(29) + 0.1 + i * 0.08, B(31) - 0.15);
+    const q = spr(t, B(29) + i * 0.08, 15, 0.8) * (1 - eIn(P(t, BN(39) + 0.1, 0.3)));
+    if (t < B(36) && q > 0.01) {
+      const am = i * 2 * Math.PI / 3 + Math.PI / 3 + rot, rm = (RING.r0 + RING.r1) / 2;
+      const [sx, sy] = ringXf(t)([[RING.cx + Math.cos(am) * rm, RING.cy + Math.sin(am) * rm]])[0];
+      const k = ringXf.k(t);
+      const ix = lerp(CIRC[i][0], sx, toSector), iy = lerp(CIRC[i][1], sy, toSector);
+      if (toSector > 0.05) { circ(ctx, ix, iy, 40 * k * q * toSector); ctx.fillStyle = C.night; ctx.fill(); }
+      icon(ctx, HAB_IC[i], ix, iy, lerp(120, 44 * k, toSector) * q, mixC(C.deep, C.neon, toSector), 1.1);
+      const lr = 372, lx = RING.cx + Math.cos(am) * lr, ly = RING.cy + Math.sin(am) * lr + 12;
+      const pl = [lerp(CIRC[i][0], lx, toSector), lerp(CIRC[i][1] + CR + 70, ly, toSector)];
+      rise(ctx, t, lab, pl[0], pl[1], { size: lerp(38, 30, toSector), w: 700, c: C.mist, align: 'center' }, B(29) + 0.1 + i * 0.08, BN(36));
+    }
   });
   // plus signs
   [760, 1160].forEach((x, i) => {
@@ -102,25 +159,39 @@ scene(27.5, 40.2, (ctx, t) => {
     if (k <= 0.001) return;
     ctx.fillStyle = C.neon; ctx.fillRect(x - 28 * k, 556, 56 * k, 8); ctx.fillRect(x - 4, 560 - 28 * k, 8, 56 * k);
   });
-  rise(ctx, t, 'THE HABIT LOOP', 960, 250, { size: 26, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(28.75), B(36));
-  // stats around the loop, each with the partner's real logo
+  rise(ctx, t, 'THE HABIT LOOP', 960, 110, { size: 26, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(28.75), BN(36));
+  // stats around the loop: white cards with the partner's real logo, wired to the loop
   const STATS = [
-    ['TIKTOK', 95, ' min/day', 160, 440, 'left', '', 'l_tiktok'],
-    ['SPOTIFY', 30, ' min/day', 1760, 440, 'right', '', 'l_spotify'],
-    ['STARBUCKS', 1, ' pay app in US', 1760, 800, 'right', '#', 'l_starbucks'],
-    ['ALIPAY', 1, 'B daily users', 160, 800, 'left', '', 'l_alipay'],
+    ['TIKTOK', 95, ' min/day', 150, 420, 'left', '', 'l_tiktok'],
+    ['SPOTIFY', 30, ' min/day', 1770, 420, 'right', '', 'l_spotify'],
+    ['STARBUCKS', 1, ' pay app in US', 1770, 780, 'right', '#', 'l_starbucks'],
+    ['ALIPAY', 1, 'B daily users', 150, 780, 'left', '', 'l_alipay'],
   ];
   STATS.forEach(([k, v, suf, x, y, al, pre, logo], i) => {
     const t0 = B(32 + i);
-    const q = spr(t, t0, 16, 0.8) * (1 - eIn(P(t, B(36), 0.3)));
-    const lx = al === 'left' ? x + 48 : x - 48;
-    if (q > 0.01) pic(ctx, logo, lx, y - 32, 96 * q);
-    const tx = al === 'left' ? x + 116 : x - 116;
-    rise(ctx, t, k, tx, y - 62, { size: 22, w: 700, c: C.leaf, align: al, ls: 6 }, t0, B(36));
+    if (t < t0 || t > BN(36) + 0.5) return;
     const n = Math.round(v * eOut(P(t, t0, 0.45)));
-    rise(ctx, t, (pre || '') + n + suf, tx, y, { size: 50, w: 700, c: C.mist, align: al, ls: -1 }, t0 + 0.05, B(36) + 0.04);
+    const stat = (pre || '') + n + suf, full = (pre || '') + v + suf;
+    const cw = 140 + Math.max(TW(ctx, k, { size: 20, w: 700, ls: 6 }), TW(ctx, full, { size: 44, w: 700, ls: -1 })) + 34, ch = 130;
+    const inn = spr(t, t0, 15, 0.86), out = eIn(P(t, BN(36), 0.4));
+    const dx = (al === 'left' ? -1 : 1) * ((1 - inn) * 700 + out * 900);
+    const x0 = (al === 'left' ? x : x - cw) + dx, y0 = y - ch / 2;
+    // connector to the loop
+    const ex = al === 'left' ? x0 + cw : x0, ang = Math.atan2(y - RING.cy, ex - RING.cx);
+    const lp = eOut(P(t, t0 + 0.15, 0.35)) * (1 - out);
+    if (lp > 0) {
+      const rx = RING.cx + Math.cos(ang) * (RING.r1 + 26), ry = RING.cy + Math.sin(ang) * (RING.r1 + 26);
+      ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ex, y); ctx.lineTo(lerp(ex, rx, lp), lerp(y, ry, lp)); ctx.stroke();
+      circ(ctx, lerp(ex, rx, lp), lerp(y, ry, lp), 6); ctx.fillStyle = C.neon; ctx.fill();
+    }
+    shadowOn(ctx, 0.5); rr(ctx, x0, y0, cw, ch, 30); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    pic(ctx, logo, x0 + 70, y, 82);
+    T(ctx, k, x0 + 140, y - 16, { size: 20, w: 700, c: C.leaf, ls: 6 });
+    T(ctx, stat, x0 + 140, y + 36, { size: 44, w: 700, c: C.deep, ls: -1 });
   });
-  rise(ctx, t, 'daily', 960, 578, { size: 44, w: 700, c: C.mist, align: 'center' }, B(31.6), B(36));
+  rise(ctx, t, 'daily', 960, 578, { size: 44, w: 700, c: C.mist, align: 'center' }, B(31.6), BN(36));
+  // the inserted bar: thirty days, two kinds of app
+  habitDays(ctx, t);
   // "7–" joins, caption
   if (t >= B(37) && t < B(39.3)) {
     const p = eOut(P(t, B(37), 0.4)), q = eIn(P(t, B(39), 0.25));

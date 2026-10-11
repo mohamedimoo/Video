@@ -75,10 +75,11 @@ scene(51, 69, (ctx, t) => {
     if (FORCE.includes(i) && t >= B(66)) return;     // drawn by the lift-out below
     const lift = pillarLift(t, i);
     const x0 = PIL_X(i), h = 296 * k, y0 = 712 - h - lift;
-    rr(ctx, x0, y0, 180, h, 26); ctx.fillStyle = i === 3 ? C.neon : C.deep; ctx.fill();
+    const flash = Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 2.2);
+    rr(ctx, x0, y0, 180, h, 26); ctx.fillStyle = mixC(i === 3 ? C.neon : C.deep, i === 3 ? C.deep : C.green, flash * 0.85); ctx.fill();
     ctx.save(); rr(ctx, x0, y0, 180, h, 26); ctx.clip();
     const q = spr(t, B(56) + i * 0.06, 16, 0.8);
-    const pop = 1 + 0.12 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.12) * 4);
+    const pop = 1 + 0.28 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 3);
     pic(ctx, im, x0 + 90, y0 + 118 + (1 - q) * 300, 150 * pop);
     T(ctx, n, x0 + 90, y0 + h - 30 + (1 - q) * 200, { size: 18, w: 700, c: i === 3 ? C.night : C.mist, align: 'center', ls: 2 });
     ctx.restore();
@@ -101,8 +102,8 @@ scene(51, 69, (ctx, t) => {
 
   // headlines (kinetic, flat): the house, then what it is built from and measured by
   const ho = { size: 64, w: 700, ls: -1 };
-  riseWords(ctx, t, [['Our', C.deep], ['Strategy', C.deep], ['House.', C.leaf]], 120, 150, ho, [B(59), B(59) + .08, B(59) + .16], B(61));
-  riseWords(ctx, t, [['Built', C.deep], ['from', C.deep], ['Joy.', C.leaf]], 120, 150, ho, [B(61), B(61) + .08, B(61) + .16], B(63));
+  riseWords(ctx, t, [['Our', C.deep], ['Strategy', C.deep], ['House.', C.leaf]], 120, 150, ho, [B(52), B(52) + .08, B(52) + .16], B(61) - 0.24);
+  riseWords(ctx, t, [['Built', C.deep], ['from', C.deep], ['Joy.', C.leaf]], 120, 150, ho, [B(61), B(61) + .08, B(61) + .16], B(63) - 0.24);
   riseWords(ctx, t, [['Measured', C.deep], ['for', C.deep], ['Impact.', C.leaf]], 120, 150, ho, [B(63), B(63) + .08, B(63) + .16], B(66));
 
   // ground band, which rises and swallows the frame on beat 66
@@ -129,27 +130,29 @@ function pillarLift(t, i) {
   // each pillar lifts a little on its own beat (60–64), settling on a damped spring
   const t0 = B(60 + i);
   if (t < t0) return 0;
-  return 26 * (spr(t, t0, 16, 0.75) - spr(t, t0 + 0.32, 16, 0.75));
+  return 44 * (spr(t, t0, 16, 0.75) - spr(t, t0 + 0.4, 16, 0.75));
 }
 
-// --- Three forces: flat ribbons converge into the EAI rings around the real Salam glass logo (68–80) ---
-const RIB = [{ n: 'EXPERIENCE', c: C.mist }, { n: 'AI', c: C.neon }, { n: 'VALUE-ADDED SERVICES', c: C.leaf }];
+// --- Three forces: flat ribbons wrap into three rings around the EAI core (story 68–80, real 72–88) ---
+const RIB = [{ n: 'EXPERIENCE', c: C.mist, im: 'SparklesIcon', lab: 'Experience' }, { n: 'AI', c: C.neon, im: 'AiBrain01', lab: 'AI' }, { n: 'VALUE-ADDED SERVICES', c: C.leaf, im: 'Gift', lab: 'Value-added services' }];
 const RM = 120;
 function eaiCentre(t) {
-  const a = eInOut(P(t, B(73), 0.5)), b = eInOut(P(t, B(78), B(1.6)));
-  return [lerp(lerp(960, 520, a), 1220, b), lerp(lerp(540, 500, a), 540, b), lerp(lerp(1, 0.82, a), 0.62, b)];
+  const a = eInOut(P(t, BN(78), 0.55)), b = eInOut(P(t, BN(86.4), BN(1.4)));
+  return [lerp(lerp(960, 560, a), 1220, b), lerp(lerp(500, 520, a), 540, b), lerp(lerp(1, 0.86, a), 0.6, b)];
 }
+const ringAng = (t, k) => t * (0.55 + k * 0.22) + k * 2.1;
 scene(67.9, 81, (ctx, t) => {
   if (t >= B(68)) bg(ctx, C.night);
   if (t < B(68)) return;
-  const amp = eInOut(P(t, B(68), B(1.5))) * 80;
-  const conv = eInOut(P(t, B(70), B(1.2)));
-  const wrap = eInOut(P(t, B(71.2), B(1.1)));
-  const collapse = eInOut(P(t, B(78.6), B(1.2)));
+  const amp = eInOut(P(t, BN(72), BN(1.5))) * 80;
+  const conv = eInOut(P(t, BN(74), BN(1.2)));
+  const wrap = eInOut(P(t, BN(75.2), BN(1.1)));
+  const collapse = eInOut(P(t, BN(86.6), BN(1.2)));
   const [cx, cy, sc] = eaiCentre(t);
+  const radii = [240, 292, 344];
   RIB.forEach((r, k) => {
-    const R = lerp([250, 300, 350][k] * sc, 175, collapse);
-    const hw = lerp(40, lerp(14, 2, collapse), wrap);
+    const R = lerp(radii[k] * sc, 175, collapse);
+    const hw = lerp(40, lerp(9, 2, collapse), wrap);
     const top = [], bot = [];
     for (let j = 0; j <= RM; j++) {
       const s = j / RM;
@@ -157,44 +160,64 @@ scene(67.9, 81, (ctx, t) => {
       const baseY = lerp(434 + k * 120, 554, conv);
       const braid = conv * 90 * Math.sin(s * Math.PI * 2 * 1.3 - t * 4 + k * 2.094);
       let x = lerp(180, 1740, s), y = baseY + tap * (amp * Math.sin(Math.PI * 2 * 1.1 * s - t * 3 + k * 1.3) * (1 - conv) + braid);
-      // rings: each ribbon becomes an arc that keeps turning
-      const a = s * Math.PI * 2 * 0.86 + t * (0.6 + k * 0.25) + k * 2.1;
+      const a = s * Math.PI * 2 * 0.82 + ringAng(t, k);
       x = lerp(x, cx + Math.cos(a) * R, wrap); y = lerp(y, cy + Math.sin(a) * R, wrap);
-      // normal for the ribbon width
       const nx = lerp(0, Math.cos(a), wrap), ny = lerp(1, Math.sin(a), wrap);
       top.push([x + nx * hw, y + ny * hw]); bot.push([x - nx * hw, y - ny * hw]);
     }
     poly(ctx, top.concat(bot.reverse())); ctx.fillStyle = r.c; ctx.fill();
   });
-  RIB.forEach((r, k) => rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, B(68) + 0.1 + k * 0.08, B(70.4)));
-  rise(ctx, t, 'One app.', 120, 200, { size: 96, w: 700, c: C.mist, ls: -2 }, B(68), B(71));
-  rise(ctx, t, 'Three forces.', 120, 310, { size: 96, w: 700, c: C.neon, ls: -2 }, B(69), B(71) + 0.05);
-  // the core: a night disc and the real glass logo
-  if (t >= B(71.6)) {
-    const k = spr(t, B(71.6), 14, 0.82);
-    const dr = lerp(200 * sc, 140, collapse) * k;
-    circ(ctx, cx, cy, dr); ctx.fillStyle = mixC(C.night, '#06231F', 1); ctx.fill();
-    glass(ctx, cx, cy, lerp(330 * sc, 220, collapse) * k);
+  RIB.forEach((r, k) => rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, BN(72) + 0.1 + k * 0.08, BN(74.4)));
+  rise(ctx, t, 'One app.', 120, 200, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(72), BN(75));
+  rise(ctx, t, 'Three forces.', 120, 310, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(73), BN(75) + 0.05);
+
+  // the core: a neon disc that spells EAI, and later AI
+  if (t >= BN(75.6)) {
+    const k = spr(t, BN(75.6), 14, 0.82);
+    const dr = lerp(158 * sc, 140, collapse) * k;
+    circ(ctx, cx, cy, dr); ctx.fillStyle = C.neon; ctx.fill();
+    ctx.strokeStyle = C.night; ctx.lineWidth = 3; circ(ctx, cx, cy, dr - 14); ctx.stroke();
+    const o = { size: 112 * sc * k, w: 800, ls: -3 };
+    const drop = eIn(P(t, BN(86.8), 0.35));
+    const we = TW(ctx, 'E', o), wa = TW(ctx, 'AI', o);
+    const left = cx - (we + wa) / 2 + drop * we / 2;
+    ctx.save(); circ(ctx, cx, cy, dr - 16); ctx.clip();
+    T(ctx, 'E', left, cy + 40 * sc + drop * 160, { ...o, c: C.night });
+    T(ctx, 'AI', left + we, cy + 40 * sc, { ...o, c: C.night });
+    ctx.restore();
   }
-  // EAI / ONE INTELLIGENT EXPERIENCE
-  {
-    const o = { size: 220, w: 800, ls: -8 };
-    rise(ctx, t, 'EAI', 1000, 600, { ...o, c: C.mist }, B(73) + 0.1, B(74));
-    rise(ctx, t, 'ONE INTELLIGENT EXPERIENCE', 1006, 680, { size: 28, w: 700, c: C.leaf, ls: 10 }, B(73) + 0.25, B(74) + 0.05);
+  // a rider on each ring: the force's real 3D icon in a white badge, with its name
+  RIB.forEach((r, k) => {
+    const q = spr(t, BN(76) + k * 0.12, 15, 0.8) * (1 - eIn(P(t, BN(86.3), 0.3)));
+    if (q <= 0.01) return;
+    const R = radii[k] * sc, a = ringAng(t, k) - 0.5;
+    const bx = cx + Math.cos(a) * R, by = cy + Math.sin(a) * R;
+    shadowOn(ctx, 0.4); circ(ctx, bx, by, 46 * q * sc); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    icon(ctx, r.im, bx, by, 50 * q * sc, C.deep, 1.2);
+  });
+  // the equation that names it
+  if (t >= BN(77) && t < BN(78.6)) {
+    const parts = [['Experience', C.mist], ['+', C.neon], ['AI', C.mist], ['+', C.neon], ['Value-added services', C.mist], ['=', C.neon], ['EAI', C.neon]];
+    const o = { size: 40, w: 700 };
+    const sp = 22, ws = parts.map(p => TW(ctx, p[0], o));
+    let x = 960 - (ws.reduce((a, b) => a + b, 0) + sp * (parts.length - 1)) / 2;
+    parts.forEach((p, i) => { rise(ctx, t, p[0], x, 980, { ...o, c: p[1] }, BN(77) + i * 0.06, BN(78)); x += ws[i] + sp; });
   }
+  // one intelligent experience
+  rise(ctx, t, 'One intelligent', 1000, 470, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(79), BN(81));
+  rise(ctx, t, 'experience.', 1000, 580, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(79) + 0.12, BN(81) + 0.04);
+  rise(ctx, t, 'A new kind of ecosystem.', 1004, 660, { size: 40, w: 500, c: C.fog }, BN(80), BN(81) + 0.08);
   // the AI assistant, live: real screens from the Salam app
   {
-    const k = spr(t, B(74), 14, 0.86), out = eIn(P(t, B(78), 0.45));
-    if (k > 0.01 && out < 1) {
-      phone(ctx, t, [['s_ai_main', B(74)], ['s_ai_typing', B(75)], ['s_ai_answer', B(77)]], 1390 + out * 900, lerp(1500, 545, k), 900, { shadow: 0.5 });
-    }
+    const k = spr(t, BN(81.3), 14, 0.86), out = eIn(P(t, BN(86), 0.45));
+    if (k > 0.01 && out < 1) phone(ctx, t, [['s_ai_main', BN(81.3)], ['s_ai_typing', BN(83)], ['s_ai_answer', BN(85)]], 1390 + out * 900, lerp(1500, 545, k), 900, { shadow: 0.5 });
   }
+  const co = { size: 48, w: 600, align: 'center' };
+  rise(ctx, t, 'Ask anything.', 560, 960, { ...co, c: C.mist }, BN(82), BN(84) - 0.24);
+  rise(ctx, t, 'Get the right plan.', 560, 960, { ...co, c: C.mist }, BN(84), BN(85.6) - 0.24);
   {
-    const o = { size: 54, w: 600 }, a = TW(ctx, 'A new kind of ', o), b = TW(ctx, 'ecosystem.', o);
-    rise(ctx, t, 'A new kind of', 520 - (a + b) / 2, 900, { ...o, c: C.mist }, B(74) + 0.1, B(76));
-    rise(ctx, t, 'ecosystem.', 520 - (a + b) / 2 + a, 900, { ...o, c: C.neon }, B(74) + 0.2, B(76) + 0.04);
-    const c2 = TW(ctx, 'Together, ', o), d2 = TW(ctx, 'as one.', o);
-    rise(ctx, t, 'Together,', 520 - (c2 + d2) / 2, 900, { ...o, c: C.mist }, B(76), B(78));
-    rise(ctx, t, 'as one.', 520 - (c2 + d2) / 2 + c2, 900, { ...o, c: C.neon }, B(76) + 0.1, B(78) + 0.04);
+    const a = TW(ctx, 'Together, ', co), b = TW(ctx, 'as one.', co);
+    rise(ctx, t, 'Together,', 560 - (a + b) / 2, 960, { ...co, align: 'left', c: C.mist }, BN(85.6), BN(86.4));
+    rise(ctx, t, 'as one.', 560 - (a + b) / 2 + a, 960, { ...co, align: 'left', c: C.neon }, BN(85.7), BN(86.45));
   }
 });

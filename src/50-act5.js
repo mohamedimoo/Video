@@ -1,57 +1,70 @@
-// ===== ACT V — END TITLE (bars 28–33.5, beats 108–134) =====
-const GROUND = 980;
+// ===== ACT V — END TITLE (story beats 108–134, real beats 120–154) =====
+const GROUND = 1000;
 const STAIRS = [
-  { n: 'CORE', x: 260, top: 760, c: C.stone, tc: C.deep, sc: '#4E5F5A', b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'], ph: 0 },
-  { n: 'BEYOND', x: 760, top: 620, c: C.night, tc: C.mist, sc: C.fog, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'], ph: 2 },
-  { n: 'ECOSYSTEM', x: 1260, top: 480, c: C.neon, tc: C.night, sc: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'], ph: 1 },
+  { n: 'CORE', no: '01', x: 260, top: 700, c: C.stone, tc: C.deep, sc: '#3F504B', ck: C.green, b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'], ph: 0, t0: 120 },
+  { n: 'BEYOND', no: '02', x: 760, top: 540, c: C.night, tc: C.mist, sc: C.fog, ck: C.neon, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'], ph: 2, t0: 122 },
+  { n: 'ECOSYSTEM', no: '03', x: 1260, top: 380, c: C.neon, tc: C.night, sc: C.deep, ck: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'], ph: 1, t0: 124 },
 ];
+function stairTop(t, s) { return GROUND - (GROUND - s.top) * spr(t, BN(s.t0), 15, 0.86); }
 scene(107.4, 112.8, (ctx, t) => {
   bg(ctx, C.mist);
   STAIRS.forEach((s, k) => {
-    const rise_ = spr(t, B(108 + k), 15, 0.86);
-    const h = (GROUND - s.top) * rise_;
+    const top = stairTop(t, s), h = GROUND - top;
     if (h > 1) {
-      rr(ctx, s.x, GROUND - h, 500, h + 40, 0); ctx.fillStyle = s.c; ctx.fill();
-      ctx.save(); ctx.beginPath(); ctx.rect(s.x, GROUND - h, 500, h); ctx.clip();
-      const y0 = GROUND - h;
-      T(ctx, s.n, s.x + 30, y0 + 56, { size: 26, w: 800, c: s.tc, ls: 6 });
-      s.b.forEach((b, i) => T(ctx, b, s.x + 30, y0 + 100 + i * 34, { size: 21, w: 500, c: s.sc }));
+      ctx.beginPath(); ctx.roundRect(s.x, top, 500, h + 60, [28, 28, 0, 0]); ctx.fillStyle = s.c; ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.rect(s.x, top, 500, h); ctx.clip();
+      T(ctx, s.no, s.x + 30, top + 74, { size: 60, w: 800, c: s.tc, ls: -2 });
+      T(ctx, s.n, s.x + 32, top + 116, { size: 24, w: 800, c: s.tc, ls: 6 });
+      // each addition ticks in on the beat after its step lands
+      s.b.forEach((b, i) => {
+        const q = spr(t, BN(s.t0 + 1) + i * 0.18, 18, 0.8);
+        if (q <= 0.01) return;
+        const y = top + 160 + i * 40;
+        ctx.save(); ctx.translate(s.x + 44, y - 7); ctx.scale(q, q); icon(ctx, 'Tick02', 0, 0, 24, s.ck, 1.4); ctx.restore();
+        ctx.save(); ctx.beginPath(); ctx.rect(s.x + 64, y - 30, 420, 40); ctx.clip();
+        T(ctx, b, s.x + 66, y + (1 - q) * 30, { size: 21, w: 500, c: s.sc }); ctx.restore();
+      });
       ctx.restore();
     }
-    // the matching phone from the previous scene walks onto its step
-    const ph = PHONES3[s.ph];
-    const m = eInOut(P(t, B(107.4) + k * 0.1, B(1) + 0.2));
-    const tx = s.x + 400, th = 400, ty = GROUND - h + 60 - th / 2;   // rides on top of its block
-    const x = lerp(ph.x, tx, m), y = lerp(ph.y, ty, m);
-    phone(ctx, t, [[ph.s, 0]], x, y, lerp(ph.h, th, m), { rot: lerp(ph.rot, 0, m), shadow: 0.6 });
   });
-  rise(ctx, t, 'BECOME A SUPERAPP', 120, 170, { size: 24, w: 700, c: C.leaf, ls: 8 }, B(108));
-  rise(ctx, t, 'Step by step.', 120, 250, { size: 72, w: 700, c: C.deep, ls: -2 }, B(108) + 0.1);
-  // the thread climbs the staircase on beat 111
-  const tp = eInOut(P(t, B(111), 0.55));
+  // growth: the thread climbs the stairs, and a rocket lifts off the top step
+  const tp = eInOut(P(t, BN(126), 0.7));
   if (tp > 0) {
-    const path = [[180, GROUND], [260, 760], [760, 760], [760, 620], [1260, 620], [1260, 480], [1760, 480], [2000, 220]];
+    const tops = STAIRS.map(s => stairTop(t, s));
+    const path = [[160, GROUND], [260, tops[0] - 12], [760, tops[0] - 12], [760, tops[1] - 12], [1260, tops[1] - 12], [1260, tops[2] - 12], [1500, tops[2] - 12]];
     let tot = 0; for (let i = 1; i < path.length; i++) tot += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
-    const head = tp * tot, tail = Math.max(0, head - 900);
+    const head = tp * tot;
     ctx.strokeStyle = C.green; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
-    let acc = 0, started = false;
+    let acc = 0, hx = path[0][0], hy = path[0][1]; ctx.moveTo(hx, hy);
     for (let i = 1; i < path.length; i++) {
       const a = path[i - 1], b = path[i], l = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      const s0 = clamp((tail - acc) / l), s1 = clamp((head - acc) / l);
-      if (s1 > s0) {
-        const p0 = [lerp(a[0], b[0], s0), lerp(a[1], b[1], s0)], p1 = [lerp(a[0], b[0], s1), lerp(a[1], b[1], s1)];
-        if (!started) { ctx.moveTo(...p0); started = true; } else ctx.lineTo(...p0);
-        ctx.lineTo(...p1);
-      }
-      acc += l;
+      const u = clamp((head - acc) / l); if (u <= 0) break;
+      hx = lerp(a[0], b[0], u); hy = lerp(a[1], b[1], u); ctx.lineTo(hx, hy); acc += l;
     }
-    ctx.stroke();
+    ctx.stroke(); circ(ctx, hx, hy, 12); ctx.fillStyle = C.green; ctx.fill();
+  }
+  STAIRS.forEach((s, k) => {
+    const top = stairTop(t, s);
+    // the matching phone from the hub walks onto its step and rides it up
+    const ph = PHONES3[s.ph];
+    const m = eInOut(P(t, BN(119.4) + k * 0.1, BN(1) + 0.2));
+    const th = 400, tx = s.x + 400, risen = (GROUND - top) / (GROUND - s.top), ty = top + 60 - th / 2 + (1 - risen) * 520;  // waits below frame until its step rises
+    phone(ctx, t, [[ph.s, 0]], lerp(ph.x, tx, m), lerp(ph.y, ty, m), lerp(ph.h, th, m), { rot: lerp(ph.rot, 0, m), shadow: 0.6 });
+  });
+  rise(ctx, t, 'BECOME A SUPERAPP', 120, 170, { size: 24, w: 700, c: C.leaf, ls: 8 }, BN(120));
+  rise(ctx, t, 'Step by step.', 120, 250, { size: 72, w: 700, c: C.deep, ls: -2 }, BN(120) + 0.1);
+  {
+    const k = spr(t, BN(125.6), 16, 0.8), up = eIn(P(t, BN(126.6), BN(1)));
+    // the growth line's head becomes an arrow that shoots off the top step
+    if (k > 0.01) { ctx.save(); ctx.translate(1520 + up * 500, STAIRS[2].top - 12 - up * 700); ctx.rotate(-Math.PI / 4 * up); ctx.scale(k, k);
+      ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(-14, -26); ctx.lineTo(-14, 26); ctx.closePath(); ctx.fillStyle = C.green; ctx.fill(); ctx.restore(); }
+    rise(ctx, t, 'SUPERAPP', 1292, 940, { size: 64, w: 800, c: C.night, ls: 2 }, BN(127), BN(127.8));
   }
   // the black "Beyond" block opens up into the night
-  const op = eIn(P(t, B(111.6), B(0.4) + 0.1));
+  const op = eIn(P(t, BN(127.6), BN(0.4) + 0.1));
   if (op > 0) {
     const s = STAIRS[1];
-    rr(ctx, lerp(s.x, -40, op), lerp(s.top, -40, op), lerp(500, W + 80, op), lerp(GROUND - s.top + 40, H + 80, op), 0);
+    rr(ctx, lerp(s.x, -40, op), lerp(s.top, -40, op), lerp(500, W + 80, op), lerp(GROUND - s.top + 60, H + 80, op), 0);
     ctx.fillStyle = C.night; ctx.fill();
   }
 });
@@ -145,20 +158,6 @@ scene(120, 134.01, (ctx, t) => {
       circ(ctx, x, y, r); ctx.fillStyle = on ? C.neon : C.teal; ctx.fill();
     }
   }
-  // the real glass logo is revealed through the shape the dots have drawn
-  if (solid > 0) {
-    const cx = lerp(END.gx, 960, collapse), cy = lerp(END.gy, 500, collapse);
-    const h = lerp(END.gh, 200 * 0.82, collapse);
-    if (collapse > 0) {
-      const k = spr(t, B(133) + 0.12, 16, 0.9);
-      rr(ctx, 960 - 100 * k, 500 - 100 * k, 200 * k, 200 * k, 200 * 0.26 * k); ctx.fillStyle = C.deep; ctx.fill();
-    }
-    ctx.save();
-    const sc = lerp(0.85, 1.35, solid);
-    poly(ctx, glassPts(cx, cy, h * sc, 60)); ctx.clip();
-    glass(ctx, cx, cy, h);
-    ctx.restore();
-  }
   // day counter and the "once a month" callback
   if (t < B(128.6)) {
     rise(ctx, t, 'DAY', 220, 420, { size: 30, w: 700, c: C.leaf, ls: 10 }, B(120.6), B(128));
@@ -169,25 +168,95 @@ scene(120, 134.01, (ctx, t) => {
     rise(ctx, t, 'every', 1730, 620, { size: 110, w: 800, c: C.neon, align: 'right', ls: -4 }, B(126), B(128) + 0.05);
     rise(ctx, t, 'day.', 1730, 730, { size: 110, w: 800, c: C.neon, align: 'right', ls: -4 }, B(126) + 0.3, B(128) + 0.1);
   }
-  // end title: the real wordmark letters rise one by one
-  {
-    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, B(129.5) + i * 0.06, 0.4)) * (1 - eIn(P(t, B(132.9) + i * 0.02, 0.25))));
-    if (rv.some(v => v > 0)) wordLetters(ctx, END.wx, END.wy, END.wh, C.mist, rv);
+  // ---- outro (real beats 145–154) ----
+  const L = lockup(t);
+  // the real glass logo is revealed through the shape the dots have drawn
+  if (solid > 0) {
+    const cx = lerp(L.gx, 960, collapse), cy = lerp(L.gy, 500, collapse);
+    const h = lerp(L.gh, 200 * 0.82, collapse);
+    if (collapse > 0) {
+      const k = spr(t, BN(153) + 0.12, 16, 0.9);
+      rr(ctx, 960 - 100 * k, 500 - 100 * k, 200 * k, 200 * k, 200 * 0.26 * k); ctx.fillStyle = C.deep; ctx.fill();
+    }
+    ctx.save();
+    poly(ctx, glassPts(cx, cy, h * lerp(0.85, 1.35, solid), 60)); ctx.clip();
+    glass(ctx, cx, cy, h);
+    ctx.restore();
   }
-  const tw = { size: 46, w: 500 };
-  riseWords(ctx, t, [['Making', C.mist], ['the', C.mist], ['joy', C.mist], ['of', C.mist], ['technology', C.mist], ['accessible', C.mist]], 960, 770, { ...tw, align: 'center' }, [0, 1, 2, 3, 4, 5].map(i => B(130) + i * 0.07), B(132.6));
-  riseWords(ctx, t, [['for', C.mist], ['everyone,', C.mist], ['everyday.', C.neon]], 960, 840, { ...tw, align: 'center' }, [0, 1, 2].map(i => B(131) + i * 0.1), B(132.7));
+  // the real wordmark letters rise one by one, then ride with the lockup
   {
-    const w1 = TW(ctx, 'for everyone, ', tw), w2 = TW(ctx, 'everyday.', tw), x = 960 - (w1 + w2) / 2 + w1;
-    const p = eOut(P(t, B(132), 0.35)), q = eIn(P(t, B(132.7), 0.3));
-    if (p > 0 && q < 1) { ctx.fillStyle = C.neon; ctx.fillRect(x, 860 + q * 200, w2 * p, 6); }
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BN(145.5) + i * 0.06, 0.4)) * (1 - eIn(P(t, BN(152.9) + i * 0.02, 0.25))));
+    if (rv.some(v => v > 0)) wordLetters(ctx, L.wx, L.wy, L.wh, C.mist, rv);
+  }
+  // the line that matters: "the joy of technology"
+  if (t >= BN(146) && t < BN(153.6)) {
+    const settle = eInOut(P(t, BN(151), 0.7));
+    const gone = eIn(P(t, BN(153), 0.38));
+    const s0 = lerp(1, 0.5, settle) * (1 - gone);
+    const cx = 960, cy = lerp(600, 760, settle) + gone * 80;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(s0, s0);
+    joyPhrase(ctx, t, settle);
+    ctx.restore();
   }
   // the app icon label returns: last frame == first frame
   if (collapse > 0) {
-    const lp = eOut(P(t, B(133) + 0.2, 0.25));
+    const lp = eOut(P(t, BN(153) + 0.2, 0.25));
     ctx.save(); ctx.beginPath(); ctx.rect(960 - 200, 500 + 100 + 12, 400, 70); ctx.clip();
     const lh = 30, lw = WORD_W(lh);
     wordLetters(ctx, 960 - lw / 2, 500 + 100 + 60 + (1 - lp) * 70, lh, C.dim);
     ctx.restore();
   }
 });
+
+// the lockup (glass logo + wordmark) has three places: centre, tucked up top, and the final end title
+function lockup(t) {
+  const P0 = { gx: 640, gy: 460, gh: 380, wx: 860, wy: 560, wh: 150 };
+  const P1 = { gx: 822, gy: 150, gh: 120, wx: 900, wy: 186, wh: 56 };
+  const P2 = { gx: 690, gy: 330, gh: 270, wx: 856, wy: 410, wh: 112 };
+  const a = eInOut(P(t, BN(146), 0.6)), b = eInOut(P(t, BN(151), 0.7));
+  const o = {};
+  for (const k in P0) o[k] = lerp(lerp(P0[k], P1[k], a), P2[k], b);
+  return o;
+}
+const JOY_ICONS = [['SmartPhone01', -720, -250, 0], ['Home01', 720, -250, 0.25], ['Airplane01', -760, 170, 0.5], ['FavouriteIcon', 760, 170, 0.75]];
+function joyPhrase(ctx, t, settle) {
+  const big = { size: 150, w: 800, ls: -5 };
+  const wA = TW(ctx, 'the joy ', big), wB = TW(ctx, 'of technology', big), x0 = -(wA + wB) / 2;
+  rise(ctx, t, 'Making', 0, -215, { size: 58, w: 500, c: C.fog, align: 'center' }, BN(146) + 0.1, 1e9);
+  // the two halves slam in on the beat and the off-beat
+  // each half grows from its outer edge, so the gap between them never closes
+  const slamIn = (t0, str, x, anchorRight) => {
+    if (t < t0) return;
+    const p = eOut(P(t, t0, 0.24)), k = lerp(1.8, 1, p), w = TW(ctx, str, big);
+    const ax = anchorRight ? x + w : x;
+    ctx.save(); ctx.translate(ax, -50); ctx.scale(k, k); T(ctx, str, anchorRight ? -w : 0, 50, { ...big, c: C.mist }); ctx.restore();
+  };
+  slamIn(BN(147), 'the joy', x0, true);
+  slamIn(BN(147.5), 'of technology', x0 + wA, false);
+  // the hit: a neon highlight sweeps behind the phrase and the type turns night-green inside it
+  const hp = eOut(P(t, BN(148), 0.38));
+  if (hp > 0) {
+    const hx = x0 - 34, hw = (wA + wB + 68) * hp;
+    ctx.save();
+    rr(ctx, hx, -132, hw, 182, 34); ctx.fillStyle = C.neon; ctx.fill();
+    ctx.beginPath(); ctx.rect(hx, -140, hw, 200); ctx.clip();
+    T(ctx, 'the joy ', x0, 0, { ...big, c: C.night }); T(ctx, 'of technology', x0 + wA, 0, { ...big, c: C.night });
+    ctx.restore();
+  }
+  // a spark pops above "joy"
+  const sk = spr(t, BN(148.25), 15, 0.75) * (1 - settle);
+  if (sk > 0.01) pic(ctx, 'i_sparkles', x0 + TW(ctx, 'the joy', big) + 18, -150, 120 * sk);
+  rise(ctx, t, 'accessible', 0, 140, { size: 72, w: 700, c: C.mist, align: 'center' }, BN(149), 1e9);
+  {
+    const o = { size: 58, w: 500 }, a = TW(ctx, 'for everyone, ', o), b = TW(ctx, 'everyday.', o);
+    rise(ctx, t, 'for everyone,', -(a + b) / 2, 230, { ...o, c: C.mist }, BN(149.5), 1e9);
+    rise(ctx, t, 'everyday.', -(a + b) / 2 + a, 230, { ...o, c: C.neon }, BN(149.6), 1e9);
+    const up = eOut(P(t, BN(152), 0.35));
+    if (up > 0) { ctx.fillStyle = C.neon; ctx.fillRect(-(a + b) / 2 + a, 252, b * up, 8); }
+  }
+  // the joy, made of real Salam 3D icons, gathers around the phrase
+  JOY_ICONS.forEach(([im, x, y, d]) => {
+    const k = spr(t, BN(150) + d * BEAT, 15, 0.8) * (1 - eIn(P(t, BN(151), 0.35)));
+    if (k > 0.01) { ctx.strokeStyle = C.neon; ctx.lineWidth = 4; circ(ctx, x, y, 70 * k); ctx.stroke(); icon(ctx, im, x, y, 64 * k, C.neon, 1.1); }
+  });
+}

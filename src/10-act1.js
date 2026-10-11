@@ -3,7 +3,7 @@ const SCENES = [];
 const scene = (a, b, draw) => SCENES.push({ a, b, draw });
 
 // --- Hook (beats 0–4): the feed whips past the app icon and brakes on "Last opened 29 days ago" ---
-const FEED = [['CHAT', 'i_info'], ['WATCH', 'i_sparkles'], ['PAY', 'i_coins'], ['PLAY', 'i_medal'], ['SHOP', 'i_gift'], ['LISTEN', 'i_tower'], ['SCROLL', 'i_magnifier'], ['STREAM', 'i_5g']];
+const FEED = [['CHAT', 'BubbleChat'], ['WATCH', 'Tv01'], ['PAY', 'CreditCard'], ['PLAY', 'GameController03'], ['SHOP', 'ShoppingBag01'], ['LISTEN', 'Headphones'], ['SCROLL', 'Search01'], ['STREAM', 'PlayCircle']];
 const PITCH = 340, GAP0 = 760;  // the feed starts below the frame so frame 0 is the icon alone
 scene(0, 8, (ctx, t) => {
   bg(ctx, C.night);
@@ -18,7 +18,8 @@ scene(0, 8, (ctx, t) => {
     const y = 500 + GAP0 + i * PITCH - S - up - clear;
     if (y < -200 || y > 1300) continue;
     rr(ctx, 960 - 430, y - 150, 860, 300, 52); ctx.fillStyle = i % 2 ? C.teal : C.deep; ctx.fill();
-    pic(ctx, FEED[i - 1][1], 960 - 430 + 160, y, 210);
+    circ(ctx, 960 - 430 + 150, y, 90); ctx.fillStyle = C.neon; ctx.fill();
+    icon(ctx, FEED[i - 1][1], 960 - 430 + 150, y, 100, C.deep, 1.1);
     T(ctx, FEED[i - 1][0], 960 - 430 + 300, y + 44, { size: 124, w: 800, c: C.mist, ls: -3 });
   }
   // item 9: the salam card
@@ -84,11 +85,11 @@ scene(4, 8, (ctx, t) => {
 
 // --- Threats: "Disruption from every direction." (beats 8–20) ---
 const THREATS = [
-  { k: 'OTT', l: 'owns the conversation', x: 470, y: 500, im: 'i_info' },
-  { k: 'eSIM', l: 'owns customer choice', x: 1470, y: 470, im: 'i_esim' },
-  { k: 'BIG TECH', l: 'owns identity', x: 1530, y: 790, im: 'i_faceid' },
+  { k: 'OTT', l: 'owns the conversation', x: 500, y: 500, im: 'i_info' },
+  { k: 'eSIM', l: 'owns customer choice', x: 1460, y: 470, im: 'i_esim' },
+  { k: 'BIG TECH', l: 'owns identity', x: 1540, y: 790, im: 'i_faceid' },
   { k: 'FINTECH', l: 'owns the wallet', x: 960, y: 960, im: 'i_coins' },
-  { k: 'SUPER-APPS', l: 'own the ecosystem', x: 390, y: 840, im: 'i_globe' },
+  { k: 'SUPER-APPS', l: 'own the ecosystem', x: 420, y: 840, im: 'i_globe' },
 ];
 const LEAF_C = [960, 660];
 function threatLeafSize(t) {
@@ -100,9 +101,9 @@ function threatLeafSize(t) {
 }
 scene(8, 20, (ctx, t) => {
   bg(ctx, C.mist);
-  riseWords(ctx, t, [['Disruption', C.deep], ['from', C.deep]], 120, 190, { size: 96, w: 700, ls: -2 }, [B(8), B(8) + 0.1], B(16));
-  riseWords(ctx, t, [['every', C.leaf], ['direction.', C.leaf]], 120, 300, { size: 96, w: 700, ls: -2 }, [B(9), B(9) + 0.1], B(16));
-  rise(ctx, t, 'The risk is real.', 120, 190, { size: 96, w: 700, ls: -2, c: C.deep }, B(16), B(17));
+  riseWords(ctx, t, [['Disruption', C.deep], ['from', C.deep]], 120, 190, { size: 96, w: 700, ls: -2 }, [B(8), B(8) + 0.1], B(16) - 0.24);
+  riseWords(ctx, t, [['every', C.leaf], ['direction.', C.leaf]], 120, 300, { size: 96, w: 700, ls: -2 }, [B(9), B(9) + 0.1], B(16) - 0.24);
+  rise(ctx, t, 'The risk is real.', 120, 190, { size: 96, w: 700, ls: -2, c: C.deep }, B(16), B(17) - 0.24);
   riseWords(ctx, t, [['The', C.deep], ['opportunity', C.deep], ['is', C.deep]], 120, 190, { size: 96, w: 700, ls: -2 }, [B(17), B(17) + .08, B(17) + .16], B(19));
   slam(ctx, t, 'bigger.', 960, 1000, { size: 230, w: 800, ls: -8, c: C.leaf }, B(18));
 
@@ -116,7 +117,8 @@ scene(8, 20, (ctx, t) => {
     const blast = eIn(P(t, B(18) - 0.05, 0.4)) * 1900;
     const x = c.x + dx / dl * (1500 * fly + blast) - dx * sq;
     const y = c.y + dy / dl * (1500 * fly + blast) - dy * sq;
-    const w = 470, h = 160;
+    // the card is sized to its own text
+    const h = 160, w = 158 + Math.max(TW(ctx, c.k, { size: 22, w: 700, ls: 5 }), TW(ctx, c.l, { size: 32, w: 600, ls: -0.5 })) + 44;
     shadowOn(ctx, 0.55); rr(ctx, x - w / 2, y - h / 2, w, h, 34); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
     pic(ctx, c.im, x - w / 2 + 82, y, 118);
     T(ctx, c.k, x - w / 2 + 158, y - 14, { size: 22, w: 700, c: C.leaf, ls: 5 });
@@ -140,10 +142,10 @@ function habitsLayout() {
 scene(20, 28, (ctx, t) => {
   bg(ctx, C.deep);
   const o = { size: 150, w: 700, ls: -5, c: C.mist };
-  rise(ctx, t, 'Awareness', 150, 420, o, B(20), B(23));
-  rise(ctx, t, "isn't the problem.", 150, 590, o, B(21), B(23) + 0.05);
+  rise(ctx, t, 'Awareness', 150, 420, o, B(20), B(23) - 0.36);
+  rise(ctx, t, "isn't the problem.", 150, 590, o, B(21), B(23) - 0.32);
   [[420, TW(ctx, 'Awareness', o)], [590, TW(ctx, "isn't the problem.", o)]].forEach(([y, w], i) => {
-    const p = eOut(P(t, B(22) + i * 0.1, 0.32)), po = eIn(P(t, B(23) + i * 0.05, 0.3));
+    const p = eOut(P(t, B(22) + i * 0.1, 0.32)), po = eIn(P(t, B(23) - 0.36 + i * 0.04, 0.3));
     if (p <= 0 || po >= 1) return;
     ctx.fillStyle = C.neon; ctx.fillRect(140, y - 52 - po * 200, (w + 20) * p, 14);
   });

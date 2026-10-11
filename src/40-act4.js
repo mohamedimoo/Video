@@ -32,12 +32,14 @@ scene(80, 88.2, (ctx, t) => {
   const rot = wheelRot(t);
   const unroll = eInOut(P(t, B(86.25), B(0.75)));
   const open = eInOut(P(t, B(87), B(0.95)));
-  // core: the night disc and the real Salam glass logo, carried over from the EAI rings
+  // core: the neon AI disc carried over from the EAI scene
   const coreK = 1 - eIn(P(t, B(86), 0.4));
   if (coreK > 0) {
     ctx.strokeStyle = C.neon; ctx.lineWidth = 4; circ(ctx, WH.cx, WH.cy, 175 * coreK); ctx.stroke();
-    circ(ctx, WH.cx, WH.cy, 140 * coreK); ctx.fillStyle = '#06231F'; ctx.fill();
-    glass(ctx, WH.cx, WH.cy, 220 * coreK);
+    circ(ctx, WH.cx, WH.cy, 140 * coreK); ctx.fillStyle = C.neon; ctx.fill();
+    ctx.strokeStyle = C.night; ctx.lineWidth = 3; circ(ctx, WH.cx, WH.cy, 126 * coreK); ctx.stroke();
+    const o = { size: 112 * 0.6 * coreK, w: 800, ls: -3 };
+    T(ctx, 'AI', WH.cx, WH.cy + 24 * coreK, { ...o, c: C.night, align: 'center' });
   }
   // segments
   segs.forEach((g, i) => {
@@ -93,10 +95,10 @@ scene(80, 88.2, (ctx, t) => {
 const USAGE = [['Social', 93, 'UserGroup'], ['Streaming', 80, 'Video01'], ['News', 65, 'News01'], ['Gaming', 57, 'GameController03'], ['Work', 50, 'Briefcase01']];
 const BEYOND = [['Sports & scores', 'FootballIcon'], ['Gaming hub', 'GameController03'], ['Streaming deals', 'Video01'], ['News feed', 'News01'], ['Lifestyle rewards', 'DiscountTag01']];
 const BARRIERS = [
-  { b: 'No branch near me', q: '“I want help when I need it.”', p: 23, c: C.red, ic: 'Store01', a: 'The app becomes the branch', s: '3-minute onboarding · 24/7 AI assistant', im: 'i_ai' },
-  { b: "I don't know anyone using it", q: '“I need confidence.”', p: 22, c: C.orange, ic: 'UserMultiple', a: 'Refer & earn · Circles', s: 'Real users, real stories', im: 'i_gift' },
-  { b: 'Poor network performance', q: '“I need proof.”', p: 20, c: C.orange, ic: 'WifiDisconnected01', a: 'Live coverage map', s: 'Speed test · reliability dashboard', im: 'i_tower' },
-  { b: 'Too expensive', q: '“I don’t see enough value.”', p: 17, c: C.purple, ic: 'MoneyBag01', a: 'Value, reframed', s: 'Bundles · rewards & loyalty', im: 'i_coins' },
+  { b: 'No branch near me', q: '“I want help when I need it.”', p: 23, c: C.red, ic: 'Store01', a: 'The app becomes the branch', s: '3-minute onboarding · 24/7 AI assistant', im: 'AiBrain01' },
+  { b: "I don't know anyone using it", q: '“I need confidence.”', p: 22, c: C.orange, ic: 'UserMultiple', a: 'Refer & earn · Circles', s: 'Real users, real stories', im: 'Gift' },
+  { b: 'Poor network performance', q: '“I need proof.”', p: 20, c: C.orange, ic: 'WifiDisconnected01', a: 'Live coverage map', s: 'Speed test · reliability dashboard', im: 'Signal' },
+  { b: 'Too expensive', q: '“I don’t see enough value.”', p: 17, c: C.purple, ic: 'MoneyBag01', a: 'Value, reframed', s: 'Bundles · rewards & loyalty', im: 'Coins01' },
 ];
 const GREYT = '#9AA6A2';
 scene(88, 102.2, (ctx, t) => {
@@ -183,7 +185,7 @@ scene(88, 102.2, (ctx, t) => {
       shadowOn(ctx, half ? 0.2 : 0.5); rr(ctx, 1240, y - 30, 580, 108, 28); ctx.fillStyle = half ? '#FBE4E4' : C.deep; ctx.fill(); shadowOff(ctx);
       if (half) T(ctx, r.q, 1272, y + 34, { size: 28, w: 600, c: '#A3373B' });
       else {
-        pic(ctx, r.im, 1300, y + 24, 92);
+        circ(ctx, 1298, y + 24, 34); ctx.fillStyle = C.neon; ctx.fill(); icon(ctx, r.im, 1298, y + 24, 38, C.deep, 1.2);
         T(ctx, r.a, 1362, y + 16, { size: 29, w: 700, c: C.mist }); T(ctx, r.s, 1362, y + 52, { size: 19, w: 500, c: C.fog });
       }
       ctx.restore();
@@ -197,7 +199,7 @@ scene(88, 102.2, (ctx, t) => {
 // --- reason to stay -> fragmented tiles -> one app, three real screens (beats 100–108) ---
 const CARD = { x: 180, y: 350, w: 1560, h: 380 };
 const TILE_LABELS = ['Bills', 'eSIM', 'Router', 'Offers', 'Pay', 'Support', 'Top-up', 'Shop', 'Track', 'Plans', 'Rewards', 'Coverage'];
-const TILE_IM = ['i_inbox', 'i_esim', 'i_homewifi', 'i_gift', 'i_coins', 'i_info', 'i_lightning', 'i_package', 'i_pin', 'i_sim', 'i_medal', 'i_tower'];
+const TILE_IM = ['Invoice03', 'Simcard01', 'Wifi01', 'Gift', 'CreditCard', 'CustomerSupport', 'Flash', 'ShoppingBag01', 'Package', 'SmartPhone01', 'Medal01', 'Signal'];
 const FRAG_COL = [C.stone, C.white, C.teal, '#F6C9A8', C.leaf, '#D6CCF5', C.white, C.stone, '#BFE6C4', C.deep, '#F9DADB', C.white];
 const PHONES3 = [
   { s: 's_plans', x: 590, y: 640, h: 660, rot: -0.07 },
@@ -240,7 +242,7 @@ scene(100, 108.6, (ctx, t) => {
       } else {
         shadowOn(ctx, 0.35); ctx.fillStyle = FRAG_COL[i]; ctx.fill(); shadowOff(ctx);
         const dark = [C.teal, C.deep, C.leaf].includes(FRAG_COL[i]);
-        pic(ctx, TILE_IM[i], 0, -h * 0.12, h * 0.55);
+        icon(ctx, TILE_IM[i], 0, -h * 0.12, h * 0.36, dark ? C.neon : C.deep, 1.1);
         T(ctx, lab, 0, h * 0.36, { size: 26, w: 700, c: dark ? C.mist : C.ink, align: 'center' });
       }
       ctx.restore();
@@ -249,28 +251,62 @@ scene(100, 108.6, (ctx, t) => {
   rise(ctx, t, 'FRAGMENTED TODAY', 960, 150, { size: 26, w: 700, c: C.red, align: 'center', ls: 8 }, B(102) + 0.1, B(103));
   const cp = P(t, B(103), 0.5);
   if (cp > 0 && cp < 1) T(ctx, '»»»', lerp(-300, 2300, eInOut(cp)), 580, { size: 240, w: 800, c: C.leaf, align: 'center', ls: -30 });
-  // three real screens: one app
+  // one app: a hub. Every service plugs into the same phone, then AI ties it together (real beats 111–119)
   if (t >= B(103.3) && t < B(107.6)) {
-    PHONES3.forEach((ph, i) => {
-      const k = spr(t, B(103.3) + [0.12, 0, 0.12][i], 14, 0.86);
-      const spread = eOut(P(t, B(104), 0.5));
-      const x = lerp(960, ph.x, spread), lift = 20 * (spr(t, B(107), 16, 0.8) - spr(t, B(107) + 0.3, 16, 0.8));
-      phone(ctx, t, [[ph.s, 0]], x, ph.y - lift, ph.h * k, { rot: ph.rot * spread, shadow: 0.7, scroll: i === 1 ? 0.12 * eInOut(P(t, B(105), B(2))) : 0 });
+    const spread = eInOut(P(t, BN(118), 0.6));
+    const lift = 20 * (spr(t, BN(119), 16, 0.8) - spr(t, BN(119) + 0.3, 16, 0.8));
+    // side phones slide out from behind the hub on beat 118
+    [0, 2].forEach(i => {
+      if (spread <= 0) return;
+      const ph = PHONES3[i];
+      phone(ctx, t, [[ph.s, 0]], lerp(960, ph.x, spread), ph.y - lift, ph.h * lerp(0.85, 1, spread), { rot: ph.rot * spread, shadow: 0.6 });
     });
+    // capability cards wired into the hub
+    HUB.forEach((c, i) => {
+      const t0 = BN(113 + Math.floor(i / 2)), left = i % 2 === 0;
+      const k = spr(t, t0 + (left ? 0 : 0.1), 15, 0.86), out = eIn(P(t, BN(118) + (i % 3) * 0.04, 0.4));
+      if (k <= 0.01 || out >= 1) return;
+      const y = 340 + Math.floor(i / 2) * 200;
+      const cw = 470, x0 = (left ? 150 : 1920 - 150 - cw) + (left ? -1 : 1) * ((1 - k) * 600 + out * 900);
+      // connector + a pulse that travels into the phone
+      const ex = left ? x0 + cw : x0, px = left ? 790 : 1130;
+      const lp = eOut(P(t, t0 + 0.12, 0.3)) * (1 - out);
+      if (lp > 0) {
+        ctx.strokeStyle = '#B9D3C0'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(ex, y); ctx.lineTo(lerp(ex, px, lp), y); ctx.stroke();
+        const pp = (((t - t0) / BEAT) % 1);
+        circ(ctx, lerp(ex, px, pp), y, 7); ctx.fillStyle = C.green; ctx.fill();
+      }
+      shadowOn(ctx, 0.45); rr(ctx, x0, y - 62, cw, 124, 30); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+      circ(ctx, x0 + 64, y, 36); ctx.fillStyle = C.deep; ctx.fill(); icon(ctx, c[1], x0 + 64, y, 36, C.neon, 1.1);
+      T(ctx, c[0], x0 + 120, y - 6, { size: 30, w: 700, c: C.deep });
+      T(ctx, c[2], x0 + 120, y + 30, { size: 20, w: 500, c: '#5B6B66' });
+    });
+    // the hub phone: its screen follows each service as it plugs in
+    {
+      const k = spr(t, B(103.3), 14, 0.86);
+      const scr = [['s_home', 0], ['s_plans', BN(114)], ['s_payment', BN(115)], ['s_ai_answer', BN(116)], ['s_home', BN(118)]];
+      phone(ctx, t, scr, 960, 600 - lift, lerp(740, 760, spread) * k, { shadow: 0.7 });
+    }
     const o = { size: 72, w: 700, ls: -2 }, a = TW(ctx, 'One App. ', o), b = TW(ctx, 'One Experience.', o);
-    rise(ctx, t, 'One App.', 960 - (a + b) / 2, 150, { ...o, c: C.deep }, B(104), B(107.4));
-    rise(ctx, t, 'One Experience.', 960 - (a + b) / 2 + a, 150, { ...o, c: C.leaf }, B(104) + 0.12, B(107.4));
-    rise(ctx, t, 'All of Salam. Built around you.', 960, 1050, { size: 36, w: 500, c: C.ink, align: 'center' }, B(105), B(107.4));
-    const k = eOut(P(t, B(106), 0.45));
-    if (k > 0) {
-      ctx.save(); shadowOn(ctx, 0.5); rr(ctx, 310, 900, 1300 * k, 64, 32); ctx.fillStyle = C.neon; ctx.fill(); shadowOff(ctx);
-      ctx.beginPath(); ctx.rect(310, 900, 1300 * k, 64); ctx.clip();
-      icon(ctx, 'AiBrain01', 352, 932, 30, C.night, 1.2);
-      T(ctx, 'AI   ·   Personalised  ·  Predictive  ·  Intelligent assistance  ·  Smart automation  ·  Continuous learning', 384, 941, { size: 24, w: 600, c: C.night });
+    rise(ctx, t, 'One App.', 960 - (a + b) / 2, 120, { ...o, c: C.deep }, BN(112), BN(119.4));
+    rise(ctx, t, 'One Experience.', 960 - (a + b) / 2 + a, 120, { ...o, c: C.leaf }, BN(112) + 0.12, BN(119.4));
+    rise(ctx, t, 'All of Salam. Built around you.', 960, 178, { size: 32, w: 500, c: '#4E5F5A', align: 'center' }, BN(117), BN(119.4));
+    const kk = eOut(P(t, BN(116), 0.45)), ko = eIn(P(t, BN(119.3), 0.3));
+    if (kk > 0 && ko < 1) {
+      ctx.save(); ctx.translate(0, ko * 200);
+      shadowOn(ctx, 0.5); rr(ctx, 310, 985, 1300 * kk, 62, 31); ctx.fillStyle = C.neon; ctx.fill(); shadowOff(ctx);
+      ctx.beginPath(); ctx.rect(310, 985, 1300 * kk, 62); ctx.clip();
+      icon(ctx, 'AiBrain01', 352, 1016, 30, C.night, 1.2);
+      T(ctx, 'AI ties it together   ·   Personalised  ·  Predictive  ·  Intelligent assistance  ·  Smart automation', 384, 1025, { size: 24, w: 600, c: C.night });
       ctx.restore();
     }
   }
 });
+const HUB = [
+  ['Unified login', 'FingerPrint', 'One identity for everything'], ['E-Commerce', 'ShoppingBag01', 'Devices, checkout, tracking'],
+  ['Mobile', 'SmartPhone01', 'Plans, SIM & eSIM, top-up'], ['Loyalty', 'Award01', 'Rewards every day'],
+  ['Home', 'Home01', 'Fiber, 5G and your router'], ['Customer care', 'CustomerSupport', '24/7, right in the app'],
+];
 function cardText(ctx, t, x, y) {
   const o = { size: 64, w: 700, ls: -1 };
   rise(ctx, t, 'Turn every reason not to choose us', x + CARD.w / 2 + 60, y + 165, { ...o, c: C.mist, align: 'center' }, B(100) + 0.15);

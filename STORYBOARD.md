@@ -1,108 +1,54 @@
 # "30 Days Lit": beat-by-beat storyboard
 
-100 BPM, so 1 beat is 0.6 s and 1 bar is 2.4 s. The film is 33½ bars long (80.4 s). Beats are numbered from 0.
+84 BPM, so 1 beat is 0.714 s and 1 bar is 2.86 s. The film is 38½ bars long (110 s). Beats are numbered from 0.
 **Bold** marks a scene change: something transforms and a hit plays in the soundtrack.
 
-## ACT I: Kinetic type (bars 1–7)
-| Bar | Beats | What happens |
-|---|---|---|
-| 1, **hook** | 0 | Frame 0 is the Salam app icon (the glass logo on Deep Green) alone on Night. A feed of verb cards, each with a real 3D icon (CHAT · WATCH · PAY · PLAY · SHOP · LISTEN · SCROLL · STREAM), whips up and carries the icon away. |
-| | 1 | The feed brakes hard. |
-| | 2 | It lands on the Salam card: "Last opened **29 days ago**". |
-| | 3 | "Once a **month.**" slams in. |
-| 2 | **4** | Everything leaves upward. "They live on their phones" rises in, beside a card with a real Salam customer photo. |
-| | 5–6 | "EVERY" slides in from the right, then "DAY" from the left. |
-| | 7 | The full stop is a real circle. It grows to fill the frame and becomes the Mist background. |
-| 3–4 | **8–9** | "Disruption from / **every direction.**" |
-| | 10–14 | Five threat cards, each with a 3D icon, fly in from five directions, one per beat: OTT, eSIM, Big Tech, Fintech, Super-apps. The glass Salam logo in the centre shrinks with each one. |
-| | 15 | The cards squeeze in on the leaf. |
-| 5 | **16** | "The risk is real." |
-| | 17 | "The opportunity is" |
-| | 18 | "**bigger.**" slams in. The leaf grows and blasts the cards out of frame. |
-| | 19 | The Salam mark opens like an iris into Deep Green. |
-| 6–7 | **20–21** | "Awareness / isn't the problem." |
-| | 22 | Neon strike-throughs land on both lines. |
-| | 23 | "**Relevance** is." slams in. |
-| | 24–26 | "Winning apps are built on", then "daily habits" slams in, then "not monthly utility." (struck through). |
-| | 27 | "daily" collapses into itself. The letters of "habits" start to move. |
+The 3D renders from the Salam file appear at hero moments only: the five threat cards, the five Strategy House pillars, the check on "a reason to stay", and the spark over "joy". Every other icon is a Hugeicons line icon.
 
-## ACT II: Shape morphing (bars 8–13)
-| Bar | Beats | What happens |
-|---|---|---|
-| 8 | **28** | The real glyph outlines of h-a-b-i-t-s morph into three circles. |
-| | 29 | 3D icons land in the circles, with labels: Content, Community, Commerce. |
-| | 30 | Plus signs appear between the circles. |
-| | **31** | The circles become three sectors of a rotating ring: the habit loop. |
-| 9 | 32–35 | One stat per beat around the loop, each with the partner's real logo, counting up from 0: TikTok 95 min/day, Spotify 30 min/day, Starbucks #1 pay app in US, Alipay 1B daily users. |
-| 10 | **36** | The three sectors morph into the glyphs "1", "5" and "×". |
-| | 37 | "7–" joins to make "7–15×". |
-| | 38 | "more lifetime value" |
-| | 39 | The × turns 45° into a crosshair, and a Night disc opens from it. |
-| 11–12 | **40** | The crosshair becomes the equator and meridian, and a wireframe globe unfolds from them. |
-| | 41 | "The world is moving to **super-apps.**" |
-| | 42–46 | One pin per beat, each count rising from 0: WeChat 1.3B, Grab 35M, Jio 460M (tagged "The Salam blueprint."), Kakao 50M, M-Pesa 51M. |
-| 13 | 47 | The light thread jumps from pin to pin. |
-| | **48** | The globe turns to Riyadh. |
-| | 49 | The globe zooms through Riyadh. The pin becomes the real Nafath tile: "Telecoms own the identity layer." |
-| | 50 | The tile becomes the Salam mark: "Trusted identity and connectivity **at scale.**" |
-| | 51 | The mark flattens into a line. The line splits, and its lower edge becomes the ground. |
+## ACT I: Kinetic type (bars 1–7, beats 0–27)
+| Beats | What happens |
+|---|---|
+| **0–3** (hook) | Frame 0 is the Salam app icon (the glass logo on Deep Green) alone on Night. A feed of verb cards (CHAT · WATCH · PAY · PLAY · SHOP · LISTEN · SCROLL · STREAM), each with a line icon, whips past and brakes on the Salam card: "Last opened **29 days ago**". Then "Once a **month.**" slams in. |
+| **4–7** | "They live on their phones", next to a real Salam customer with "Chat", "Stream" and "Pay" chips. "EVERY" then "**DAY.**" slide in. The full stop grows to fill the frame and becomes the next scene. |
+| **8–15** | "Disruption from / **every direction.**" Five threat cards, each sized to its own text and carrying a 3D icon, fly in from five directions and squeeze the glass Salam logo. |
+| **16–19** | "The risk is real." → "The opportunity is" → "**bigger.**" The logo grows, the cards blast away, and the Salam mark opens like an iris into Deep Green. |
+| **20–27** | "Awareness / isn't the problem." gets struck through, then "**Relevance** is." Then "Winning apps are built on / **daily habits** / ~~not monthly utility.~~" |
 
-## ACT III: The Strategy House and EAI, all flat (bars 14–20)
-| Bar | Beats | What happens |
-|---|---|---|
-| 14–15 | **52–54** | The house builds on Mist, one row per beat: Measurement (with arrow icons), Culture, then seven Foundation chips, each with its Hugeicons line icon. |
-| | 55 | Five rounded pillars rise. |
-| | 56 | Each pillar gets its real 3D icon and label: Experience, Intelligence, Growth, Ecosystem, Trust. |
-| 16 | 57 | The rounded roof drops into place. |
-| | 58 | The roof gets the glass logo, the real "salam" wordmark and "Making the joy of technology accessible for everyone, everyday." |
-| | 59 | "Our Strategy **House.**" |
-| 17–18 | **60–64** | One pillar lifts on each beat and its 3D icon pops. The headline swaps to "Built from **Joy.**", then "Measured for **Impact.**" |
-| | 65 | The Measurement row flashes. |
-| | **66** | The house sinks and the Night ground rises over the frame. Experience, Intelligence and Ecosystem lift out. |
-| | 67 | Those three pillars lie down as flat strips. |
-| 19 | **68–69** | The strips become flat ribbons: EXPERIENCE, AI, VALUE-ADDED SERVICES. "One app. / **Three forces.**" |
-| | 70–71 | The ribbons braid and converge. |
-| 20 | **72** | The ribbons wrap into three turning rings around the real Salam glass logo. |
-| | 73 | "EAI · ONE INTELLIGENT EXPERIENCE" |
-| | 74–77 | A phone rises with the real AI assistant: the welcome screen, then the question being typed, then the recommended plan. "A new kind of **ecosystem.**", then "Together, **as one.**" |
-| | 78–79 | The phone leaves. The rings and logo shrink into the core of the AI wheel. |
+## ACT II: Shape morphing (bars 8–14, beats 28–55)
+| Beats | What happens |
+|---|---|
+| **28–30** | The glyph outlines of "habits" morph into three circles: Content, Community, Commerce. |
+| **31–35** | The circles become the habit loop: three turning sectors with arrowheads around a 24-hour dial, each carrying its icon. White stat cards with the real partner logos wire into the loop, one per beat: TikTok 95 min/day, Spotify 30 min/day, Starbucks #1 pay app in US, Alipay 1B daily users. |
+| **36–39** (new bar) | The loop tucks up. Two rows of 30 days compare "Winning apps", whose days light up one by one ("every day"), with "Telco app", where only bill day lights ("once a month"). The days fold back into the loop. |
+| **40–43** | The loop's sectors morph into "15×", "7–" joins, then "more lifetime value". The × turns into a crosshair and a night disc opens. |
+| **44–51** | A globe unfolds: "The world is moving to **super-apps.**" Five pins land one per beat (WeChat, Grab, Jio "The Salam blueprint.", Kakao, M-Pesa), then the light thread links them. |
+| **52–55** | The globe zooms into Riyadh. The pin becomes the real Nafath tile ("Telecoms own the identity layer."), the tile becomes the Salam mark ("Trusted identity and connectivity **at scale.**"), and the mark flattens into a line that becomes the ground. |
 
-## ACT IV: Data and UI (bars 21–27)
-| Bar | Beats | What happens |
-|---|---|---|
-| 21 | **80–81** | The AI wheel assembles around the glass logo: 10 customer domains on top, 10 internal capabilities below, each with a live label and a Hugeicons icon. |
-| | 82 | "AI cross-cuts every **capability.**" |
-| 22 | 83–85 | Light pulses run outward along the spokes: the upper half, then the lower half, then all segments. The wheel starts turning. |
-| | **86** | The wheel spins up and unrolls into a strip of 20 cells. |
-| | 87 | The cells grow into Mist columns that fill the frame. |
-| 23 | **88–91** | Usage bars, each with its icon, count up: Social 93, Streaming 80, News 65, Gaming 57, Work 50. Facing them, the real Salam app rises in a phone, then 5 "+ BEYOND" chips pop beside it, with a "»" between the halves. |
-| 24 | **92** | Both halves split away. "72%" counts up. |
-| | 93 | "of aware users still don't consider Salam." |
-| 24–25 | 94–97 | The 72% moves to the corner. One barrier row per beat: 23% · 22% · 20% · 17%, each with its icon and the customer's voice on a red-tinted card. |
-| 25 | 98–99 | The cards flip to Deep Green answers, each with a 3D icon ("The app becomes the branch" and the rest). Each barrier turns grey once answered. |
-| 26 | **100–101** | A Deep Green card with the 3D check rises: "Turn every reason not to choose us / **into a reason to stay.**" |
-| | **102** | The card breaks into 12 mismatched app tiles, each with a 3D icon: "FRAGMENTED TODAY". |
-| | 103 | Chevrons sweep across, and the tiles pour into one phone. |
-| 27 | **104** | The phone opens into three real Salam screens (plans, home, AI answer): "One App. **One Experience.**" |
-| | 105 | "All of Salam. Built around you." |
-| | 106 | The AI bar slides in under the phones. |
-| | 107 | The phones lift. |
+## ACT III: The Strategy House and EAI, all flat (bars 15–22, beats 56–87)
+| Beats | What happens |
+|---|---|
+| **56–63** | "Our Strategy **House.**" The house builds row by row: Measurement, Culture, the Foundation chips, then five pillars with their 3D icons. The roof drops in, carrying the glass logo, the wordmark and the vision line. |
+| 64–69 | One pillar lifts and flashes on each beat. The headline swaps to "Built from **Joy.**", then "Measured for **Impact.**" The Measurement row flashes. |
+| **70–71** | The house sinks into the night. Experience, Intelligence and Ecosystem lift out and lie down as three strips. |
+| **72–75** | "One app. / **Three forces.**" The flat ribbons braid and wrap into three rings. |
+| **76–79** (new bar) | The core lands: a neon disc that reads "EAI". Each force rides its ring as a white badge with its line icon. "Experience + AI + Value-added services = EAI". The group moves left, then "One intelligent / **experience.**" and "A new kind of ecosystem." |
+| 80–87 | A phone rises with the real Salam AI assistant: "Ask anything." on the welcome screen, then a question being typed, then "Get the right plan." on the recommended plan, then "Together, **as one.**" The phone leaves, and the "E" drops out of "EAI", leaving the "AI" core of the wheel. |
 
-## ACT V: End title (bars 28–33½)
-| Bar | Beats | What happens |
-|---|---|---|
-| 28 | **108–110** | A rising staircase, one step per beat: Core (Stone), Beyond (Night), Ecosystem (Neon). Each of the three phones walks onto its step and rides it up. Title: "BECOME A SUPERAPP / Step by step." |
-| | 111 | The thread climbs the stairs and leaves the frame at the top right. |
-| 29 | **112** | The black Beyond block opens into the night. "Beyond Telco." A card with real Salam customers rises beside it. |
-| | 113 | "**Closer to Life.**" |
-| | 114–115 | A family photo card rises, an arc draws over it, and seven moments land on the arc. |
-| 30 | **116–119** | The moments, each with its Hugeicons icon, light two per beat: Mobile, Home, Travel, Entertainment, Wellbeing, Deals, Faith. "Everyday moments. / **All in one place.**" |
-| 31 | **120** | The moments break into 30 dots, which form a month. |
-| | 121–123 | Day 01 lights, then 03, then 07. "once a month" sits on the right. |
-| 32 (riser) | 124–127 | The lighting speeds up (12 → 18 → 24 → 29 days). "once a month" is struck out, and "**every day.**" appears. |
-| 33 (**strongest moment**) | **128** | **Hit: all 30 days are lit and the month punches outward.** |
-| | 128½–129 | The 30 dots fold into the exact outline of the glass Salam logo, and the logo is revealed through it. |
-| | 129½ | The real "salam" wordmark rises, one letter at a time. |
-| | 130–131 | "Making the joy of technology accessible / for everyone, **everyday.**" |
-| 33½, **end title** | **132** | An underline lands under "everyday." |
-| | 133 | The title clears and the glass logo shrinks back into the app icon. The last frame is the first frame, so the film loops. |
+## ACT IV: Data and UI (bars 23–30, beats 88–119)
+| Beats | What happens |
+|---|---|
+| **88–95** | The AI wheel assembles: 10 customer domains and 10 internal capabilities, each with a label and a line icon. "AI cross-cuts every **capability.**" Light pulses run outward along the spokes, then the wheel spins up and unrolls into Mist columns. |
+| **96–99** | Usage bars count up beside the real Salam home screen, then five "+ BEYOND" chips pop in. |
+| **100–107** | "72%" counts up, then moves to the corner. Four barrier rows land, then flip to Deep Green answers with line icons. |
+| **108–111** | A Deep Green card with the 3D check: "Turn every reason not to choose us / **into a reason to stay.**" It breaks into 12 mismatched tiles ("FRAGMENTED TODAY"), and chevrons pour them into one phone. |
+| **112–119** | The hub, built over a new bar: "One App. **One Experience.**" Six service cards plug into the phone, two per beat, each with a pulse travelling down its wire, and the phone's screen follows each one (home, plans, payment, AI). The "AI ties it together" bar slides under, then "All of Salam. Built around you." Two more phones slide out from behind. |
+
+## ACT V: End title (bars 31–38½, beats 120–153)
+| Beats | What happens |
+|---|---|
+| **120–127** | "BECOME A SUPERAPP / **Step by step.**" over a new bar. Numbered steps rise one at a time, each carrying its phone, and each step's additions tick in on the next beat: 01 Core, 02 Beyond, 03 Ecosystem. A growth line climbs the stairs and shoots off the top as an arrow: "SUPERAPP". |
+| **128–135** | The Beyond block opens into the night. "Beyond Telco. / **Closer to Life.**" sits beside real Salam customers. A family photo card and an arc of seven moments follow, lighting two per beat: "Everyday moments. / **All in one place.**" |
+| **136–143** | The moments break into 30 dots, which form a month. A counter runs while the days light faster and faster under a riser. "once a month" is struck out, and "**every day.**" appears. |
+| **144–147** | **The hit: all 30 days are lit.** They fold into the outline of the glass logo, which is revealed through it, and the wordmark rises. The lockup tucks up, "Making" appears, then "the joy" and "of technology" slam in. |
+| **148–151** (last full bar, the strongest moment) | **A neon highlight sweeps behind "the joy of technology" and the type turns night-green.** A spark lands on "joy", then "accessible" and "for everyone, **everyday.**" arrive, with four line-icon moments around them. |
+| **152–153** (final half bar, end title) | Everything settles into the end title: the logo and wordmark over the highlighted tagline, with "everyday." underlined. Then it all folds back into the app icon, so the last frame is the first frame and the film loops. |

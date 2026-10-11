@@ -1,9 +1,14 @@
 // ===== Core: timing, easing, colour, drawing helpers =====
 // Everything is a pure function of t. No state survives between frames.
 const W = 1920, H = 1080;
-const BPM = 100, BEAT = 60 / BPM, BAR = BEAT * 4;
-const DUR = BAR * 33.5;            // 80.4 s: 33 full bars + final half bar
-const B = n => n * BEAT;           // beat index -> seconds
+const BPM = 84, BEAT = 60 / BPM, BAR = BEAT * 4;
+const DUR = BAR * 38.5;            // 110 s: 38 full bars + final half bar
+// Scenes are written against a "story beat" numbering. A whole bar is inserted before
+// five story beats to give those sections room; B() maps story beats onto real beats.
+const INSERTS = [[36, 4], [72, 4], [106, 4], [112, 4], [132, 4]];
+const shiftOf = n => INSERTS.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
+const B = n => (n + shiftOf(n)) * BEAT;   // story beat -> seconds
+const BN = n => n * BEAT;                 // real beat -> seconds (for the inserted bars)
 
 const C = {
   deep: '#003830', teal: '#005147', night: '#020E0D', leaf: '#52B13C',

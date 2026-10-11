@@ -34,7 +34,7 @@ async function worker(id, f0, f1) {
   return seg;
 }
 
-const total = Math.round(80.4 * FPS);
+const total = Math.round(await (async () => { const b = await chromium.launch({ args: ["--disable-gpu"] }); const pg = await b.newPage(); await pg.goto(html); await pg.waitForFunction(() => window.ready === true); const d = await pg.evaluate(() => window.DUR); await b.close(); return d; })() * FPS);
 const A = fa ? +fa : 0, Bf = fb ? +fb : total;
 const n = +nw, per = Math.ceil((Bf - A) / n);
 const jobs = [];
