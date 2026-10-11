@@ -2,13 +2,18 @@
 // Everything is a pure function of t. No state survives between frames.
 const W = 1920, H = 1080;
 const BPM = 84, BEAT = 60 / BPM, BAR = BEAT * 4;
-const DUR = BAR * 38.5;            // 110 s: 38 full bars + final half bar
-// Scenes are written against a "story beat" numbering. A whole bar is inserted before
-// five story beats to give those sections room; B() maps story beats onto real beats.
+const DUR = BAR * 40.5;            // ~115.7 s: 40 full bars + final half bar
+// Scenes are written against "story beats". Bars were inserted in two passes to give sections room:
+// INSERTS maps story beats to v2 beats, INSERTS2 maps v2 beats to real beats.
+// B() addresses story beats, BN() addresses v2 beats, BV() addresses real beats directly.
 const INSERTS = [[36, 4], [72, 4], [106, 4], [112, 4], [132, 4]];
-const shiftOf = n => INSERTS.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
-const B = n => (n + shiftOf(n)) * BEAT;   // story beat -> seconds
-const BN = n => n * BEAT;                 // real beat -> seconds (for the inserted bars)
+const INSERTS2 = [[54, 4], [128, 4]];         // Nafath, step by step
+const shiftOf = (n, L) => L.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
+const BN = n => (n + shiftOf(n, INSERTS2)) * BEAT;  // v2 beat -> seconds
+const B = n => BN(n + shiftOf(n, INSERTS));          // story beat -> seconds
+const BV = n => n * BEAT;                            // real beat -> seconds
+// Large wipes are drawn at the frame's own time so they stay crisp (no blur halo)
+const crispT = t => Math.round(t * 60) / 60;
 
 const C = {
   deep: '#003830', teal: '#005147', night: '#020E0D', leaf: '#52B13C',

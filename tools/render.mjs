@@ -21,7 +21,7 @@ async function worker(id, f0, f1) {
   const t0 = Date.now();
   for (let k = f0; k < f1; k++) {
     for (let j = 0; j < SUB; j++) {
-      const t = k / FPS + (j - (SUB - 1) / 2) / (FPS * SUB);
+      const t = k / FPS + (j - (SUB - 1) / 2) / (FPS * SUB * 2);   // subframes 1/360 s apart (180-degree shutter)
       await page.evaluate(t => window.seek(t), t);
       const buf = await page.screenshot({ type: 'jpeg', quality: 95 });
       if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));

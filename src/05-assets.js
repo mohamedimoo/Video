@@ -20,9 +20,10 @@ function pic(ctx, name, cx, cy, h, alpha = 1) {
 }
 const picW = (name, h) => IMG[name] ? h * IMG[name].width / IMG[name].height : 0;
 
-// soft drop shadow for cards and phones (a shadow, never a glow)
+// contact shadow for cards and phones (a shadow, never a glow)
+// a tight contact shadow: it reads as elevation, never as a halo
 function shadowOn(ctx, k = 1) {
-  ctx.shadowColor = `rgba(0, 40, 34, ${0.22 * k})`; ctx.shadowBlur = 50 * k; ctx.shadowOffsetY = 26 * k;
+  ctx.shadowColor = `rgba(0, 10, 8, ${0.14 * Math.min(1, k)})`; ctx.shadowBlur = 8; ctx.shadowOffsetY = 3;
 }
 function shadowOff(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0; }
 
@@ -127,32 +128,8 @@ const MARK_PTS = (() => {
 // mark polygon centred at (cx, cy), height h
 const markPts = (cx, cy, h, N = 140) => resample(MARK_PTS.map(([x, y]) => [cx + x * h, cy + y * h]), N);
 
-// silhouette of the glass logo (polar trace of its alpha), so dots can fold into it
-let GLASS_POLY = null;
-function traceGlass() {
-  const im = IMG.l_salam_glass; if (!im) return;
-  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
-  const g = c.getContext('2d'); g.drawImage(im, 0, 0);
-  const d = g.getImageData(0, 0, c.width, c.height).data;
-  let sx = 0, sy = 0, n = 0;
-  for (let y = 0; y < c.height; y += 4) for (let x = 0; x < c.width; x += 4) if (d[(y * c.width + x) * 4 + 3] > 128) { sx += x; sy += y; n++; }
-  const cx = sx / n, cy = sy / n, out = [];
-  for (let k = 0; k < 120; k++) {
-    const a = k / 120 * Math.PI * 2; let r = 0;
-    for (let rr_ = 0; rr_ < c.width; rr_ += 2) {
-      const x = Math.round(cx + Math.cos(a) * rr_), y = Math.round(cy + Math.sin(a) * rr_);
-      if (x < 0 || y < 0 || x >= c.width || y >= c.height) break;
-      if (d[(y * c.width + x) * 4 + 3] > 100) r = rr_;
-    }
-    out.push([Math.cos(a) * r / im.height, Math.sin(a) * r / im.height]);
-  }
-  GLASS_POLY = { pts: out, ox: (cx - im.width / 2) / im.height, oy: (cy - im.height / 2) / im.height };
-}
 // glass logo image centred at (cx, cy), height h
 function glass(ctx, cx, cy, h, alpha = 1) { pic(ctx, 'l_salam_glass', cx, cy, h, alpha); }
-function glassPts(cx, cy, h, N = 30) {
-  const G = GLASS_POLY; return resample(G.pts.map(([x, y]) => [cx + (x + G.ox) * h, cy + (y + G.oy) * h]), N);
-}
 
 // the app icon: frame 0 and the very last frame
 function appIcon(ctx, cx, cy, s, labelP = 1) {

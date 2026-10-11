@@ -78,7 +78,7 @@ scene(4, 8, (ctx, t) => {
     T(ctx, 'DAY', dx, 930, { ...o, c: C.neon });
     // the full stop is a real circle: it becomes the next scene
     const px = dx + wd + 46, py = 930 - 24;
-    const r = lerp(26, 2400, eIn(P(t, B(7), B(1))));
+    const r = lerp(26, 2400, eIn(P(crispT(t), B(7), B(1))));
     circ(ctx, px, py, r); ctx.fillStyle = r > 30 ? C.mist : C.neon; ctx.fill();
   }
 });
@@ -125,7 +125,7 @@ scene(8, 20, (ctx, t) => {
     T(ctx, c.l, x - w / 2 + 158, y + 34, { size: 32, w: 600, c: C.deep, ls: -0.5 });
   });
   // the real Salam glass logo is squeezed by each card, then grows; its mark opens into the next scene
-  const g = eIn(P(t, B(19), B(1))), g2 = eIn(P(t, B(19) + 0.1, B(1) - 0.1));
+  const g = eIn(P(crispT(t), B(19), B(1))), g2 = eIn(P(crispT(t), B(19) + 0.1, B(1) - 0.1));
   if (g < 0.05) glass(ctx, LEAF_C[0], LEAF_C[1], s);
   if (g > 0) {
     poly(ctx, markPts(LEAF_C[0], LEAF_C[1], lerp(s * 0.9, 6400, g))); ctx.fillStyle = C.green; ctx.fill();

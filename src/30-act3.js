@@ -22,7 +22,7 @@ function roofPath(ctx, cx, top, w, h) {
 
 scene(51, 69, (ctx, t) => {
   // the line from Act II splits: the top edge flies up, the bottom edge becomes the ground
-  const sp = eInOut(P(t, B(51.4), 0.55));
+  const sp = eInOut(P(crispT(t), B(51.4), 0.55));
   const yTop = lerp(540, -30, sp), yBot = lerp(540, 900, sp);
   ctx.fillStyle = C.mist; ctx.fillRect(0, yTop, W, yBot - yTop);
   const sink = eIn(P(t, B(66), B(1))) * 1400;   // the house sinks on beat 66
@@ -112,7 +112,7 @@ scene(51, 69, (ctx, t) => {
   riseWords(ctx, t, [['Measured', C.deep], ['for', C.deep], ['Impact.', C.leaf]], 120, 150, ho, [B(63), B(63) + .08, B(63) + .16], B(66));
 
   // ground band, which rises and swallows the frame on beat 66
-  const gy = lerp(yBot, -40, eIn(P(t, B(66) + 0.05, B(1) - 0.05)));
+  const gy = lerp(yBot, -40, eIn(P(crispT(t), B(66) + 0.05, B(1) - 0.05)));
   ctx.fillStyle = C.night; ctx.fillRect(0, gy, W, H - gy + 10);
 
   // Experience, Intelligence and Ecosystem lift out and lie down as three flat strips
@@ -142,8 +142,8 @@ function pillarLift(t, i) {
 const RIB = [{ n: 'EXPERIENCE', c: C.mist, im: 'SparklesIcon', lab: 'Experience' }, { n: 'AI', c: C.neon, im: 'AiBrain01', lab: 'AI' }, { n: 'VALUE-ADDED SERVICES', c: C.leaf, im: 'Gift', lab: 'Value-added services' }];
 const RM = 120;
 function eaiCentre(t) {
-  const a = eInOut(P(t, BN(78), 0.55)), b = eInOut(P(t, BN(86.4), BN(1.4)));
-  return [lerp(lerp(960, 560, a), 1220, b), lerp(lerp(500, 520, a), 540, b), lerp(lerp(1, 0.86, a), 0.6, b)];
+  const a = spr(t, BN(78), 9, 0.92), b = spr(t, BN(86.4), 7, 0.95);
+  return [lerp(lerp(960, 560, a), WHEEL_C[0], b), lerp(lerp(500, 520, a), WHEEL_C[1], b), lerp(lerp(1, 0.86, a), 0.93, b)];
 }
 const ringAng = (t, k) => t * (0.55 + k * 0.22) + k * 2.1;
 scene(67.9, 81, (ctx, t) => {
@@ -151,12 +151,12 @@ scene(67.9, 81, (ctx, t) => {
   if (t < B(68)) return;
   const amp = eInOut(P(t, BN(72), BN(1.5))) * 80;
   const conv = eInOut(P(t, BN(74), BN(1.2)));
-  const wrap = eInOut(P(t, BN(75.2), BN(1.1)));
-  const collapse = eInOut(P(t, BN(86.6), BN(1.2)));
+  const wrap = spr(t, BN(75.2), 6.5, 0.95);
+  const collapse = spr(t, BN(86.6), 8, 0.98);
   const [cx, cy, sc] = eaiCentre(t);
   const radii = [240, 292, 344];
   RIB.forEach((r, k) => {
-    const R = lerp(radii[k] * sc, 175, collapse);
+    const R = lerp(radii[k] * sc, 125, collapse);
     const hw = lerp(40, lerp(9, 2, collapse), wrap);
     const top = [], bot = [];
     for (let j = 0; j <= RM; j++) {
@@ -179,16 +179,17 @@ scene(67.9, 81, (ctx, t) => {
   // the core: a neon disc that spells EAI, and later AI
   if (t >= BN(75.6)) {
     const k = spr(t, BN(75.6), 14, 0.82);
-    const dr = lerp(158 * sc, 140, collapse) * k;
+    const dr = lerp(158 * sc, 125, collapse) * k;
     circ(ctx, cx, cy, dr); ctx.fillStyle = C.neon; ctx.fill();
-    ctx.strokeStyle = C.night; ctx.lineWidth = 3; circ(ctx, cx, cy, dr - 14); ctx.stroke();
+    if (collapse < 1) { ctx.strokeStyle = C.night; ctx.lineWidth = 3 * (1 - collapse); circ(ctx, cx, cy, dr - 14); ctx.stroke(); }
     const o = { size: 112 * sc * k, w: 800, ls: -3 };
     const drop = eIn(P(t, BN(86.8), 0.35));
     const we = TW(ctx, 'E', o), wa = TW(ctx, 'AI', o);
-    const left = cx - (we + wa) / 2 + drop * we / 2;
-    ctx.save(); circ(ctx, cx, cy, dr - 16); ctx.clip();
-    T(ctx, 'E', left, cy + 40 * sc + drop * 160, { ...o, c: C.night });
-    T(ctx, 'AI', left + we, cy + 40 * sc, { ...o, c: C.night });
+    // "E" drops out and "AI" slides to the centre, exactly where the AI wheel's core label sits
+    const ax = lerp(cx - (we + wa) / 2 + we, cx - wa / 2, eInOut(P(t, BN(86.9), 0.45)));
+    ctx.save(); circ(ctx, cx, cy, dr - 2); ctx.clip();
+    T(ctx, 'E', ax - we, cy + 40 * sc + drop * 160, { ...o, c: C.night });
+    T(ctx, 'AI', ax, cy + 40 * sc, { ...o, c: C.night });
     ctx.restore();
   }
   // a rider on each ring: the force's real 3D icon in a white badge, with its name

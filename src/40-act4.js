@@ -1,18 +1,15 @@
 // ===== ACT IV — DATA & UI (bars 21–27, beats 80–107) =====
-const WH = { cx: 1220, cy: 540, r0: 192, r1: 430 };
+const WHEEL_C = [975, 560];
+const WH = { cx: WHEEL_C[0], cy: WHEEL_C[1], r0: 160, r1: 312, core: 150, ring: 125 };
 const DOMAINS = ['Connectivity', 'Faith', 'News & Content', 'Sports & Fantasy', 'Gaming', 'Ecommerce', 'Food & Festivals', 'Travel', 'Health & Wellbeing', 'Fintech & Pay'];
-const CAPS = ['Identity', 'Wallet & Billing', 'Personalisation', 'Gamification', 'Martech & Data', 'Product + Tech Ops', 'Mini-Apps Platform', 'Partnerships', 'Customer Support', 'Design System & UX'];
-const DOM_IC = ['Wifi01', 'Mosque01', 'News01', 'FootballIcon', 'GameController03', 'ShoppingBag01', 'Restaurant01', 'Airplane01', 'HealthIcon', 'Wallet01'];
-const CAP_IC = ['FingerPrint', 'Invoice01', 'MagicWand01', 'Award01', 'Database01', 'Settings02', 'DashboardSquare01', 'Agreement01', 'CustomerSupport', 'PaintBoard'];
-const SEGN = 20, SG = 0.012;
+const CAPS = ['Identity', 'Wallet & Billing', 'Personalisation Engine', 'Gamification', 'Martech & Data Stack', 'Product + Tech Ops', 'Mini-Apps Platform', 'Partnerships', 'Customer Support', 'Design System & UX'];
+const SEGN = 20, SG = 0.013;
+const WHEEL_GREEN = mixC(C.neon, C.green, 0.2);
 function segAngles(i) {
   const up = i < 10, j = up ? i : i - 10;
-  const a0 = (up ? Math.PI : 0) + j * Math.PI / 10 + SG, a1 = (up ? Math.PI : 0) + (j + 1) * Math.PI / 10 - SG;
-  return [a0, a1];
+  return [(up ? Math.PI : 0) + j * Math.PI / 10 + SG, (up ? Math.PI : 0) + (j + 1) * Math.PI / 10 - SG];
 }
-function wheelRot(t) {
-  return 0.12 * Math.max(0, t - B(84)) + 7 * eIn(P(t, B(86), B(1)));
-}
+function wheelRot(t) { return 7 * eIn(P(t, B(86), B(1))); }
 let _WC = null;
 function wheelCache() {
   if (_WC) return _WC;
@@ -20,76 +17,133 @@ function wheelCache() {
   for (let i = 0; i < SEGN; i++) {
     const [a0, a1] = segAngles(i);
     const src = sectorPts(WH.cx, WH.cy, WH.r0, WH.r1, a0, a1, 80);
-    const cell = rectPts(160 + i * 80, 850, 76, 14, 80);
-    segs.push({ src, cell: align(src, cell) });
+    segs.push({ src, cell: align(src, rectPts(160 + i * 80, 850, 76, 14, 80)) });
   }
   return (_WC = segs);
 }
+// diagonal hatch inside a path (the "behind the scenes" texture)
+function hatch(ctx, pathFn, col, gap = 9) {
+  ctx.save(); pathFn(); ctx.clip();
+  ctx.strokeStyle = col; ctx.lineWidth = 1.3; ctx.beginPath();
+  for (let x = -H; x < W; x += gap) { ctx.moveTo(x, H); ctx.lineTo(x + H, 0); }
+  ctx.stroke(); ctx.restore();
+}
+function arrowGlyph(ctx, x, y, up, col) {
+  ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  const d = up ? 1 : -1;   // head at y - 7d: up points up
+  ctx.moveTo(x, y + 7 * d); ctx.lineTo(x, y - 7 * d); ctx.moveTo(x - 5, y - 2 * d); ctx.lineTo(x, y - 7 * d); ctx.lineTo(x + 5, y - 2 * d); ctx.stroke();
+}
+// faint dot grid, stronger towards the right edge (texture, not light)
+function dotGrid(ctx, col, x0 = 700, sp = 34) {
+  ctx.fillStyle = col;
+  for (let x = x0; x < W; x += sp) {
+    const r = 0.5 + 1.1 * (x - x0) / (W - x0);
+    for (let y = 18; y < H; y += sp) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
+  }
+}
+const segFill = (t, i) => {
+  const up = i < 10, j = up ? i : i - 10;
+  return eOut(P(t, B(up ? 81 : 82) + j * 0.075, 0.38));
+};
+const PULSES = [[83, [2, 7, 13]], [84, [5, 11, 17]], [85, [0, 9, 15, 19]]];   // spoke boundaries that light on each beat
 
 scene(80, 88.2, (ctx, t) => {
   bg(ctx, C.night);
   const segs = wheelCache();
   const rot = wheelRot(t);
   const unroll = eInOut(P(t, B(86.25), B(0.75)));
-  const open = eInOut(P(t, B(87), B(0.95)));
-  // core: the neon AI disc carried over from the EAI scene
+  const open = eInOut(P(crispT(t), B(87), B(0.95)));
+  const out = eIn(P(t, B(86), 0.35));
+  // behind-the-scenes band and the divider
+  const dv = eInOut(P(t, B(80.25), 0.55)) * (1 - out);
+  if (dv > 0) {
+    ctx.fillStyle = '#071613'; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy);
+    ctx.fillStyle = '#22322E'; ctx.fillRect(110, WH.cy - 1, 1700 * dv, 2);
+  }
+  dotGrid(ctx, '#0D2420');
+  // core: dark disc, neon ring, dotted inner circle; the neon disc from EAI hollows out into the ring
   const coreK = 1 - eIn(P(t, B(86), 0.4));
   if (coreK > 0) {
-    ctx.strokeStyle = C.neon; ctx.lineWidth = 4; circ(ctx, WH.cx, WH.cy, 175 * coreK); ctx.stroke();
-    circ(ctx, WH.cx, WH.cy, 140 * coreK); ctx.fillStyle = C.neon; ctx.fill();
-    ctx.strokeStyle = C.night; ctx.lineWidth = 3; circ(ctx, WH.cx, WH.cy, 126 * coreK); ctx.stroke();
-    const o = { size: 112 * 0.6 * coreK, w: 800, ls: -3 };
-    T(ctx, 'AI', WH.cx, WH.cy + 24 * coreK, { ...o, c: C.night, align: 'center' });
+    circ(ctx, WH.cx, WH.cy, lerp(WH.ring, WH.core, eOut(P(t, B(80), 0.5))) * coreK); ctx.fillStyle = '#0A1A17'; ctx.fill();
+    const hollow = eInOut(P(t, B(80), 0.42));
+    const rIn = (WH.ring - 3) * hollow * coreK, rOut = WH.ring * coreK;
+    ctx.beginPath(); ctx.arc(WH.cx, WH.cy, rOut, 0, Math.PI * 2); ctx.arc(WH.cx, WH.cy, rIn, 0, Math.PI * 2, true); ctx.fillStyle = C.neon; ctx.fill('evenodd');
+    const dots = eOut(P(t, B(80.3), 0.6));
+    for (let k = 0; k < 60 * dots; k++) { const a = -Math.PI / 2 + k / 60 * Math.PI * 2; circ(ctx, WH.cx + Math.cos(a) * 104 * coreK, WH.cy + Math.sin(a) * 104 * coreK, 1.5); ctx.fillStyle = '#1E3A33'; ctx.fill(); }
+    const o = { size: 104 * coreK, w: 800, ls: -3, align: 'center' };
+    ctx.save(); circ(ctx, WH.cx, WH.cy, rIn); ctx.clip(); T(ctx, 'AI', WH.cx, WH.cy + 37 * coreK, { ...o, c: C.neon }); ctx.restore();
+    ctx.save(); ctx.beginPath(); ctx.arc(WH.cx, WH.cy, rOut + 200, 0, Math.PI * 2); ctx.arc(WH.cx, WH.cy, rIn, 0, Math.PI * 2, true); ctx.clip('evenodd');
+    ctx.beginPath(); ctx.arc(WH.cx, WH.cy, rOut, 0, Math.PI * 2); ctx.clip(); T(ctx, 'AI', WH.cx, WH.cy + 37 * coreK, { ...o, c: C.night }); ctx.restore();
   }
   // segments
   segs.forEach((g, i) => {
     const up = i < 10, j = up ? i : i - 10;
-    const k = spr(t, B(up ? 80 : 81) + j * 0.035, 16, 0.85);
+    const k = spr(t, B(80.4) + j * 0.02 + (up ? 0 : 0.1), 16, 0.85);
     if (k <= 0.001) return;
     const [a0, a1] = segAngles(i);
-    let pts = sectorPts(WH.cx, WH.cy, WH.r0, lerp(WH.r0 + 2, WH.r1, k), a0 + rot, a1 + rot, 80);
-    if (unroll > 0) pts = mixPts(rotPts(g.src, WH.cx, WH.cy, rot), g.cell, unroll);
-    if (open > 0) { // every cell grows into a column of the next (light) scene
-      const x0 = 160 + i * 80, cw = lerp(76, 80, open);
-      const left = i === 0 ? lerp(x0, 0, open) : x0, right = i === 19 ? lerp(x0 + 76, W, open) : x0 + cw;
-      pts = rectPts(left, lerp(850, -2, open), right - left, lerp(14, H + 4, open), 80);
+    const rOut = lerp(WH.r0 + 2, WH.r1, k);
+    const fill = segFill(t, i);
+    if (unroll > 0 || open > 0) {
+      let pts = mixPts(rotPts(g.src, WH.cx, WH.cy, rot), g.cell, unroll);
+      if (open > 0) {
+        const x0 = 160 + i * 80, left = i === 0 ? lerp(x0, 0, open) : x0, right = i === 19 ? lerp(x0 + 76, W, open) : x0 + lerp(76, 80, open);
+        pts = rectPts(left, lerp(850, -2, open), right - left, lerp(14, H + 4, open), 80);
+      }
+      poly(ctx, pts); ctx.fillStyle = mixC(up ? WHEEL_GREEN : '#1A2925', C.mist, unroll); ctx.fill();
+      return;
     }
-    // light pulses run outward through the segments on beats 83–85
-    let base = up ? C.deep : C.teal;
-    [83, 84, 85].forEach((n, q) => {
-      const hit = q === 0 ? up : q === 1 ? !up : true;
-      if (!hit) return;
-      const pu = Math.max(0, 1 - Math.abs(t - (B(n) + j * 0.025)) * 3.2);
-      if (pu > 0) base = mixC(base, C.green, pu);
-    });
-    if (unroll > 0) base = mixC(base, C.mist, unroll);
-    poly(ctx, pts); ctx.fillStyle = base; ctx.fill();
-    // label + Hugeicons icon on every segment
-    if (unroll < 0.05 && k > 0.6) {
-      const am = (a0 + a1) / 2 + rot;
-      const flip = Math.cos(am) < 0;
-      ctx.save(); ctx.translate(WH.cx + Math.cos(am) * 214, WH.cy + Math.sin(am) * 214); ctx.rotate(flip ? am + Math.PI : am);
-      const name = up ? DOMAINS[j] : CAPS[j];
-      const lw = TW(ctx, name, { size: 16, w: 600 });
-      T(ctx, name, flip ? -lw : 0, 6, { size: 16, w: 600, c: C.mist });
-      ctx.restore();
-      icon(ctx, up ? DOM_IC[j] : CAP_IC[j], WH.cx + Math.cos(am) * 394, WH.cy + Math.sin(am) * 394, 30, C.neon, 1.1);
+    const base = () => { ctx.beginPath(); poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rOut, a0 + rot, a1 + rot, 60)); };
+    base(); ctx.fillStyle = up ? '#13221F' : '#0F1C19'; ctx.fill();
+    if (fill > 0) {
+      const rf = lerp(WH.r0, rOut, fill);
+      const fp = () => poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rf, a0 + rot, a1 + rot, 60));
+      if (up) { fp(); ctx.fillStyle = WHEEL_GREEN; ctx.fill(); }
+      else {
+        fp(); ctx.fillStyle = '#16231F'; ctx.fill();
+        hatch(ctx, fp, '#41544F');
+        base(); ctx.strokeStyle = mixC('#0F1C19', '#4E605B', fill); ctx.lineWidth = 1.4; ctx.stroke();
+      }
     }
+    // labels outside the ring: grey until their segment comes alive
+    const am = (a0 + a1) / 2 + rot, ra = WH.r1 + 24;
+    const lx = WH.cx + Math.cos(am) * ra, ly = WH.cy + Math.sin(am) * ra + 7 + Math.sin(am) * 12;
+    const al = Math.cos(am) < -0.02 ? 'right' : Math.cos(am) > 0.02 ? 'left' : 'center';   // near-vertical pairs split apart
+    const name = up ? DOMAINS[j] : CAPS[j];
+    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: mixC('#41524E', C.mist, clamp(fill * 2)), align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
   });
-  // pulse rings
-  [83, 84, 85].forEach(n => {
-    const p = P(t, B(n), 0.45); if (p <= 0 || p >= 1) return;
-    ctx.save(); ctx.beginPath(); ctx.arc(WH.cx, WH.cy, lerp(WH.r0, WH.r1, eOut(p)), 0, Math.PI * 2);
-    ctx.strokeStyle = C.neon; ctx.lineWidth = 4; ctx.stroke(); ctx.restore();
+  // light pulses run from the core outward along the spokes
+  if (unroll <= 0) PULSES.forEach(([n, list]) => list.forEach((sp, q) => {
+    const p = P(t, B(n) + q * 0.06, 0.45); if (p <= 0 || p >= 1) return;
+    const a = (sp < 10 ? Math.PI : 0) + (sp % 10) * Math.PI / 10 + rot;
+    const r0 = lerp(WH.r0, WH.r1, eIn(p)), r1 = lerp(WH.r0, WH.r1, eOut(p));
+    ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
+    ctx.moveTo(WH.cx + Math.cos(a) * r0, WH.cy + Math.sin(a) * r0); ctx.lineTo(WH.cx + Math.cos(a) * r1, WH.cy + Math.sin(a) * r1); ctx.stroke();
+  }));
+  // headline (top right) and the two blocks on the left
+  {
+    const o = { size: 54, w: 700, ls: -1.5 }, wa = TW(ctx, 'AI ', o), wb = TW(ctx, 'cross-cuts every', o);
+    rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: C.neon }, B(80.5), B(86));
+    rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: C.mist }, B(80.5) + 0.06, B(86));
+    rise(ctx, t, 'capability.', 1810, 172, { ...o, c: C.mist, align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
+  }
+  const block = (y, t0, cap, title, sub, capCol, mark) => {
+    const k = spr(t, t0, 16, 0.85) * (1 - out);
+    if (k > 0.01) { ctx.save(); ctx.translate(119, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
+    rise(ctx, t, cap, 140, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
+    rise(ctx, t, title, 110, y + 62, { size: 40, w: 700, c: C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
+    rise(ctx, t, sub, 110, y + 104, { size: 22, w: 500, c: C.fog }, t0 + 0.16, B(86) + 0.06);
+  };
+  block(252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', C.neon, () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = C.neon; ctx.fill(); });
+  block(700, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
+    rr(ctx, -9, -9, 18, 18, 3); ctx.strokeStyle = '#8FA39E'; ctx.lineWidth = 1.6; ctx.stroke(); hatch(ctx, () => rr(ctx, -9, -9, 18, 18, 3), '#8FA39E', 5);
   });
-  rise(ctx, t, 'CUSTOMER DOMAINS', WH.cx, WH.cy - WH.r1 - 26, { size: 20, w: 700, c: C.leaf, align: 'center', ls: 6 }, B(80) + 0.3, B(86));
-  rise(ctx, t, 'INTERNAL CAPABILITIES', WH.cx, WH.cy + WH.r1 + 46, { size: 20, w: 700, c: C.leaf, align: 'center', ls: 6 }, B(81) + 0.3, B(86));
-  const o = { size: 92, w: 700, ls: -2 };
-  rise(ctx, t, 'AI cross-cuts', 120, 440, { ...o, c: C.mist }, B(82), B(86));
-  rise(ctx, t, 'every', 120, 545, { ...o, c: C.mist }, B(82) + 0.1, B(86) + 0.03);
-  rise(ctx, t, 'capability.', 120, 650, { ...o, c: C.neon }, B(82) + 0.2, B(86) + 0.06);
+  // front of house / behind the scenes
+  const fk = spr(t, B(81.3), 16, 0.85) * (1 - out), bk = spr(t, B(82.3), 16, 0.85) * (1 - out);
+  rise(ctx, t, 'FRONT OF HOUSE', 1788, WH.cy - 20, { size: 17, w: 700, c: C.neon, ls: 5, align: 'right' }, B(81.3), B(86));
+  if (fk > 0.01) arrowGlyph(ctx, 1804, WH.cy - 26, true, C.neon);
+  rise(ctx, t, 'BEHIND THE SCENES', 1788, WH.cy + 40, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
+  if (bk > 0.01) arrowGlyph(ctx, 1804, WH.cy + 34, false, '#8FA39E');
 });
-
 
 // --- What users do every day vs. the Salam app today (beats 88–92) ---
 const USAGE = [['Social', 93, 'UserGroup'], ['Streaming', 80, 'Video01'], ['News', 65, 'News01'], ['Gaming', 57, 'GameController03'], ['Work', 50, 'Briefcase01']];
@@ -288,10 +342,10 @@ scene(100, 108.6, (ctx, t) => {
       phone(ctx, t, scr, 960, 600 - lift, lerp(740, 760, spread) * k, { shadow: 0.7 });
     }
     const o = { size: 72, w: 700, ls: -2 }, a = TW(ctx, 'One App. ', o), b = TW(ctx, 'One Experience.', o);
-    rise(ctx, t, 'One App.', 960 - (a + b) / 2, 120, { ...o, c: C.deep }, BN(112), BN(119.4));
-    rise(ctx, t, 'One Experience.', 960 - (a + b) / 2 + a, 120, { ...o, c: C.leaf }, BN(112) + 0.12, BN(119.4));
-    rise(ctx, t, 'All of Salam. Built around you.', 960, 178, { size: 32, w: 500, c: '#4E5F5A', align: 'center' }, BN(117), BN(119.4));
-    const kk = eOut(P(t, BN(116), 0.45)), ko = eIn(P(t, BN(119.3), 0.3));
+    rise(ctx, t, 'One App.', 960 - (a + b) / 2, 120, { ...o, c: C.deep }, BN(112), BN(118.85));
+    rise(ctx, t, 'One Experience.', 960 - (a + b) / 2 + a, 120, { ...o, c: C.leaf }, BN(112) + 0.12, BN(118.85) + 0.03);
+    rise(ctx, t, 'All of Salam. Built around you.', 960, 178, { size: 32, w: 500, c: '#4E5F5A', align: 'center' }, BN(117), BN(118.85) + 0.06);
+    const kk = eOut(P(t, BN(116), 0.45)), ko = eIn(P(t, BN(118.85), 0.3));
     if (kk > 0 && ko < 1) {
       ctx.save(); ctx.translate(0, ko * 200);
       shadowOn(ctx, 0.5); rr(ctx, 310, 985, 1300 * kk, 62, 31); ctx.fillStyle = C.neon; ctx.fill(); shadowOff(ctx);

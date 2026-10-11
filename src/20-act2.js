@@ -206,7 +206,7 @@ scene(27.5, 40.2, (ctx, t) => {
     const g = M.glyphT[2], p = eInOut(P(t, B(39.2), B(0.8)));
     const xc = M.xc;
     const pts = mixPts(rotPts(g.tgt, xc[0], xc[1], p * Math.PI / 4).map(([a, b]) => [a + (960 - xc[0]) * p, b + (600 - xc[1]) * p]), M.plus, eIn(P(t, B(39.5), B(0.5))));
-    const r = lerp(0, 2300, eIn(P(t, B(39.2), B(0.8))));
+    const r = lerp(0, 2300, eIn(P(crispT(t), B(39.2), B(0.8))));
     circ(ctx, lerp(xc[0], 960, p), lerp(xc[1], 600, p), r); ctx.fillStyle = C.night; ctx.fill();
     poly(ctx, pts); ctx.fillStyle = C.neon; ctx.fill();
   }
@@ -228,14 +228,27 @@ function strokeVis(ctx, pts, front) {
   }
   ctx.stroke();
 }
-function drawGlobe(ctx, lc, tilt, cx, cy, R, f, lw = 2) {
-  const lines = [];
-  for (let k = -6; k < 6; k++) { const lon = lc + k * 30 * f + 0.0001; const pts = []; for (let i = 0; i <= 72; i++) pts.push(gProj(-90 + i * 2.5, lon, lc, tilt, cx, cy, R)); lines.push(pts); }
-  for (let j = -2; j <= 2; j++) { const lat = j * 30 * f; const pts = []; for (let i = 0; i <= 120; i++) pts.push(gProj(lat, lc - 180 + i * 3, lc, tilt, cx, cy, R)); lines.push(pts); }
-  ctx.lineWidth = lw; ctx.lineCap = 'round';
-  ctx.strokeStyle = '#0B2B26'; lines.forEach(l => strokeVis(ctx, l, false));
-  ctx.strokeStyle = C.teal; ctx.lineWidth = lw * 1.4; lines.forEach(l => strokeVis(ctx, l, true));
-  circ(ctx, cx, cy, R); ctx.strokeStyle = C.teal; ctx.lineWidth = lw * 1.6; ctx.stroke();
+// the globe is a field of dots (Fibonacci sphere): the same dots later become Nafath's identity rings
+const GN = 560;
+const GDOTS = Array.from({ length: GN }, (_, i) => {
+  const y = 1 - 2 * (i + 0.5) / GN;
+  return { lat: Math.asin(y) / D2R, lon: (i * 137.50776) % 360 };
+});
+function globeDot(z, k) { return { r: (z >= 0 ? 2.2 + 2.6 * z : 1.7) * k, c: z >= 0 ? mixC(C.teal, C.leaf, 0.35 + 0.65 * z) : '#0B2B26' }; }
+function drawGlobe(ctx, lc, tilt, cx, cy, R, reveal, t, skip) {
+  // back dots first, then front dots
+  for (const pass of [0, 1]) {
+    GDOTS.forEach((d, i) => {
+      if (skip && skip(i)) return;
+      const q = gProj(d.lat, d.lon, lc, tilt, cx, cy, R);
+      if ((q[2] >= 0) !== (pass === 1)) return;
+      const dist = Math.hypot(q[0] - cx, q[1] - cy) / R;
+      const k = reveal(dist, i);
+      if (k <= 0.01) return;
+      const g = globeDot(q[2], k);
+      circ(ctx, q[0], q[1], g.r); ctx.fillStyle = g.c; ctx.fill();
+    });
+  }
 }
 const PINS = [
   { n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
@@ -251,27 +264,61 @@ function rrPts(x, y, w, h, r, N) {
   c.forEach(([cx, cy, a0]) => { for (let i = 0; i <= 10; i++) { const a = a0 + i / 10 * Math.PI / 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } });
   return resample(o, N);
 }
-const SHIELD = (() => {
-  const pts = [[-1, -0.95], [0, -1.2], [1, -0.95], [1, 0.1]];
-  for (let i = 1; i < 16; i++) { const u = i / 16; pts.push([1 - u, 0.1 + Math.sin(u * Math.PI / 2) * 1.1]); }
-  for (let i = 0; i < 16; i++) { const u = i / 16; pts.push([-u, 0.1 + Math.cos(u * Math.PI / 2) * 1.1]); }
-  pts.push([-1, 0.1]);
-  return pts;
+
+// --- Nafath: the globe's dots stream into concentric identity rings around the Nafath tile ---
+const NF = { cx: 960, cy: 535, ring: 150, tile: 190 };
+const NF_RINGS = [196, 224, 252, 280, 308];
+const NF_SLOTS = (() => {
+  const out = [];
+  NF_RINGS.forEach((r, k) => {
+    const n = Math.round(2 * Math.PI * r / 30);
+    for (let i = 0; i < n; i++) out.push({ k, a: -Math.PI / 2 + (i + (k % 2) * 0.5) / n * Math.PI * 2 });
+  });
+  // the stream fills the rings clockwise from the top
+  return out.sort((p, q) => ((p.a + Math.PI / 2 + 4 * Math.PI) % (2 * Math.PI)) - ((q.a + Math.PI / 2 + 4 * Math.PI) % (2 * Math.PI)));
 })();
-const shieldPts = (cx, cy, s) => resample(SHIELD.map(([a, b]) => [cx + a * s, cy + b * s]), NM);
+const GLOBE_TILT = 0.32;
+function globeFinalCentre() {
+  const rp = gProj(RIYADH.lat, RIYADH.lon, RIYADH.lon, GLOBE_TILT, 0, 0, 330);
+  return [NF.cx - rp[0], NF.cy - rp[1]];
+}
+let _NFMAP = null;
+function nafathMap() {
+  if (_NFMAP) return _NFMAP;
+  const [cx, cy] = globeFinalCentre();
+  const front = [];
+  GDOTS.forEach((d, i) => {
+    const q = gProj(d.lat, d.lon, RIYADH.lon, GLOBE_TILT, cx, cy, 330);
+    if (q[2] >= 0) front.push({ i, x: q[0], y: q[1], z: q[2], a: (Math.atan2(q[1] - NF.cy, q[0] - NF.cx) + Math.PI / 2 + 4 * Math.PI) % (2 * Math.PI) });
+  });
+  front.sort((p, q) => p.a - q.a);
+  const nS = NF_SLOTS.length, map = new Map();
+  for (let s = 0; s < nS; s++) map.set(front[Math.floor(s * front.length / nS)].i, { s, from: front[Math.floor(s * front.length / nS)] });
+  return (_NFMAP = map);
+}
+function ringR(t, k) {
+  const ripple = Math.sin(Math.PI * P(t, BV(56) + k * 0.06, 0.38)) * 12;
+  const gather = eIn(P(t, BV(58), 0.75));
+  return lerp(NF_RINGS[k] + ripple, 96, gather);
+}
 
 scene(40, 52.2, (ctx, t) => {
   bg(ctx, C.night);
+  if (t >= BV(52.6)) dotGrid(ctx, '#0B201D', 1100);
   const f = eOut(P(t, B(40), 0.7));
   const toRiyadh = eInOut(P(t, B(48), 0.7));
   const lc = lerp(lerp(98, 88, P(t, B(40), B(8))), RIYADH.lon, toRiyadh);
-  const tilt = 0.32;
-  const zoom = eIn(P(t, B(49), 0.62));
-  const R = 330 * (1 + 9 * zoom);
-  // keep Riyadh fixed while the globe zooms in on it
-  const rp = gProj(RIYADH.lat, RIYADH.lon, lc, tilt, 0, 0, R);
-  const cx = lerp(960, 960 - rp[0], toRiyadh), cy = lerp(600, 500 - rp[1], toRiyadh);
-  if (t < B(50.2)) drawGlobe(ctx, lc, tilt, cx, cy, R, f, lerp(2, 6, zoom));
+  const tilt = GLOBE_TILT, R = 330;
+  const [fx, fy] = globeFinalCentre();
+  const cx = lerp(960, fx, toRiyadh), cy = lerp(600, fy, toRiyadh);
+  const fly0 = BV(53);
+  const map = nafathMap();
+  // dots that are not part of the stream shrink away as the stream starts
+  const drop = eIn(P(t, fly0, 0.45));
+  if (drop < 1) drawGlobe(ctx, lc, tilt, cx, cy, R, (dist, i) => {
+    const k = spr(t, B(40) + dist * 0.45 + (i % 7) * 0.01, 16, 0.8);
+    return t >= fly0 ? k * (1 - drop) : k;
+  }, t, i => t >= fly0 && map.has(i));
   if (t < B(40.2)) { ctx.fillStyle = C.neon; ctx.fillRect(957, 600 - 330, 6, 660); ctx.fillRect(630, 597, 660, 6); }
 
   {
@@ -285,7 +332,6 @@ scene(40, 52.2, (ctx, t) => {
     const t0 = B(42 + i), q = pp[i];
     if (t < t0 || q[2] < 0) return;
     const k = spr(t, t0, 18) * (1 - eIn(P(t, B(48), 0.3)));
-    // leader line
     const lx = p.al === 'left' ? p.sx - 16 : p.sx + 16, ly = p.sy - 24;
     const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, B(48), 0.3)));
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(lerp(q[0], lx, lp), lerp(q[1], ly, lp)); ctx.stroke();
@@ -304,9 +350,8 @@ scene(40, 52.2, (ctx, t) => {
     }
   });
   // the light thread jumps pin to pin, then to Riyadh
-  const order = [0, 1, 2, 3, 4];
   const rq = gProj(RIYADH.lat, RIYADH.lon, lc, tilt, cx, cy, R);
-  const route = order.map(i => pp[i]).concat([rq]);
+  const route = [0, 1, 2, 3, 4].map(i => pp[i]).concat([rq]);
   const tp = eInOut(P(t, B(47), B(1.4))) * (route.length - 1);
   const th = eIn(P(t, B(49), 0.3));
   if (tp > 0 && t < B(49.4)) {
@@ -319,33 +364,60 @@ scene(40, 52.2, (ctx, t) => {
     }
     ctx.stroke();
   }
-  // Riyadh -> the Nafath tile -> the Salam mark -> a line
+  // the stream: front dots sweep clockwise into five identity rings
+  if (t >= fly0) {
+    const gone = eIn(P(t, BV(58.35), 0.4));
+    map.forEach(({ s, from }, i) => {
+      const slot = NF_SLOTS[s];
+      const t0 = fly0 + (s / NF_SLOTS.length) * 0.6;
+      const p = clamp(spr(t, t0, 8, 0.95));
+      const spin = (t - BV(54)) * 0.05 * (slot.k % 2 ? -1 : 1);
+      const a1 = slot.a + Math.max(0, spin), r1 = ringR(t, slot.k);
+      const r0 = Math.hypot(from.x - NF.cx, from.y - NF.cy), a0 = Math.atan2(from.y - NF.cy, from.x - NF.cx);
+      let da = ((a1 - a0) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+      const a = a0 + da * p + 0.9 * Math.sin(p * Math.PI), r = lerp(r0, r1, p) + 46 * Math.sin(p * Math.PI);
+      const g = globeDot(from.z, 1);
+      const rad = lerp(g.r, 4.3, p) * (1 - gone);
+      if (rad <= 0.05) return;
+      circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, NAFATH_TEAL, p); ctx.fill();
+    });
+  }
+  // Riyadh pin -> the white Nafath tile -> a line (the ground of the house)
   if (t >= B(48.4)) {
     const k = spr(t, B(48.4), 18);
-    const toTile = eInOut(P(t, B(49), 0.5)), toMark = eInOut(P(t, B(50), 0.5));
+    const toTile = eInOut(P(t, BV(53.15), 0.45));
     const flat = eInOut(P(t, B(51), 0.42));
+    const gather = eIn(P(t, BV(58), 0.75));
     const c0 = circlePts(rq[0], rq[1], 12 * k, NM);
-    const tile = align(c0, rrPts(960 - 160, 500 - 160, 320, 320, 76, NM));
-    const mk = align(tile, markPts(960, 500, 460, NM));
+    const ts = NF.tile * (1 - 0.15 * gather);
+    const tile = align(c0, rrPts(NF.cx - ts / 2, NF.cy - ts / 2, ts, ts, ts * 0.23, NM));
     let pts = mixPts(c0, tile, toTile);
-    if (toMark > 0) pts = mixPts(pts, mk, toMark);
-    if (flat > 0) pts = mixPts(pts, align(mk, rectPts(-20, 538, 1960, 4, NM)), flat);
-    const col = toMark > 0 ? mixC(NAFATH_TEAL, C.green, toMark) : toTile > 0 ? mixC(C.neon, NAFATH_TEAL, toTile) : C.neon;
-    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.green, C.mist, flat) : col; ctx.fill();
-    // the real Nafath logo sits in the tile
-    const q = spr(t, B(49) + 0.2, 17) * (1 - eIn(P(t, B(50) - 0.05, 0.22)));
-    if (q > 0.01) {
-      ctx.save(); ctx.translate(960, 500); ctx.scale(q, q);
-      rr(ctx, -128, -128, 256, 256, 54); ctx.fillStyle = C.white; ctx.fill();
-      pic(ctx, 'l_nafath', 0, 0, 250);
+    if (flat > 0) pts = mixPts(pts, align(tile, rectPts(-20, 538, 1960, 4, NM)), flat);
+    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(C.neon, C.white, toTile); ctx.fill();
+    const q = spr(t, BV(53.45), 16, 0.82) * (1 - eIn(P(t, B(51) - 0.12, 0.2)));
+    if (q > 0.01) pic(ctx, 'l_nafath', NF.cx, NF.cy, 205 * q * (1 - 0.15 * gather));
+    // the identity ring draws itself around the tile
+    const arc = eInOut(P(t, BV(53.4), 0.75)), ringOut = eIn(P(t, BV(58.2), 0.6));
+    if (arc > 0 && ringOut < 1) {
+      ctx.strokeStyle = NAFATH_TEAL; ctx.lineWidth = 3 * (1 - ringOut); ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(NF.cx, NF.cy, lerp(NF.ring, 110, gather), -Math.PI / 2, -Math.PI / 2 + arc * Math.PI * 2); ctx.stroke();
+    }
+    // verified
+    const vk = spr(t, BV(56), 17, 0.8) * (1 - eIn(P(t, BV(58), 0.3)));
+    if (vk > 0.01) {
+      const vx = NF.cx + Math.cos(-Math.PI / 4) * NF.ring, vy = NF.cy + Math.sin(-Math.PI / 4) * NF.ring;
+      ctx.save(); ctx.translate(vx, vy); ctx.scale(vk, vk);
+      circ(ctx, 0, 0, 26); ctx.fillStyle = NAFATH_TEAL; ctx.fill(); icon(ctx, 'Tick02', 0, 0, 30, C.white, 1.5);
       ctx.restore();
     }
     rise(ctx, t, 'RIYADH', 960, 590, { size: 24, w: 700, c: C.leaf, align: 'center', ls: 8 }, B(48.4), B(49));
   }
-  rise(ctx, t, 'Telecoms own the identity layer', 960, 880, { size: 60, w: 600, c: C.mist, align: 'center' }, B(49) + 0.1, B(50));
+  rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: NAFATH_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
+  rise(ctx, t, 'Nafath · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(54.2), BV(58) + 0.04);
+  rise(ctx, t, 'Telecoms own the identity layer.', 960, 128, { size: 60, w: 700, c: C.mist, align: 'center', ls: -1 }, BV(55), BV(58) + 0.08);
   {
-    const o = { size: 60, w: 600 }, a = TW(ctx, 'Trusted identity and connectivity ', o), b = TW(ctx, 'at scale.', o);
-    rise(ctx, t, 'Trusted identity and connectivity', 960 - (a + b) / 2, 880, { ...o, c: C.mist }, B(50) + 0.05, B(51));
-    rise(ctx, t, 'at scale.', 960 - (a + b) / 2 + a, 880, { ...o, c: C.neon }, B(50) + 0.15, B(51) + 0.05);
+    const o = { size: 36, w: 500 }, a = TW(ctx, 'Trusted identity and connectivity ', o), b = TW(ctx, 'at scale.', o);
+    rise(ctx, t, 'Trusted identity and connectivity', 960 - (a + b) / 2, 188, { ...o, c: C.fog }, BV(57), BV(58) + 0.08);
+    rise(ctx, t, 'at scale.', 960 - (a + b) / 2 + a, 188, { ...o, w: 700, c: C.neon }, BV(57) + 0.12, BV(58) + 0.1);
   }
 });
