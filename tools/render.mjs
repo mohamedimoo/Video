@@ -1,12 +1,16 @@
 // Full render: Playwright, 60 fps, 3 subframes per frame piped to ffmpeg and blended with tmix.
 // Frames are rendered in chunks, each to its own segment: a crashed browser only retries its chunk,
 // and running the command again skips every chunk that is already finished.
-// usage: node tools/render.mjs [workers] [outDir] [fromFrame] [toFrame]
+// usage: node tools/render.mjs [workers] [outDir] [fromFrame] [toFrame] [--plate]
+// --plate renders the After Effects background: no camera, and without the text and images that
+// tools/ae-export.mjs exported as native layers (it reads ae/plate_keys.json).
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { spawn } from 'child_process';
 import fs from 'fs'; import path from 'path';
 const FPS = 60, SUB = 3, CHUNK = 240;
-const [nw = '4', outDir = 'out/render', fa, fb] = process.argv.slice(2);
+const PLATE = process.argv.includes('--plate');
+const [nw = '4', outDir = 'out/render', fa, fb] = process.argv.slice(2).filter(a => a !== '--plate');
+const KEYS = PLATE ? JSON.parse(fs.readFileSync('ae/plate_keys.json', 'utf8')) : null;
 fs.mkdirSync(outDir, { recursive: true });
 const html = 'file://' + path.resolve('showreel.html');
 
@@ -16,6 +20,7 @@ async function openPage() {
   page.on('pageerror', e => console.error('PAGE ERROR', e.message));
   await page.goto(html);
   await page.waitForFunction(() => window.ready === true, null, { timeout: 30000 });
+  if (PLATE) await page.addScriptTag({ path: path.resolve('tools/ae-instrument.js') });
   return { browser, page };
 }
 
@@ -29,7 +34,7 @@ async function renderChunk(page, f0, f1, seg) {
     for (let k = f0; k < f1; k++) {
       for (let j = 0; j < SUB; j++) {
         const t = k / FPS + (j - (SUB - 1) / 2) / (FPS * SUB * 2);   // subframes 1/360 s apart (180-degree shutter)
-        await page.evaluate(t => window.seek(t), t);
+        await page.evaluate(([t, keys]) => { if (keys) window.__AE.plate(keys); window.seek(t); }, [t, KEYS ? KEYS[k] || [] : null]);
         const buf = await page.screenshot({ type: 'jpeg', quality: 95 });
         if (!ff.stdin.write(buf)) await new Promise(r => ff.stdin.once('drain', r));
       }
