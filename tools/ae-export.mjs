@@ -108,7 +108,8 @@ function maskPts(e, src) {
 const layers = tracks.filter(tr => [...tr.fr.values()].some(e => e.native)).map((tr, i) => {
   const all = []; for (let f = tr.first; f <= tr.last; f++) all.push(f);
   const on = all.filter(f => tr.fr.has(f));
-  const e0 = tr.fr.get(on.find(f => tr.fr.get(f).native) ?? on[0]);
+  // base style from the frame where the element is largest (lines that grow in from nothing keep a sane size)
+  const e0 = on.reduce((best, f) => { const e = tr.fr.get(f); return !best || (e.size || e.h) * (e.native ? 1 : 0.999) > (best.size || best.h) ? e : best; }, null);
   const ms = e => Math.hypot(e.m[0], e.m[1]);
   const L = { type: tr.kind, in: r3(tr.first / FPS), out: r3((tr.last + 1) / FPS), order: tr.order };
   L.pos = channel(on, f => anchor(tr.fr.get(f)), 0.25);
