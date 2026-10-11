@@ -76,7 +76,7 @@ scene(107.4, 112.8, (ctx, t) => {
     BEYOND_IC.forEach(([deg, ic], i) => {
       const k = spr(t, BV(SB.beyond + 0.5) + i * 0.08, 16, 0.8);
       if (k <= 0.01) return;
-      const a = deg * D2R;
+      const a = deg * D2R + 0.035 * (t - BV(SB.beyond));     // the band turns slowly
       ctx.save(); ctx.translate(cx + Math.cos(a) * rm, cy + Math.sin(a) * rm); ctx.scale(k, k);
       iconTile(ctx, 0, 0, 58 * sc, '#26312D', '#3C4844', ic, C.mist); ctx.restore();
     });
@@ -91,7 +91,7 @@ scene(107.4, 112.8, (ctx, t) => {
     ECO_IC.forEach(([deg, ic], i) => {
       const k = spr(t, BV(SB.eco + 0.5) + i * 0.07, 16, 0.8);
       if (k <= 0.01) return;
-      const a = deg * D2R;
+      const a = deg * D2R - 0.035 * (t - BV(SB.eco));        // the other way
       ctx.save(); ctx.translate(cx + Math.cos(a) * rm, cy + Math.sin(a) * rm); ctx.scale(k, k);
       iconTile(ctx, 0, 0, 50 * sc, C.white, null, ic, C.deep); ctx.restore();
     });

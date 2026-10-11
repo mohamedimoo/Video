@@ -155,69 +155,102 @@ function pillarLift(t, i) {
   return 44 * (spr(t, t0, 16, 0.75) - spr(t, t0 + 0.4, 16, 0.75));
 }
 
-// --- Three forces: flat ribbons wrap into three rings around the EAI core (story 68–80, real 72–88) ---
-const RIB = [{ n: 'EXPERIENCE', c: C.mist, im: 'SparklesIcon', lab: 'Experience' }, { n: 'AI', c: C.neon, im: 'AiBrain01', lab: 'AI' }, { n: 'VALUE-ADDED SERVICES', c: C.leaf, im: 'Gift', lab: 'Value-added services' }];
-const RM = 120;
+// --- Three forces: the ribbons curl into a dot-matrix Venn; where all three overlap is EAI; then they merge into one orb ---
+const RIB = [
+  { n: 'EXPERIENCE', c: C.mist, im: 'SparklesIcon' },
+  { n: 'AI', c: C.neon, im: 'AiBrain01' },
+  { n: 'VALUE-ADDED SERVICES', c: C.leaf, im: 'Gift' },
+];
+const RM = 120, VENN_R = 205, VENN_D = 118, VENN_TH = [-Math.PI / 2, Math.PI / 6, 5 * Math.PI / 6];
 function eaiCentre(t) {
   const a = spr(t, BN(78), 9, 0.92), b = spr(t, BN(86.4), 7, 0.95);
-  return [lerp(lerp(960, 560, a), WHEEL_C[0], b), lerp(lerp(500, 520, a), WHEEL_C[1], b), lerp(lerp(1, 0.86, a), 0.93, b)];
+  return [lerp(lerp(960, 560, a), WHEEL_C[0], b), lerp(lerp(520, 520, a), WHEEL_C[1], b), lerp(lerp(1, 0.86, a), 0.93, b)];
 }
-const ringAng = (t, k) => t * (0.55 + k * 0.22) + k * 2.1 + 3.4 * (1 + k * 0.3) * eInOut(P(t, BV(87), BV(2.2)));   // spins up while the AI thinks
+// the Venn turns slowly, and spins up while the assistant thinks
+const vennRot = t => 0.07 * (t - BN(74)) + 2.4 * eInOut(P(t, BV(87), BV(2.2)));
+function vennCircles(t, cx, cy, sc) {
+  const merge = spr(t, BN(78), 8, 0.92), d = VENN_D * sc * (1 - merge), rot = vennRot(t);
+  return RIB.map((r, k) => { const a = VENN_TH[k] + rot; return { x: cx + Math.cos(a) * d, y: cy + Math.sin(a) * d, a }; });
+}
+// a fixed dot matrix that lights by membership: one force dim, two brighter, all three neon
+function vennDots(ctx, t, cx, cy, sc, cs, R, reveal, shrink) {
+  const g = 19 * sc, n = Math.ceil((VENN_D * sc + R) / g) + 1, rot = 0.25 * (t - BN(74)) + 3 * eInOut(P(t, BV(87), BV(2.2)));
+  const cr = Math.cos(rot), sr = Math.sin(rot);
+  for (let i = -n; i <= n; i++) for (let j = -n; j <= n; j++) {
+    const lx = i * g + (j % 2 ? g / 2 : 0), ly = j * g * 0.866;
+    const x = cx + lx * cr - ly * sr, y = cy + lx * sr + ly * cr;
+    let m = 0, cols = [];
+    cs.forEach((c, k) => { if (Math.hypot(x - c.x, y - c.y) < R - 6 * sc) { m++; cols.push(RIB[k].c); } });
+    if (!m) continue;
+    const dist = Math.hypot(x - cx, y - cy), rv = eOut(P(reveal, dist / (R * 2.4), 0.45));
+    if (rv <= 0) continue;
+    const col = m === 3 ? C.neon : m === 2 ? mixC(C.night, mixC(cols[0], cols[1], 0.5), 0.86) : mixC(C.night, cols[0], 0.52);
+    const r = (m === 3 ? 3.8 : m === 2 ? 3.0 : 2.3) * sc * rv * (1 - shrink);
+    if (r <= 0.05) continue;
+    circ(ctx, lerp(x, cx, shrink), lerp(y, cy, shrink), r); ctx.fillStyle = col; ctx.fill();
+  }
+}
 scene(67.9, 81, (ctx, t) => {
   if (t >= B(68)) bg(ctx, C.night);
   if (t < B(68)) return;
   const amp = eInOut(P(t, BN(72), BN(1.5))) * 80;
-  const conv = eInOut(P(t, BN(74), BN(1.2)));
-  const wrap = spr(t, BN(75.2), 6.5, 0.95);
+  const curl = spr(t, BN(74.2), 6.5, 0.93);
+  const merge = spr(t, BN(78), 8, 0.92);
   const collapse = spr(t, BN(86.6), 8, 0.98);
   const [cx, cy, sc] = eaiCentre(t);
-  const radii = [240, 292, 344];
+  const R = lerp(VENN_R * sc, 125, collapse);
+  const cs = vennCircles(t, cx, cy, sc);
+  // the dot matrix fills the circles once they have formed, and gathers into the AI disc at the end
+  if (t >= BN(74.9)) vennDots(ctx, t, cx, cy, sc, cs, R, t - BN(74.9), collapse);
+  // the ribbons: flat waves that curl into the three circles; once merged, each keeps a third of the ring
   RIB.forEach((r, k) => {
-    const R = lerp(radii[k] * sc, 125, collapse);
-    const hw = lerp(40, lerp(9, 2, collapse), wrap);
+    const hw = lerp(40, 2.6, curl) * (1 - collapse);
+    if (hw <= 0.05) return;
+    const frac = lerp(1, 1 / 3, merge), a0 = cs[k].a + Math.PI / 2 + merge * (2 * Math.PI / 3) * 0.5;
     const top = [], bot = [];
     for (let j = 0; j <= RM; j++) {
       const s = j / RM;
       const tap = s < 0.18 ? eInOut(s / 0.18) : 1;
-      const baseY = lerp(434 + k * 120, 554, conv);
-      const braid = conv * 90 * Math.sin(s * Math.PI * 2 * 1.3 - t * 4 + k * 2.094);
-      let x = lerp(180, 1740, s), y = baseY + tap * (amp * Math.sin(Math.PI * 2 * 1.1 * s - t * 3 + k * 1.3) * (1 - conv) + braid);
-      const a = s * Math.PI * 2 * 0.82 + ringAng(t, k);
-      x = lerp(x, cx + Math.cos(a) * R, wrap); y = lerp(y, cy + Math.sin(a) * R, wrap);
-      const nx = lerp(0, Math.cos(a), wrap), ny = lerp(1, Math.sin(a), wrap);
+      let x = lerp(180, 1740, s), y = 434 + k * 120 + tap * amp * Math.sin(Math.PI * 2 * 1.1 * s - t * 3 + k * 1.3);
+      const a = a0 + Math.PI * 2 * s * lerp(1, frac, merge) + (s - 0.5) * 0.02;
+      const rr0 = R + (curl < 1 ? 0 : 0);
+      x = lerp(x, cs[k].x + Math.cos(a) * rr0, curl); y = lerp(y, cs[k].y + Math.sin(a) * rr0, curl);
+      const nx = lerp(0, Math.cos(a), curl), ny = lerp(1, Math.sin(a), curl);
       top.push([x + nx * hw, y + ny * hw]); bot.push([x - nx * hw, y - ny * hw]);
     }
     poly(ctx, top.concat(bot.reverse())); ctx.fillStyle = r.c; ctx.fill();
   });
-  RIB.forEach((r, k) => rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, BN(72) + 0.1 + k * 0.08, BN(74.4)));
-  rise(ctx, t, 'One app.', 120, 200, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(72), BN(75));
-  rise(ctx, t, 'Three forces.', 120, 310, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(73), BN(75) + 0.05);
-
-  // the core: a neon disc that spells EAI, and later AI
+  RIB.forEach((r, k) => rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, BN(72) + 0.1 + k * 0.08, BN(74.1)));
+  rise(ctx, t, 'One app.', 120, 200, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(72), BN(74.8));
+  rise(ctx, t, 'Three forces.', 120, 310, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(73), BN(74.85));
+  // each force names itself outside its circle
+  RIB.forEach((r, k) => {
+    const t0 = BN(75.9) + k * 0.12, q = spr(t, t0, 15, 0.82) * (1 - eIn(P(t, BN(77.85), 0.3)));
+    if (q <= 0.01) return;
+    const c = cs[k], ex = c.x + Math.cos(c.a) * (R + 30 * sc), ey = c.y + Math.sin(c.a) * (R + 30 * sc);
+    const o = { size: 24, w: 700, c: r.c, ls: 6 }, tw = TW(ctx, r.n, o), side = Math.cos(c.a);
+    const x0 = side > 0.3 ? ex : side < -0.3 ? ex - tw - 44 : ex - (tw + 44) / 2, y0 = ey + (Math.sin(c.a) > 0.3 ? 20 : Math.sin(c.a) < -0.3 ? -14 : 8);
+    ctx.save(); ctx.translate(x0 + (tw + 44) / 2, y0 - 8); ctx.scale(q, q); ctx.translate(-(x0 + (tw + 44) / 2), -(y0 - 8));
+    icon(ctx, r.im, x0 + 15, y0 - 9, 34, r.c, 1.1);
+    T(ctx, r.n, x0 + 44, y0, o);
+    ctx.restore();
+  });
+  // the core: where all three overlap is EAI; it grows into the orb as the circles merge, then becomes AI
   if (t >= BN(75.6)) {
     const k = spr(t, BN(75.6), 14, 0.82);
-    const dr = lerp(158 * sc, 125, collapse) * k;
+    const dr = lerp(lerp(80, 150, merge) * sc, 125, collapse) * k;
     circ(ctx, cx, cy, dr); ctx.fillStyle = C.neon; ctx.fill();
-    if (collapse < 1) { ctx.strokeStyle = C.night; ctx.lineWidth = 3 * (1 - collapse); circ(ctx, cx, cy, dr - 14); ctx.stroke(); }
-    const o = { size: 112 * sc * k, w: 800, ls: -3 };
+    if (collapse < 1) { ctx.strokeStyle = C.night; ctx.lineWidth = 3 * (1 - collapse); circ(ctx, cx, cy, dr - 12 * dr / 150); ctx.stroke(); }
+    const o = { size: dr * 0.83, w: 800, ls: -3 * dr / 125 };
     const drop = eIn(P(t, BN(86.8), 0.35));
     const we = TW(ctx, 'E', o), wa = TW(ctx, 'AI', o);
     // "E" drops out and "AI" slides to the centre, exactly where the AI wheel's core label sits
     const ax = lerp(cx - (we + wa) / 2 + we, cx - wa / 2, eInOut(P(t, BN(86.9), 0.45)));
     ctx.save(); circ(ctx, cx, cy, dr - 2); ctx.clip();
-    T(ctx, 'E', ax - we, cy + 40 * sc + drop * 160, { ...o, c: C.night });
-    T(ctx, 'AI', ax, cy + 40 * sc, { ...o, c: C.night });
+    T(ctx, 'E', ax - we, cy + dr * 0.296 + drop * 160, { ...o, c: C.night });
+    T(ctx, 'AI', ax, cy + dr * 0.296, { ...o, c: C.night });
     ctx.restore();
   }
-  // a rider on each ring: the force's real 3D icon in a white badge, with its name
-  RIB.forEach((r, k) => {
-    const q = spr(t, BN(76) + k * 0.12, 15, 0.8) * (1 - eIn(P(t, BN(86.3), 0.3)));
-    if (q <= 0.01) return;
-    const R = radii[k] * sc, a = ringAng(t, k) - 0.5;
-    const bx = cx + Math.cos(a) * R, by = cy + Math.sin(a) * R;
-    shadowOn(ctx, 0.4); circ(ctx, bx, by, 46 * q * sc); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
-    icon(ctx, r.im, bx, by, 50 * q * sc, C.deep, 1.2);
-  });
   // the equation that names it
   if (t >= BN(77) && t < BN(78.6)) {
     const parts = [['Experience', C.mist], ['+', C.neon], ['AI', C.mist], ['+', C.neon], ['Value-added services', C.mist], ['=', C.neon], ['EAI', C.neon]];

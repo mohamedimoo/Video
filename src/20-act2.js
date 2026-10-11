@@ -1,40 +1,177 @@
-// ===== ACT II — SHAPE MORPHING (bars 8–13, beats 28–51) =====
+// ===== ACT II — SHAPE MORPHING (beats 28–58) =====
 const NM = 140;
 const CIRC = [[560, 560], [960, 560], [1360, 560]], CR = 150;
-const RING = { cx: 960, cy: 560, r0: 190, r1: 262 };
 const HAB_LO = { size: 30, w: 700, c: C.mist, align: 'center' };
-const GAP = 0.09;
-const ROT_W = 0.75;
-function ringRot(t) {
-  const a = Math.min(t, B(36)) - B(31);
-  return -Math.PI / 2 + ROT_W * Math.max(0, a) + ROT_W * 0.25 * eOut(P(t, B(36), 0.5));
-}
-const ROT_FINAL = -Math.PI / 2 + ROT_W * (B(36) - B(31)) + ROT_W * 0.25;
+const HAB_IC = ['ContentWriting', 'UserGroup', 'ShoppingBag01'];
+const HAB_NAMES = ['Content', 'Community', 'Commerce'];
 function rotPts(pts, cx, cy, a) {
   const c = Math.cos(a), s = Math.sin(a);
   return pts.map(([x, y]) => [cx + (x - cx) * c - (y - cy) * s, cy + (x - cx) * s + (y - cy) * c]);
 }
-// during the inserted bar the loop shrinks up and makes room for the 30-day comparison
-function ringXf(t) {
-  const sh = eInOut(P(t, BN(36), 0.5)) - eInOut(P(t, BN(39), 0.5));
-  const k = 1 - 0.45 * sh, dy = -250 * sh;
-  return pts => pts.map(([x, y]) => [RING.cx + (x - RING.cx) * k, RING.cy + (y - RING.cy) * k + dy]);
+
+// --- The habit loop: one continuous trefoil runs through Content, Community and Commerce ---
+// A light draws the loop on its first lap, then keeps lapping faster and faster: the habit builds momentum.
+// The strands really pass over and under each other at the three crossings.
+const KN_S = 104, KN_NODE = 58, KN_W = 18, KN_SEG = 300;
+const KN_U = [Math.PI / 3, Math.PI, 5 * Math.PI / 3];          // lobe tips: Content (lower left), Community (top), Commerce (lower right)
+const KN_OVER = [1.8235, 3.9179, 6.0123];                       // at each crossing, the strand that passes over
+const KN_BACK = '#0B5244', KN_FRONT = '#45A88C', KN_CHEV = '#A6E0CC';
+const knotXYZ = u => [-(Math.sin(u) + 2 * Math.sin(2 * u)), Math.cos(u) - 2 * Math.cos(2 * u), -Math.sin(3 * u)];
+const KN_T0 = B(31.55), KN_A = 0.85, KN_B = 0.16, KN_TAU1 = BN(36) - B(31.55), KN_V1 = KN_A + 2 * KN_B * KN_TAU1;
+// laps of the light: it accelerates while the app stats land, then holds its speed
+function knLaps(t) {
+  const s = t - KN_T0; if (s <= 0) return 0;
+  return s <= KN_TAU1 ? KN_A * s + KN_B * s * s : KN_A * KN_TAU1 + KN_B * KN_TAU1 * KN_TAU1 + KN_V1 * (s - KN_TAU1);
 }
-ringXf.k = t => 1 - 0.45 * (eInOut(P(t, BN(36), 0.5)) - eInOut(P(t, BN(39), 0.5)));
+function knTimeOf(L) {            // when the light reached lap position L
+  let a = KN_T0, b = KN_T0 + 30;
+  for (let i = 0; i < 32; i++) { const m = (a + b) / 2; if (knLaps(m) < L) a = m; else b = m; }
+  return (a + b) / 2;
+}
+function knAge(t, n) {            // seconds since the light last passed node n
+  const L = knLaps(t), o = n / 3;
+  return t <= KN_T0 || L < o ? 1e9 : Math.max(0, t - knTimeOf(o + Math.floor(L - o)));
+}
+// where the loop sits: left of the app rows, then small at the top for the 30-day comparison, then centre for "15×"
+function knPose(t) {
+  const a = eInOut(P(t, BN(36), 0.55)), b = eInOut(P(t, BN(39), 0.5));
+  return { cx: lerp(lerp(620, 960, a), 960, b), cy: lerp(lerp(575, 300, a), 560, b), k: lerp(lerp(1, 0.5, a), 1, b) };
+}
+const knXY = (u, ps) => { const [x, y, z] = knotXYZ(u); return [ps.cx + x * KN_S * ps.k, ps.cy + y * KN_S * ps.k, z]; };
+// which stretches of the loop exist: drawn on by the first lap, retracted into the nodes before "15×"
+function knRanges(t) {
+  const L = knLaps(t), u0 = KN_U[0];
+  if (L <= 0) return [];
+  if (L < 1) return [[u0, u0 + L * 2 * Math.PI]];
+  const r = eInOut(P(t, BN(39.2), 0.55));
+  if (r <= 0) return [[u0, u0 + 2 * Math.PI]];
+  if (r >= 1) return [];
+  const h = (1 - r) * Math.PI / 3, out = [];
+  KN_U.forEach(un => { out.push([un, un + h]); out.push([un + 2 * Math.PI / 3 - h, un + 2 * Math.PI / 3]); });
+  return out;
+}
+function knStroke(ctx, ps, ua, ub, style) {
+  const n = Math.max(1, Math.ceil((ub - ua) / (2 * Math.PI) * KN_SEG));
+  let prev = knXY(ua, ps);
+  for (let i = 1; i <= n; i++) {
+    const u = ua + (ub - ua) * i / n, p = knXY(u, ps);
+    const [col, w] = style(u, (prev[2] + p[2]) / 2);
+    ctx.strokeStyle = col; ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke();
+    prev = p;
+  }
+}
+// flow chevrons travel along the ribbon
+function knChevrons(ctx, ps, t, ua, ub) {
+  const n = 15, sp = 2 * Math.PI / n, ph = ((t * 0.4) % 1) * sp;
+  ctx.strokeStyle = KN_CHEV; ctx.lineWidth = 2.2 * ps.k; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (let k = -n; k < 2 * n; k++) {
+    const u = KN_U[0] + k * sp + ph;
+    if (u < ua + 0.05 || u > ub - 0.05) continue;
+    const [x, y] = knXY(u, ps), [x2, y2] = knXY(u + 0.01, ps), a = Math.atan2(y2 - y, x2 - x), s = 4.8 * ps.k;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a);
+    ctx.beginPath(); ctx.moveTo(-s * 0.7, -s); ctx.lineTo(s * 0.5, 0); ctx.lineTo(-s * 0.7, s); ctx.stroke();
+    ctx.restore();
+  }
+  ctx.lineCap = 'round';
+}
+// the light: a tapered neon streak with a bright head
+const KN_TAIL = 1.2;
+function knComet(ctx, ps, t, ua, ub) {
+  const L = knLaps(t); if (L <= 0) return;
+  const head = KN_U[0] + L * 2 * Math.PI;
+  for (let m = -3; m <= 1; m++) {
+    const h = head + m * 2 * Math.PI, a = Math.max(ua, h - KN_TAIL), b = Math.min(ub, h);
+    if (a >= b) continue;
+    knStroke(ctx, ps, a, b, u => {
+      const f = clamp((u - (h - KN_TAIL)) / KN_TAIL);
+      return [mixC(KN_FRONT, C.neon, Math.min(1, f * 1.8)), lerp(3, KN_W + 3, Math.pow(f, 1.3)) * ps.k];
+    });
+    if (h >= ua && h <= ub) { const p = knXY(h, ps); circ(ctx, p[0], p[1], 6 * ps.k); ctx.fillStyle = C.mist; ctx.fill(); }
+  }
+}
+function knRibbon(ctx, t, ps) {
+  const ranges = knRanges(t);
+  const rib = (u, z) => [mixC(KN_BACK, KN_FRONT, (z + 1) / 2), KN_W * ps.k];
+  const run = (a, b) => { ctx.lineCap = 'round'; knStroke(ctx, ps, a, b, rib); knChevrons(ctx, ps, t, a, b); knComet(ctx, ps, t, a, b); };
+  ranges.forEach(([a, b]) => run(a, b));
+  // over-crossings: a casing in the background colour cuts the strand underneath, then the top strand is redrawn
+  KN_OVER.forEach(uc => ranges.forEach(([a, b]) => {
+    for (let m = -1; m <= 2; m++) {
+      const c = uc + m * 2 * Math.PI, lo = Math.max(a, c - 0.3), hi = Math.min(b, c + 0.3);
+      if (lo >= hi) continue;
+      ctx.lineCap = 'butt'; knStroke(ctx, ps, lo, hi, () => [C.deep, (KN_W + 12) * ps.k]);
+      run(lo, hi);
+    }
+  }));
+}
+function habitLoop(ctx, t) {
+  const ps = knPose(t), mv = spr(t, B(31), 12, 0.9);
+  if (t >= KN_T0) knRibbon(ctx, t, ps);
+  HAB_NAMES.forEach((lab, n) => {
+    const q = spr(t, B(29) + n * 0.08, 15, 0.8);
+    const [nx, ny] = knXY(KN_U[n], ps);
+    const x = lerp(CIRC[n][0], nx, mv), y = lerp(CIRC[n][1], ny, mv), r = lerp(CR, KN_NODE * ps.k, mv);
+    // the node fires each time the light passes through it
+    const age = knAge(t, n);
+    if (age < 0.5) {
+      const p = age / 0.5;
+      ctx.strokeStyle = C.neon; ctx.lineWidth = 4 * (1 - p) * ps.k; circ(ctx, x, y, r + 28 * eOut(p) * ps.k); ctx.stroke();
+    }
+    const pop = 1 + 0.09 * Math.sin(Math.PI * clamp(age / 0.3));
+    if (mv > 0.05) shadowOn(ctx, 0.5);
+    circ(ctx, x, y, r * pop); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
+    if (age < 0.3) { ctx.strokeStyle = C.neon; ctx.lineWidth = 3 * ps.k; circ(ctx, x, y, r * pop - 1.5 * ps.k); ctx.stroke(); }
+    if (q > 0.01) icon(ctx, HAB_IC[n], x, y, lerp(120, 60 * ps.k, mv) * q * pop, C.deep, 1.1);
+    // name: under its circle first, then beside its node once the light has reached it
+    rise(ctx, t, lab, CIRC[n][0], CIRC[n][1] + CR + 70, { ...HAB_LO, size: 38 }, B(29) + 0.1 + n * 0.08, B(30.6) + n * 0.03);
+    const ly = n === 1 ? ny - KN_NODE - 42 : ny + KN_NODE + 62;
+    rise(ctx, t, lab, nx, ly, HAB_LO, Math.max(knTimeOf(n / 3) + 0.04, B(31) + 0.35), BN(36));
+  });
+  rise(ctx, t, 'daily', ps.cx, ps.cy + 11, { size: 32, w: 700, c: C.mist, align: 'center' }, knTimeOf(1), BN(36));
+}
+// the four winning apps, as rows: a real logo, the stat counting up, and a week of use with every day lit
+const HAB_APPS = [
+  ['TIKTOK', 95, ' min/day', '', 'l_tiktok'],
+  ['SPOTIFY', 30, ' min/day', '', 'l_spotify'],
+  ['STARBUCKS · US', 1, ' pay app', '#', 'l_starbucks'],
+  ['ALIPAY', 1, 'B daily users', '', 'l_alipay'],
+];
+const DAYS7 = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+function habitApps(ctx, t) {
+  HAB_APPS.forEach(([k, v, suf, pre, logo], i) => {
+    const t0 = B(32 + i);
+    if (t < t0 || t > BN(36) + 0.7) return;
+    const inn = spr(t, t0, 14, 0.86), out = eIn(P(t, BN(36) + i * 0.04, 0.32));
+    const w = 640, h = 112, x0 = 1100 + (1 - inn) * 900 + out * 1000, y = 330 + i * 140;
+    shadowOn(ctx, 0.5); rr(ctx, x0, y - h / 2, w, h, 26); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    pic(ctx, logo, x0 + 62, y, 66);
+    T(ctx, k, x0 + 116, y - 14, { size: 18, w: 700, c: C.leaf, ls: 5 });
+    const n = Math.round(v * eOut(P(t, t0 + 0.1, 0.5)));
+    T(ctx, pre + n + suf, x0 + 116, y + 30, { size: 38, w: 700, c: C.deep, ls: -1 });
+    DAYS7.forEach((d, j) => {
+      const dx = x0 + w - 38 - (6 - j) * 27, q = spr(t, t0 + 0.3 + j * 0.06, 18, 0.8);
+      circ(ctx, dx, y - 8, 9.5); ctx.fillStyle = '#E3ECE6'; ctx.fill();
+      if (q > 0.01) { circ(ctx, dx, y - 8, 9.5 * q); ctx.fillStyle = C.green; ctx.fill(); }
+      T(ctx, d, dx, y + 24, { size: 13, w: 600, c: '#7A8A85', align: 'center' });
+    });
+  });
+}
+// the inserted bar: thirty days, two kinds of app (the days then fly into the loop)
 function habitDays(ctx, t) {
   if (t < BN(36) || t > BN(40)) return;
   const rows = [
-    { lab: 'Winning apps', y: 600, tIn: BN(36) + 0.15, lit: d => BN(36.6) + d * BN(1) / 30, right: 'every day', rc: C.neon },
+    { lab: 'Winning apps', y: 600, tIn: BN(36) + 0.3, lit: d => BN(36.6) + d * BN(1) / 30, right: 'every day', rc: C.neon },
     { lab: 'Telco app', y: 760, tIn: BN(37), lit: d => d === 29 ? BN(38) : 1e9, right: 'once a month', rc: C.fog },
   ];
-  const gone = eIn(P(t, BN(39), 0.5));
+  const gone = eInOut(P(t, BN(39) - 0.05, 0.4)), ps = knPose(t);
   rows.forEach((r, ri) => {
     rise(ctx, t, r.lab, 150, r.y + 12, { size: 34, w: 700, c: C.mist }, r.tIn, BN(39));
     for (let d = 0; d < 30; d++) {
       const k = spr(t, r.tIn + d * 0.012, 18, 0.8);
       if (k <= 0.01) continue;
       const x0 = 470 + d * 36, y0 = r.y;
-      const x = lerp(x0, RING.cx, gone), y = lerp(y0, RING.cy, gone);
+      const x = lerp(x0, ps.cx, gone), y = lerp(y0, ps.cy, gone);
       const on = t >= r.lit(d);
       const pop = on ? 1 + 0.35 * Math.max(0, 1 - (t - r.lit(d)) * 5) : 1;
       circ(ctx, x, y, 12 * k * pop * (1 - gone)); ctx.fillStyle = on ? (ri ? C.leaf : C.neon) : C.teal; ctx.fill();
@@ -43,7 +180,6 @@ function habitDays(ctx, t) {
     rise(ctx, t, r.right, 1770, r.y + 12, { size: 34, w: 700, c: r.rc, align: 'right' }, rk, BN(39));
   });
 }
-const sectorCanon = i => sectorPts(RING.cx, RING.cy, RING.r0, RING.r1, i * 2 * Math.PI / 3 + GAP, (i + 1) * 2 * Math.PI / 3 - GAP, NM);
 
 let _M2 = null;
 function morph2() {
@@ -57,32 +193,29 @@ function morph2() {
     const tgt = align(main, circlePts(CIRC[ci][0], CIRC[ci][1], CR, NM));
     return { main, tgt, rest: cs.filter((_, k) => k !== mi), ci };
   });
-  const circles = CIRC.map(([cx, cy], i) => circlePts(cx, cy, CR, NM));
-  const sectors = circles.map((c, i) => align(c, sectorCanon(i)));
-  // "7–15×"
+  // "7–15×": the loop's three nodes become "1", "5" and "×"
   const num = glyphRun('7–15×', 300);
   const nx = 960 - num.w / 2, ny = 680;
   const numG = num.gl.map(g => g.cs.map(c => c.map(([a, b]) => [a + nx, b + ny])));
   const mainOf = cs => { let mi = 0; cs.forEach((c, k) => { if (Math.abs(area(c)) > Math.abs(area(cs[mi]))) mi = k; }); return mi; };
+  const ps = { cx: 960, cy: 560, k: 1 };
   const glyphT = [2, 3, 4].map((gi, i) => {
     const cs = numG[gi], mi = mainOf(cs);
-    const src = rotPts(sectors[i], RING.cx, RING.cy, ROT_FINAL + Math.PI / 2);
+    const [px, py] = knXY(KN_U[i], ps);
+    const src = circlePts(px, py, KN_NODE, NM);
     return { src, tgt: align(src, resample(cs[mi], NM)), rest: cs.filter((_, k) => k !== mi) };
   });
   // the × becomes the globe's crosshair
   const xg = glyphT[2].tgt, xc = centroid(xg);
   const R = 330, th = 3;
   const plus = resample([[-th, -R], [th, -R], [th, -th], [R, -th], [R, th], [th, th], [th, R], [-th, R], [-th, th], [-R, th], [-R, -th], [-th, -th]].map(([a, b]) => [a + 960, b + 600]), NM);
-  const xToPlus = align(rotPts(xg, xc[0], xc[1], Math.PI / 4).map(([a, b]) => [a - xc[0] + 960, b - xc[1] + 600]), plus);
-  _M2 = { letters, circles, sectors, numG, glyphT, xc, plus, nx, ny };
+  _M2 = { letters, numG, glyphT, xc, plus, nx, ny };
   return _M2;
 }
 
 scene(27.5, 40.2, (ctx, t) => {
   const M = morph2();
   if (t >= B(28)) bg(ctx, C.deep);
-  const rot = ringRot(t) + Math.PI / 2;
-  const toSector = eInOut(P(t, B(31), 0.62));
   const toGlyph = eInOut(P(t, B(36), 0.55));
 
   // 1) letters of "habits" -> circles
@@ -100,36 +233,14 @@ scene(27.5, 40.2, (ctx, t) => {
       ctx.fillStyle = C.mist; ctx.fill('nonzero');
     });
   } else if (t < B(36)) {
-    // 2) circles -> 3) the habit loop: rotating sectors with direction arrows around a 24-hour dial
-    const xf = ringXf(t);
-    if (toSector > 0.3) {
-      ctx.strokeStyle = C.line; ctx.lineCap = 'round';
-      for (let h = 0; h < 24; h++) {
-        const a = h / 24 * Math.PI * 2 - Math.PI / 2, major = h % 6 === 0;
-        const r0 = (major ? 136 : 148) * toSector, r1 = 162 * toSector;
-        ctx.lineWidth = major ? 4 : 2;
-        const p0 = xf([[RING.cx + Math.cos(a) * r0, RING.cy + Math.sin(a) * r0]])[0], p1 = xf([[RING.cx + Math.cos(a) * r1, RING.cy + Math.sin(a) * r1]])[0];
-        ctx.beginPath(); ctx.moveTo(...p0); ctx.lineTo(...p1); ctx.stroke();
-      }
-    }
-    M.circles.forEach((c, i) => {
-      const s = rotPts(M.sectors[i], RING.cx, RING.cy, rot);
-      const col = [C.mist, C.leaf, C.neon][i];
-      poly(ctx, xf(mixPts(c, s, toSector))); ctx.fillStyle = mixC(C.mist, col, toSector); ctx.fill();
-      // arrowhead on the leading end of each sector: it reads as a loop
-      const ar = eOut(P(t, B(31) + 0.4, 0.35));
-      if (ar > 0) {
-        const a1 = (i + 1) * 2 * Math.PI / 3 - GAP + rot, rm = (RING.r0 + RING.r1) / 2;
-        const tri = [[Math.cos(a1) * (RING.r0 - 14), Math.sin(a1) * (RING.r0 - 14)], [Math.cos(a1) * (RING.r1 + 14), Math.sin(a1) * (RING.r1 + 14)], [Math.cos(a1 + 0.2 * ar) * rm, Math.sin(a1 + 0.2 * ar) * rm]];
-        poly(ctx, xf(tri.map(([x, y]) => [RING.cx + x, RING.cy + y]))); ctx.fillStyle = col; ctx.fill();
-      }
-    });
+    // 2) the circles become the nodes of one continuous loop
+    habitLoop(ctx, t);
   } else if (t < B(39.2)) {
-    // 4) sectors -> "15×"
+    // 3) the nodes become "15×" (the last of the loop retracts into them)
+    knRibbon(ctx, t, knPose(t));
     M.glyphT.forEach((g, i) => {
-      const src = rotPts(M.sectors[i], RING.cx, RING.cy, rot);
       ctx.beginPath();
-      const pts = mixPts(src, g.tgt, toGlyph);
+      const pts = mixPts(g.src, g.tgt, toGlyph);
       ctx.moveTo(pts[0][0], pts[0][1]); pts.forEach(q => ctx.lineTo(q[0], q[1])); ctx.closePath();
       if (toGlyph > 0.6) g.rest.forEach(c => { ctx.moveTo(c[0][0], c[0][1]); c.forEach(z => ctx.lineTo(z[0], z[1])); ctx.closePath(); });
       const exit = i < 2 ? eIn(P(t, B(39), 0.25)) : 0;
@@ -138,22 +249,6 @@ scene(27.5, 40.2, (ctx, t) => {
       if (exit > 0) ctx.restore();
     });
   }
-  // real 3D icons: inside the circles first, then riding the loop's sectors
-  const HAB_IC = ['ContentWriting', 'UserGroup', 'ShoppingBag01'], labels = [];
-  ['Content', 'Community', 'Commerce'].forEach((lab, i) => {
-    const q = spr(t, B(29) + i * 0.08, 15, 0.8) * (1 - eIn(P(t, BN(39) + 0.1, 0.3)));
-    if (t < B(36) && q > 0.01) {
-      const am = i * 2 * Math.PI / 3 + Math.PI / 3 + rot, rm = (RING.r0 + RING.r1) / 2;
-      const [sx, sy] = ringXf(t)([[RING.cx + Math.cos(am) * rm, RING.cy + Math.sin(am) * rm]])[0];
-      const k = ringXf.k(t);
-      const ix = lerp(CIRC[i][0], sx, toSector), iy = lerp(CIRC[i][1], sy, toSector);
-      if (toSector > 0.05) { circ(ctx, ix, iy, 40 * k * q * toSector); ctx.fillStyle = C.night; ctx.fill(); }
-      icon(ctx, HAB_IC[i], ix, iy, lerp(120, 44 * k, toSector) * q, mixC(C.deep, C.neon, toSector), 1.1);
-      // the label hugs the outside of the ring: its box never comes closer than 20 px to the band
-      const hw = TW(ctx, lab, HAB_LO) / 2 + 12, d = RING.r1 + 20 + Math.abs(Math.cos(am)) * hw + Math.abs(Math.sin(am)) * 23;
-      labels.push([lab, i, RING.cx + Math.cos(am) * d, RING.cy + Math.sin(am) * d + 10, hw]);
-    }
-  });
   // plus signs
   [760, 1160].forEach((x, i) => {
     const k = spr(t, B(30) + i * 0.08, 18) * (1 - eIn(P(t, B(31) - 0.1, 0.25)));
@@ -161,44 +256,7 @@ scene(27.5, 40.2, (ctx, t) => {
     ctx.fillStyle = C.neon; ctx.fillRect(x - 28 * k, 556, 56 * k, 8); ctx.fillRect(x - 4, 560 - 28 * k, 8, 56 * k);
   });
   rise(ctx, t, 'THE HABIT LOOP', 960, 110, { size: 26, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(28.75), BN(36));
-  // stats around the loop: white cards with the partner's real logo, wired to the loop
-  const STATS = [
-    ['TIKTOK', 95, ' min/day', 96, 330, 'left', '', 'l_tiktok'],
-    ['SPOTIFY', 30, ' min/day', 1824, 330, 'right', '', 'l_spotify'],
-    ['STARBUCKS · US', 1, ' pay app', 1824, 840, 'right', '#', 'l_starbucks'],
-    ['ALIPAY', 1, 'B daily users', 96, 840, 'left', '', 'l_alipay'],
-  ];
-  STATS.forEach(([k, v, suf, x, y, al, pre, logo], i) => {
-    const t0 = B(32 + i);
-    if (t < t0 || t > BN(36) + 0.5) return;
-    const n = Math.round(v * eOut(P(t, t0, 0.45)));
-    const stat = (pre || '') + n + suf, full = (pre || '') + v + suf;
-    const cw = 140 + Math.max(TW(ctx, k, { size: 20, w: 700, ls: 6 }), TW(ctx, full, { size: 44, w: 700, ls: -1 })) + 34, ch = 130;
-    const inn = spr(t, t0, 15, 0.86), out = eIn(P(t, BN(36), 0.4));
-    const dx = (al === 'left' ? -1 : 1) * ((1 - inn) * 700 + out * 900);
-    const x0 = (al === 'left' ? x : x - cw) + dx, y0 = y - ch / 2;
-    // connector to the loop
-    const ex = al === 'left' ? x0 + cw : x0, ang = Math.atan2(y - RING.cy, ex - RING.cx);
-    const lp = eOut(P(t, t0 + 0.15, 0.35)) * (1 - out);
-    if (lp > 0) {
-      const rx = RING.cx + Math.cos(ang) * (RING.r1 + 12), ry = RING.cy + Math.sin(ang) * (RING.r1 + 12);
-      ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ex, y); ctx.lineTo(lerp(ex, rx, lp), lerp(y, ry, lp)); ctx.stroke();
-      circ(ctx, lerp(ex, rx, lp), lerp(y, ry, lp), 6); ctx.fillStyle = C.neon; ctx.fill();
-    }
-    shadowOn(ctx, 0.5); rr(ctx, x0, y0, cw, ch, 30); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
-    pic(ctx, logo, x0 + 70, y, 82);
-    T(ctx, k, x0 + 140, y - 16, { size: 20, w: 700, c: C.leaf, ls: 6 });
-    T(ctx, stat, x0 + 140, y + 36, { size: 44, w: 700, c: C.deep, ls: -1 });
-  });
-  // the ring labels sit on top of the connectors: a knockout in the background colour lets the lines pass behind them
-  // (under the circles first; they leave as the circles become the loop and return hugging the ring)
-  labels.forEach(([lab, i, x, y, hw]) => {
-    rise(ctx, t, lab, CIRC[i][0], CIRC[i][1] + CR + 70, { ...HAB_LO, size: 38 }, B(29) + 0.1 + i * 0.08, B(31) - 0.05);
-    const t1 = B(31) + 0.5 + i * 0.06;
-    if (t > t1 && t < BN(36) + 0.3) { rr(ctx, x - hw, y - 33, hw * 2, 46, 23); ctx.fillStyle = C.deep; ctx.fill(); }
-    rise(ctx, t, lab, x, y, HAB_LO, t1, BN(36));
-  });
-  rise(ctx, t, 'daily', 960, 578, { size: 44, w: 700, c: C.mist, align: 'center' }, B(31.6), BN(36));
+  habitApps(ctx, t);
   // the inserted bar: thirty days, two kinds of app
   habitDays(ctx, t);
   // "7–" joins, caption
@@ -436,7 +494,7 @@ scene(40, 52.2, (ctx, t) => {
       const slot = NF_SLOTS[s];
       const t0 = fly0 + (s / NF_SLOTS.length) * 0.6;
       const p = clamp(spr(t, t0, 8, 0.95));
-      const spin = (t - BV(54)) * 0.05 * (slot.k % 2 ? -1 : 1);
+      const spin = (t - BV(54)) * 0.11 * (slot.k % 2 ? -1 : 1);
       const a1 = slot.a + Math.max(0, spin), r1 = ringR(t, slot.k);
       const r0 = Math.hypot(from.x - NF.cx, from.y - NF.cy), a0 = Math.atan2(from.y - NF.cy, from.x - NF.cx);
       let da = ((a1 - a0) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;

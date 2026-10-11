@@ -5,7 +5,7 @@
 
 There are no glows anywhere. Shadows are short contact shadows that are always darker than the background. Large wipes are drawn at the frame's own time, so their edges stay crisp. Big moves use springs, so motion blur never smears bright shapes into a halo.
 
-Every headline arrives letter by letter and leaves in a tight cascade that has cleared its space before the next line comes in. Dot grids drift and photos push in slowly, so no frame is ever static.
+One camera language runs through the film: a slow, continuous float with a soft push-in on every scene change. It never shakes or rolls, and it settles before the loop point. Every headline arrives letter by letter and leaves in a tight cascade that has cleared its space before the next line comes in. Dot grids drift, photos push in slowly and landed cards keep drifting, so no frame is ever static.
 
 The 3D renders from the Salam file appear at hero moments only: the threat cards, the check on "a reason to stay", and the glass logo in the hook, the roof and the app icon. Every other icon is a simple Hugeicons line icon.
 
@@ -21,9 +21,9 @@ The 3D renders from the Salam file appear at hero moments only: the threat cards
 ## ACT II: Shape morphing (beats 28–58)
 | Beats | What happens |
 |---|---|
-| **28–35** | The glyphs of "habits" become three circles (Content, Community, Commerce), then the habit loop around a 24-hour dial. The labels leave as the circles turn into the loop and return hugging the ring. Partner stat cards (TikTok, Spotify, Starbucks, Alipay) land in the four corners and wire into the loop, and their connectors pass behind the labels. |
-| **36–39** | Thirty days of "Winning apps" (every day lit) against the "Telco app" (only bill day lit). |
-| **40–43** | The loop becomes "7–15×" and "more lifetime value". The × turns into a crosshair, and a night disc opens. |
+| **28–35** (the habit loop) | The glyphs of "habits" become three circles (Content + Community + Commerce). The circles glide left and shrink into the three nodes of one continuous trefoil loop. A neon light draws the loop on its first lap, naming each node as it reaches it. Then it keeps lapping faster and faster through strands that pass over and under each other, flow chevrons running along them. Every node fires as the light passes and plays a note. "daily" sits at the centre. On the right, four app rows land one per beat (TikTok 95 min/day, Spotify 30 min/day, Starbucks #1 pay app in the US, Alipay 1B daily users), each with a week of use in which every day lights. |
+| **36–39** | The loop, still lapping, shrinks to the top. Thirty days of "Winning apps" (every day lit) against the "Telco app" (only bill day lit). The days fly into the loop. |
+| **40–43** | The loop retracts into its nodes, and the three nodes become "1", "5" and "×". "7–" rises in, then "more lifetime value". The × turns into a crosshair, and a night disc opens. |
 | **44–52** | A dotted world map on a globe, with real continents from Natural Earth, a graticule, a rim, and an orbit with a satellite. "The world is moving to **super-apps.**" Five markets land with their numbers (WeChat, Grab, Jio "the Salam blueprint", Kakao, M-Pesa). A light thread flies great-circle arcs from market to market, and the globe turns to Riyadh. |
 | **53–58** (Nafath) | The Riyadh pin becomes a white tile with the real Nafath logo. The globe's front land dots sweep clockwise into five identity rings, and a teal ring draws around the tile. "IDENTITY LAYER / Nafath · Riyadh", then "Telecoms own the identity layer." A verified tick lands, then "Trusted identity and connectivity **at scale.**" The rings gather into the tile. |
 
@@ -32,10 +32,10 @@ The 3D renders from the Salam file appear at hero moments only: the threat cards
 |---|---|
 | **59–67** | The tile flattens into a line, the line becomes the ground, and the Strategy House builds row by row: Measurement (Warm Stone), Culture (Deep Green), the capability chips, five white pillar cards with line icons, and the Deep Green roof with its neon edge and the wordmark. "Our Strategy **House.**" |
 | **68–73** | One after another, the pillars fill from the bottom with their accents: Experience in Salam Green, Intelligence in Forest Teal, Growth in Leaf, Ecosystem in Neon and Trust in Deep Green. Their icons and labels invert as they fill. The headline turns to "Built from **Joy.**", then "Measured for **Impact.**" |
-| **74–79** | The house lifts apart and sinks into the night. Three pillars become flat ribbons: "One app. / **Three forces.**" The ribbons wrap into three rings. |
-| **80–85** | The neon "EAI" core lands, each force rides its ring with a line icon, and "Experience + AI + Value-added services = EAI" appears. Then "One intelligent / **experience.**" and "A new kind of ecosystem.", and the live AI assistant arrives on a phone. |
-| **86–94** (the plan story) | The rings spin up. "Ask anything.": "Which plan fits my month?" is typed into a bubble and the assistant thinks. What it knows flies out of the EAI core along data lines as chips (38 GB a month · Dubai, every month · Streams every day). "Get the right plan.": a plan card rises from the phone with a BEST MATCH badge, a 98% match ring, "Solo Unlimited" and 149 SAR / month. The chips settle into its benefits (Unlimited data · 40 GB GCC roaming · Shahid VIP included). The button is tapped, a flat ring opens from the touch point, and it reads "Activated ✓". "Together, **as one.**" The story slides away. |
-| **95** | The rings collapse onto the core, and the "E" drops out, leaving "AI". |
+| **74–79** | The house lifts apart and sinks into the night. Three pillars become flat ribbons: "One app. / **Three forces.**" Each ribbon curls into a circle, and the three circles overlap in a Venn. |
+| **80–85** | The Venn fills with a dot matrix that lights by membership: dim inside one circle, brighter where two overlap, neon where all three meet. The neon "EAI" core lands in that centre, and each circle names itself with a line icon (EXPERIENCE, AI, VALUE-ADDED SERVICES). "Experience + AI + Value-added services = EAI" appears. The circles slide together and merge into one orb: a neon core in a field of neon dots, ringed by the three colours, a third each. The orb moves left, then "One intelligent / **experience.**" and "A new kind of ecosystem.", and the live AI assistant arrives on a phone. |
+| **86–94** (the plan story) | The orb's dots spin up while the assistant thinks. "Ask anything.": "Which plan fits my month?" is typed into a bubble and the assistant thinks. What it knows flies out of the EAI core along data lines as chips (38 GB a month · Dubai, every month · Streams every day). "Get the right plan.": a plan card rises from the phone with a BEST MATCH badge, a 98% match ring, "Solo Unlimited" and 149 SAR / month. The chips settle into its benefits (Unlimited data · 40 GB GCC roaming · Shahid VIP included). The button is tapped, a flat ring opens from the touch point, and it reads "Activated ✓". "Together, **as one.**" The story slides away. |
+| **95** | The orb's dots gather into the core, which becomes the AI disc, and the "E" drops out, leaving "AI". |
 
 ## ACT IV: Data and UI (beats 96–127)
 | Beats | What happens |
@@ -51,7 +51,7 @@ The 3D renders from the Salam file appear at hero moments only: the threat cards
 | Beats | What happens |
 |---|---|
 | **128** (as the reference) | The phones drop away. On Mist with dashed orbit guides and a drifting dot grid: "THE PLAN · STEP BY STEP", the wordmark top right, "BECOME A SUPERAPP / Step by Step **Approach**", a 01–02–03 stepper and a progress line along the bottom. |
-| **129–131** | **The Core** sphere springs in (phone and home icons), with "PHASE 01 · CORE / Merge Mobile + Home" and a "Unified account" callout. |
+| **129–131** | **The Core** disc springs in (phone and home icons), with "PHASE 01 · CORE / Merge Mobile + Home" and a "Unified account" callout. |
 | **131½–133** | **Beyond** grows out from behind the Core as a dark ring with six partner icons, with "PHASE 02 · BEYOND / Open up to partners" and "AI-guided discovery". |
 | **134–136** | **Ecosystem** grows out as a neon ring with eight white icon tiles, with "PHASE 03 · ECOSYSTEM / Build Salam-owned platforms" and "Social & first-party content". |
 | **136½–139** | An orbit closes around all three rings and the title becomes "Core → Beyond → **Ecosystem**". A deep green disc opens from the rings. |

@@ -113,10 +113,11 @@ scene(8, 20, (ctx, t) => {
     if (t < t0) return;
     const dx = c.x - LEAF_C[0], dy = c.y - LEAF_C[1], dl = Math.hypot(dx, dy);
     const fly = 1 - spr(t, t0, 15, 0.86);
-    const sq = 0.2 * eOut(P(t, B(15), 0.4));
+    // once landed, every card keeps creeping in on the logo and floats a little, so the squeeze never stops
+    const sq = 0.2 * eOut(P(t, B(15), 0.4)) + 0.06 * eInOut(P(t, t0 + 0.3, B(15) - t0));
     const blast = eIn(P(t, B(18) - 0.05, 0.4)) * 1900;
-    const x = c.x + dx / dl * (1500 * fly + blast) - dx * sq;
-    const y = c.y + dy / dl * (1500 * fly + blast) - dy * sq;
+    const x = c.x + dx / dl * (1500 * fly + blast) - dx * sq + 5 * Math.sin(t * 1.9 + i * 1.7);
+    const y = c.y + dy / dl * (1500 * fly + blast) - dy * sq + 7 * Math.sin(t * 2.3 + i * 2.9);
     // the card is sized to its own text
     const h = 160, w = 158 + Math.max(TW(ctx, c.k, { size: 22, w: 700, ls: 5 }), TW(ctx, c.l, { size: 32, w: 600, ls: -0.5 })) + 44;
     shadowOn(ctx, 0.55); rr(ctx, x - w / 2, y - h / 2, w, h, 34); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);

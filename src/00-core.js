@@ -232,33 +232,3 @@ function fillContours(ctx, cs, dx, dy, col) {
   ctx.fillStyle = col; ctx.fill('nonzero');
 }
 
-// ---- tiny 3D ----
-function cam3(yaw, pitch, dist, cx = 960, cy = 540, f = dist) {
-  const c = Math.cos(yaw), s = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
-  return {
-    p(x, y, z) {
-      const x1 = c * x + s * z, z1 = -s * x + c * z;
-      const y2 = cp * y - sp * z1, z2 = sp * y + cp * z1;
-      const k = f / (z2 + dist);
-      return [cx + x1 * k, cy + y2 * k, z2];
-    }
-  };
-}
-const BOXF = [[0, 1, 2, 3], [5, 4, 7, 6], [4, 0, 3, 7], [1, 5, 6, 2], [4, 5, 1, 0], [3, 2, 6, 7]];
-// returns visible faces of an axis-aligned box: {pts, z, kind}
-function boxFaces(cam, x0, y0, z0, x1, y1, z1, tag) {
-  const v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]].map(q => cam.p(...q));
-  const kinds = ['front', 'back', 'left', 'right', 'top', 'bottom'];
-  const out = [];
-  BOXF.forEach((f, i) => {
-    const pts = f.map(k => v[k]);
-    if (area(pts) <= 0.5) return;
-    out.push({ pts, z: pts.reduce((a, p) => a + p[2], 0) / 4, kind: kinds[i], tag });
-  });
-  return out;
-}
-// affine mapping of a local (w x h) rect onto a projected quad (p0 top-left, p1 top-right, p3 bottom-left)
-function onQuad(ctx, q, w, h) {
-  const [p0, p1, , p3] = q;
-  ctx.setTransform((p1[0] - p0[0]) / w, (p1[1] - p0[1]) / w, (p3[0] - p0[0]) / h, (p3[1] - p0[1]) / h, p0[0], p0[1]);
-}

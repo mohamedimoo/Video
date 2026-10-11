@@ -23,7 +23,9 @@ function sonicEvents() {
   // the inserted bars
   for (let d = 0; d < 30; d++) ev.push([BN(36.6) + d * BN(1) / 30, 2 + (d % 10), 0.22, 'pluck']);
   ev.push([BN(38), 0, 0.6, 'pluck']);
-  [0, 1, 2].forEach(k => ev.push([BN(76) + k * 0.12, 7 + k * 2, 0.45, 'pluck']));
+  [0, 1, 2].forEach(k => ev.push([BN(75.9) + k * 0.12, 7 + k * 2, 0.45, 'pluck']));
+  // the habit loop: a soft note each time the light passes a node, quickening with the loop
+  for (let L = 0; ; L += 1 / 3) { const tt = knTimeOf(L); if (tt > BN(39.3)) break; ev.push([tt, [4, 7, 9][Math.round(L * 3) % 3], 0.16, 'pluck']); }
   [0, 1, 2, 3, 4, 5].forEach(i => ev.push([BN(113 + Math.floor(i / 2)) + (i % 2) * 0.1, 5 + i, 0.4, 'pluck']));
   // Nafath: the rings form, the labels land, verified
   [0, 1, 2, 3, 4].forEach(i => ev.push([BV(53) + i * 0.12, 4 + i * 2, 0.4, 'pluck']));

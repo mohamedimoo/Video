@@ -13,14 +13,33 @@ window.SHUTTER = 1 / 360;      // with 3 render subframes 1/360 s apart: a 180-d
 const sm = document.createElement('canvas'); sm.width = 240; sm.height = 135;
 const smctx = sm.getContext('2d', { willReadFrequently: true });
 
+// One camera language for the whole film: a slow, continuous float, plus a soft push-in on every scene change.
+// The float's periods divide the running time, so the loop stays seamless. The camera only ever zooms in, and it
+// pans inside that zoom margin, so the edges of the frame are never uncovered. It never shakes or rolls.
+const CAM_HITS = SCENE_HITS.map(B).concat(SCENE_HITS_V.map(BV)).sort((a, b) => a - b);
+function camAt(t) {
+  const w = (k, ph = 0) => Math.sin(2 * Math.PI * k * t / DUR + ph);
+  let z = 1.016 + 0.008 * w(11) + 0.004 * w(17, 1.1);
+  const settle = 1 - eInOut(P(t, DUR - 1.5, 1.4));     // every push-in has settled before the loop point
+  for (const h of CAM_HITS) {
+    const s = t - h;
+    if (s > 0 && s < 3) z += settle * 0.014 * (1 - Math.exp(-s / 0.1)) * Math.exp(-s / 0.75) * (1 - P(s, 2.2, 0.8));
+  }
+  const m = z - 1;
+  return { z, x: m * 960 * 0.55 * w(7, 0.7), y: m * 540 * 0.55 * w(9, 2.3) };
+}
 function drawFrame(c, t) {
   t = ((t % DUR) + DUR) % DUR;      // the film loops: last frame == first frame
   FRAME_T = t;
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   bg(c, C.night);
+  const cm = camAt(t);
   for (const s of SCENES) {
-    if (t >= B(s.a) && t < B(s.b)) { c.save(); s.draw(c, t); c.restore(); c.setTransform(1, 0, 0, 1, 0, 0); }
+    if (t >= B(s.a) && t < B(s.b)) {
+      c.save(); c.setTransform(cm.z, 0, 0, cm.z, (1 - cm.z) * 960 + cm.x, (1 - cm.z) * 540 + cm.y);
+      s.draw(c, t); c.restore(); c.setTransform(1, 0, 0, 1, 0, 0);
+    }
   }
 }
 // how much of the frame changes across the shutter (thumbnail difference)
