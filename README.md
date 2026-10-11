@@ -20,7 +20,7 @@ An 80-second (80.4 s) motion showreel for Salam, built as code.
 - **Banned effects:** no particle bursts, glows, lens flares, camera shake, RGB split, crossfades, gradients or bouncy easing.
 - **Camera:** locked off and front-on. The subject moves and the camera does not, except for the one 3D orbit of the strategy house.
 - **Easing:** exponential curves and a damped spring (`spr`, zeta 0.8, about 1.5% overshoot), all written as functions of time.
-- **Motion blur:** each `seek(t)` averages 2 shutter samples, and the render blends 3 subframes per output frame with `tmix`. Fast moves blur along their own direction in proportion to speed, and still elements stay sharp.
+- **Motion blur:** each `seek(t)` measures how much of the frame changes across the shutter, then averages 2 to 14 sub-samples to match. The render also blends 3 subframes per output frame with `tmix`. Fast moves blur along their own direction in proportion to speed, and still elements stay sharp.
 - **Unusual techniques:**
   - *Sonification:* every number on screen also plays as a note in the score, and each lit day of the month is an ascending note.
   - *Stacked-slice extrusion:* the 3D headline is the same line of type drawn at 14 depths and flipped like a split-flap.

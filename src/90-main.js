@@ -6,8 +6,10 @@ const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
 const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
 const tctx = tmp.getContext('2d');
-window.SAMPLES = 2;
+window.SAMPLES = 0;          // 0 = adaptive: more sub-samples when the frame moves fast
 window.SHUTTER = 1 / 180;
+const sm = document.createElement('canvas'); sm.width = 240; sm.height = 135;
+const smctx = sm.getContext('2d', { willReadFrequently: true });
 
 function drawFrame(c, t) {
   t = ((t % DUR) + DUR) % DUR;      // the film loops: last frame == first frame
@@ -18,18 +20,37 @@ function drawFrame(c, t) {
     if (t >= B(s.a) && t < B(s.b)) { c.save(); s.draw(c, t); c.restore(); c.setTransform(1, 0, 0, 1, 0, 0); }
   }
 }
+// how much of the frame changes across the shutter (thumbnail difference)
+function motionAt(t) {
+  const px = [];
+  for (const dt of [-0.5, 0.5]) {
+    drawFrame(tctx, t + dt * window.SHUTTER);
+    smctx.drawImage(tmp, 0, 0, 240, 135);
+    px.push(smctx.getImageData(0, 0, 240, 135).data);
+  }
+  let n = 0;
+  for (let i = 0; i < px[0].length; i += 4) {
+    if (Math.abs(px[0][i] - px[1][i]) + Math.abs(px[0][i + 1] - px[1][i + 1]) + Math.abs(px[0][i + 2] - px[1][i + 2]) > 36) n++;
+  }
+  return n / (240 * 135);
+}
+window.samplesFor = t => {
+  if (window.SAMPLES > 0) return window.SAMPLES;
+  const m = motionAt(t);
+  return m < 0.004 ? 2 : m < 0.03 ? 4 : m < 0.08 ? 8 : 14;
+};
 window.seek = function (t) {
-  const K = window.SAMPLES;
+  const K = window.samplesFor(t);
+  window.lastK = K;
   if (K <= 1) { drawFrame(ctx, t); return; }
+  // running average: sample k is laid over the mean of the previous k at weight 1/(k+1)
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
-  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
-  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalCompositeOperation = 'source-over';
   for (let k = 0; k < K; k++) {
     drawFrame(tctx, t + ((k + 0.5) / K - 0.5) * window.SHUTTER);
-    ctx.globalAlpha = 1 / K; ctx.drawImage(tmp, 0, 0);
+    ctx.globalAlpha = 1 / (k + 1); ctx.drawImage(tmp, 0, 0);
   }
-  ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
+  ctx.globalAlpha = 1;
 };
 window.DUR = DUR; window.BEAT = BEAT;
 
