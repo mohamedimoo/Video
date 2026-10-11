@@ -1,5 +1,5 @@
 // ===== ACT III — THE STRATEGY HOUSE, FLAT AND RICH (bars 14–20, beats 51–79) =====
-const PILLARS = [['EXPERIENCE', 'i_sparkles'], ['INTELLIGENCE', 'i_ai'], ['GROWTH', 'i_rocket'], ['ECOSYSTEM', 'i_globe'], ['TRUST', 'i_shield']];
+const PILLARS = [['EXPERIENCE', 'FavouriteIcon'], ['INTELLIGENCE', 'AiBrain01'], ['GROWTH', 'ChartUp'], ['ECOSYSTEM', 'Globe02'], ['TRUST', 'Shield01']];
 const FOUND = [['Data', 'Database01'], ['AI', 'AiBrain01'], ['Engineering', 'CodeIcon'], ['Content', 'ContentWriting'], ['Operations', 'Settings01'], ['Security', 'SecurityLock'], ['Governance', 'JusticeScale01']];
 const MEAS = ['Business outcomes', 'Customer outcomes', 'Experience KPIs', 'Leading indicators', 'Continuous optimisation'];
 const CULT = 'Customer Obsessed  ·  Agile & Adaptive  ·  Empowered Teams  ·  Data-Driven  ·  Learn Fast  ·  Own It';
@@ -36,10 +36,10 @@ scene(51, 69, (ctx, t) => {
       const flash = Math.max(0, 1 - Math.abs(t - B(65) - 0.1) * 3);
       rr(ctx, 360, 846, 1200, 54, 16); ctx.fillStyle = mixC(C.stone, C.leaf, flash * 0.6); ctx.fill();
       T(ctx, 'MEASUREMENT', 386, 881, { size: 18, w: 700, c: C.deep, ls: 4 });
-      let x = 560;
+      let x = 596;
       MEAS.forEach((m, i) => {
-        T(ctx, m, x, 880, { size: 16, w: 600, c: C.deep });
-        x += TW(ctx, m, { size: 16, w: 600 }) + 14;
+        T(ctx, m, x, 880, { size: 15, w: 600, c: C.deep });
+        x += TW(ctx, m, { size: 15, w: 600 }) + 12;
         if (i < MEAS.length - 1) { icon(ctx, 'ArrowRight01', x + 10, 874, 20, C.green, 1.4); x += 36; }
       });
       ctx.restore();
@@ -80,7 +80,12 @@ scene(51, 69, (ctx, t) => {
     ctx.save(); rr(ctx, x0, y0, 180, h, 26); ctx.clip();
     const q = spr(t, B(56) + i * 0.06, 16, 0.8);
     const pop = 1 + 0.28 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 3);
-    pic(ctx, im, x0 + 90, y0 + 118 + (1 - q) * 300, 150 * pop);
+    // simple line icon in a ring (Hugeicons, from the team's icon file)
+    const iy = y0 + 104 + (1 - q) * 300, ic = i === 3 ? C.deep : C.neon;
+    ctx.save(); ctx.translate(x0 + 90, iy); ctx.scale(pop, pop);
+    ctx.strokeStyle = ic; ctx.lineWidth = 3; circ(ctx, 0, 0, 52); ctx.stroke();
+    icon(ctx, im, 0, 0, 56, ic, 1.1);
+    ctx.restore();
     T(ctx, n, x0 + 90, y0 + h - 30 + (1 - q) * 200, { size: 18, w: 700, c: i === 3 ? C.night : C.mist, align: 'center', ls: 2 });
     ctx.restore();
   });
@@ -121,7 +126,7 @@ scene(51, 69, (ctx, t) => {
       const rot = Math.sin(lay * Math.PI) * 0.22 * (k - 1);
       ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot);
       rr(ctx, -w / 2, -h / 2, w, h, lerp(26, 40, lay)); ctx.fillStyle = mixC(pi === 3 ? C.neon : C.deep, STRIP_COL[k], lay); ctx.fill();
-      if (lay < 0.4) pic(ctx, PILLARS[pi][1], 0, -h / 2 + 118, 150 * (1 - lay * 2.5));
+      if (lay < 0.4) icon(ctx, PILLARS[pi][1], 0, -h / 2 + 104, 56 * (1 - lay * 2.5), pi === 3 ? C.deep : C.neon, 1.1);
       ctx.restore();
     });
   }

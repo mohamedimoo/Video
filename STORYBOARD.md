@@ -3,7 +3,7 @@
 84 BPM, so 1 beat is 0.714 s and 1 bar is 2.86 s. The film is 38½ bars long (110 s). Beats are numbered from 0.
 **Bold** marks a scene change: something transforms and a hit plays in the soundtrack.
 
-The 3D renders from the Salam file appear at hero moments only: the five threat cards, the five Strategy House pillars, the check on "a reason to stay", and the spark over "joy". Every other icon is a Hugeicons line icon.
+The 3D renders from the Salam file appear at hero moments only: the five threat cards, the check on "a reason to stay", and the spark over "joy". Every other icon, including the Strategy House pillars and the habit loop, is a simple Hugeicons line icon from the team's icon file.
 
 ## ACT I: Kinetic type (bars 1–7, beats 0–27)
 | Beats | What happens |
@@ -27,7 +27,7 @@ The 3D renders from the Salam file appear at hero moments only: the five threat 
 ## ACT III: The Strategy House and EAI, all flat (bars 15–22, beats 56–87)
 | Beats | What happens |
 |---|---|
-| **56–63** | "Our Strategy **House.**" The house builds row by row: Measurement, Culture, the Foundation chips, then five pillars with their 3D icons. The roof drops in, carrying the glass logo, the wordmark and the vision line. |
+| **56–63** | "Our Strategy **House.**" The house builds row by row: Measurement, Culture, the Foundation chips, then five pillars, each with a line icon in a ring. The roof drops in, carrying the glass logo, the wordmark and the vision line. |
 | 64–69 | One pillar lifts and flashes on each beat. The headline swaps to "Built from **Joy.**", then "Measured for **Impact.**" The Measurement row flashes. |
 | **70–71** | The house sinks into the night. Experience, Intelligence and Ecosystem lift out and lie down as three strips. |
 | **72–75** | "One app. / **Three forces.**" The flat ribbons braid and wrap into three rings. |
@@ -46,9 +46,9 @@ The 3D renders from the Salam file appear at hero moments only: the five threat 
 ## ACT V: End title (bars 31–38½, beats 120–153)
 | Beats | What happens |
 |---|---|
-| **120–127** | "BECOME A SUPERAPP / **Step by step.**" over a new bar. Numbered steps rise one at a time, each carrying its phone, and each step's additions tick in on the next beat: 01 Core, 02 Beyond, 03 Ecosystem. A growth line climbs the stairs and shoots off the top as an arrow: "SUPERAPP". |
-| **128–135** | The Beyond block opens into the night. "Beyond Telco. / **Closer to Life.**" sits beside real Salam customers. A family photo card and an arc of seven moments follow, lighting two per beat: "Everyday moments. / **All in one place.**" |
-| **136–143** | The moments break into 30 dots, which form a month. A counter runs while the days light faster and faster under a riser. "once a month" is struck out, and "**every day.**" appears. |
+| **120–127** | The hub's phones drop out of frame on the downbeat. "BECOME A SUPERAPP / **Step by step.**" over a new bar. Numbered steps rise one at a time, each with a line icon, and each step's additions tick in on the next beat: 01 Core, 02 Beyond, 03 Ecosystem. No app screens here. A growth line climbs the stairs and shoots off the top as an arrow: "SUPERAPP". |
+| **128–135** | The Beyond block opens into the night. "Beyond Telco. / **Closer to Life.**" sits beside real Salam customers. Then Mist rises from the arc like a sunrise, turning the section light. A family photo card and an arc of seven white moment circles follow, turning green two per beat: "Everyday moments. / **All in one place.**" |
+| **136–143** | The moments break into 30 dots, which form a month as a night disc opens from them. A counter runs while the days light faster and faster under a riser. "once a month" is struck out, and "**every day.**" appears. |
 | **144–147** | **The hit: all 30 days are lit.** They fold into the outline of the glass logo, which is revealed through it, and the wordmark rises. The lockup tucks up, "Making" appears, then "the joy" and "of technology" slam in. |
 | **148–151** (last full bar, the strongest moment) | **A neon highlight sweeps behind "the joy of technology" and the type turns night-green.** A spark lands on "joy", then "accessible" and "for everyone, **everyday.**" arrive, with four line-icon moments around them. |
 | **152–153** (final half bar, end title) | Everything settles into the end title: the logo and wordmark over the highlighted tagline, with "everyday." underlined. Then it all folds back into the app icon, so the last frame is the first frame and the film loops. |

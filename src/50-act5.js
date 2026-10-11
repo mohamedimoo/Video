@@ -1,9 +1,9 @@
 // ===== ACT V — END TITLE (story beats 108–134, real beats 120–154) =====
 const GROUND = 1000;
 const STAIRS = [
-  { n: 'CORE', no: '01', x: 260, top: 700, c: C.stone, tc: C.deep, sc: '#3F504B', ck: C.green, b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'], ph: 0, t0: 120 },
-  { n: 'BEYOND', no: '02', x: 760, top: 540, c: C.night, tc: C.mist, sc: C.fog, ck: C.neon, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'], ph: 2, t0: 122 },
-  { n: 'ECOSYSTEM', no: '03', x: 1260, top: 380, c: C.neon, tc: C.night, sc: C.deep, ck: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'], ph: 1, t0: 124 },
+  { n: 'CORE', no: '01', x: 260, top: 700, c: C.stone, tc: C.deep, sc: '#3F504B', ck: C.green, b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'], ph: 0, t0: 120, ic: 'SmartPhone01' },
+  { n: 'BEYOND', no: '02', x: 760, top: 540, c: C.night, tc: C.mist, sc: C.fog, ck: C.neon, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'], ph: 2, t0: 122, ic: 'DashboardSquare01' },
+  { n: 'ECOSYSTEM', no: '03', x: 1260, top: 380, c: C.neon, tc: C.night, sc: C.deep, ck: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'], ph: 1, t0: 124, ic: 'Globe02' },
 ];
 function stairTop(t, s) { return GROUND - (GROUND - s.top) * spr(t, BN(s.t0), 15, 0.86); }
 scene(107.4, 112.8, (ctx, t) => {
@@ -14,6 +14,11 @@ scene(107.4, 112.8, (ctx, t) => {
       ctx.beginPath(); ctx.roundRect(s.x, top, 500, h + 60, [28, 28, 0, 0]); ctx.fillStyle = s.c; ctx.fill();
       ctx.save(); ctx.beginPath(); ctx.rect(s.x, top, 500, h); ctx.clip();
       T(ctx, s.no, s.x + 30, top + 74, { size: 60, w: 800, c: s.tc, ls: -2 });
+      {
+        const q = spr(t, BN(s.t0) + 0.25, 16, 0.8);
+        if (q > 0.01) { ctx.save(); ctx.translate(s.x + 432, top + 66); ctx.scale(q, q);
+          ctx.strokeStyle = s.ck; ctx.lineWidth = 3; circ(ctx, 0, 0, 40); ctx.stroke(); icon(ctx, s.ic, 0, 0, 42, s.ck, 1.1); ctx.restore(); }
+      }
       T(ctx, s.n, s.x + 32, top + 116, { size: 24, w: 800, c: s.tc, ls: 6 });
       // each addition ticks in on the beat after its step lands
       s.b.forEach((b, i) => {
@@ -43,13 +48,11 @@ scene(107.4, 112.8, (ctx, t) => {
     }
     ctx.stroke(); circ(ctx, hx, hy, 12); ctx.fillStyle = C.green; ctx.fill();
   }
-  STAIRS.forEach((s, k) => {
-    const top = stairTop(t, s);
-    // the matching phone from the hub walks onto its step and rides it up
-    const ph = PHONES3[s.ph];
-    const m = eInOut(P(t, BN(119.4) + k * 0.1, BN(1) + 0.2));
-    const th = 400, tx = s.x + 400, risen = (GROUND - top) / (GROUND - s.top), ty = top + 60 - th / 2 + (1 - risen) * 520;  // waits below frame until its step rises
-    phone(ctx, t, [[ph.s, 0]], lerp(ph.x, tx, m), lerp(ph.y, ty, m), lerp(ph.h, th, m), { rot: lerp(ph.rot, 0, m), shadow: 0.6 });
+  // the hub's three phones drop out of frame on the downbeat; no app screens on the stairs
+  if (t < BN(120.6)) PHONES3.forEach((ph, k) => {
+    const d = eIn(P(t, BN(119.4) + k * 0.06, 0.45));
+    if (d >= 1) return;
+    phone(ctx, t, [[ph.s, 0]], ph.x, ph.y + d * 1100, ph.h * (1 - d * 0.2), { rot: ph.rot * (1 + d * 2), shadow: 0.6 });
   });
   rise(ctx, t, 'BECOME A SUPERAPP', 120, 170, { size: 24, w: 700, c: C.leaf, ls: 8 }, BN(120));
   rise(ctx, t, 'Step by step.', 120, 250, { size: 72, w: 700, c: C.deep, ls: -2 }, BN(120) + 0.1);
@@ -90,37 +93,41 @@ scene(111.6, 121.4, (ctx, t) => {
   const o = { size: 160, w: 800, ls: -6 };
   rise(ctx, t, 'Beyond Telco.', 110, 470, { ...o, c: C.mist }, B(112), B(114));
   rise(ctx, t, 'Closer to Life.', 110, 670, { ...o, c: C.leaf }, B(113), B(114) + 0.05);
-  // everyday moments: a family photo, the arc of moments around it
+  // everyday moments, light themed: Mist rises from the arc like a sunrise
+  const sun = eIn(P(t, B(114) - 0.3, 0.5));
+  if (sun > 0) { circ(ctx, ARC.cx, ARC.cy, lerp(0, 2400, sun)); ctx.fillStyle = C.mist; ctx.fill(); }
   const toDots = eInOut(P(t, B(120), B(0.9)));
   {
-    const k = spr(t, B(114) + 0.1, 14, 0.86), out = eIn(P(t, B(120), 0.4));
+    const k = spr(t, B(114) + 0.25, 14, 0.86), out = eIn(P(t, B(120), 0.4));
     if (k > 0.01 && out < 1) {
       const cy = lerp(1500, 790, k) + out * 900;
       ctx.save();
-      rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.mist; ctx.fill(); ctx.clip();
+      shadowOn(ctx, 0.5); rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+      rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.clip();
       pic(ctx, 'p_family', 960, cy + 120, 780);
       ctx.restore();
     }
   }
-  const ap = eInOut(P(t, B(114) + 0.1, B(1.6)));
+  const ap = eInOut(P(t, B(114) + 0.28, B(1.6)));
   if (ap > 0 && toDots < 1) {
-    ctx.strokeStyle = C.teal; ctx.lineWidth = 3; ctx.beginPath();
+    ctx.strokeStyle = '#BCD5C3'; ctx.lineWidth = 3; ctx.beginPath();
     ctx.arc(ARC.cx, ARC.cy, ARC.R, ARC.a0 - 0.12, lerp(ARC.a0 - 0.12, ARC.a1 + 0.12, ap * (1 - toDots))); ctx.stroke();
   }
   MOMENTS.forEach(([m, ic], i) => {
-    const t0 = B(114) + 0.1 + B(1.6) * (i / 6) * 0.8;
+    const t0 = B(114) + 0.28 + B(1.6) * (i / 6) * 0.8;
     const k = spr(t, t0, 16) * (1 - eIn(P(t, B(120), 0.3)));
     if (k <= 0.001) return;
     const [x, y] = momentPos(i);
     const lit = B(116 + Math.floor(i / 2)) + (i % 2) * 0.15;
     const lp = spr(t, lit, 18);
     const pop = 1 + 0.12 * (t > lit ? Math.max(0, 1 - (t - lit) * 4) : 0);
-    circ(ctx, x, y, 62 * k * pop); ctx.fillStyle = mixC(C.deep, C.green, clamp(lp)); ctx.fill();
-    icon(ctx, ic, x, y, 54 * k, t > lit ? C.night : C.mist, 1.1);
-    rise(ctx, t, m, x, y - 84, { size: 24, w: 600, c: C.mist, align: 'center' }, t0 + 0.1, B(120));
+    shadowOn(ctx, 0.35); circ(ctx, x, y, 62 * k * pop); ctx.fillStyle = mixC(C.white, C.green, clamp(lp)); ctx.fill(); shadowOff(ctx);
+    if (t <= lit) { ctx.strokeStyle = '#CFE0D3'; ctx.lineWidth = 2; ctx.stroke(); }
+    icon(ctx, ic, x, y, 54 * k, t > lit ? C.white : C.deep, 1.1);
+    rise(ctx, t, m, x, y - 84, { size: 24, w: 600, c: C.deep, align: 'center' }, t0 + 0.1, B(120));
   });
-  rise(ctx, t, 'Everyday moments.', 960, 150, { size: 84, w: 700, c: C.mist, align: 'center', ls: -2 }, B(116), B(120));
-  rise(ctx, t, 'All in one place.', 960, 250, { size: 84, w: 700, c: C.neon, align: 'center', ls: -2 }, B(119), B(120) + 0.05);
+  rise(ctx, t, 'Everyday moments.', 960, 150, { size: 84, w: 700, c: C.deep, align: 'center', ls: -2 }, B(116), B(120));
+  rise(ctx, t, 'All in one place.', 960, 250, { size: 84, w: 700, c: C.green, align: 'center', ls: -2 }, B(119), B(120) + 0.05);
 });
 
 // --- 30 days light up, then fold into the Salam logo, the end title, and back to the icon (beats 120–134) ---
@@ -134,7 +141,10 @@ const DAY_T = (() => {
 })();
 const END = { gx: 640, gy: 460, gh: 380, wx: 860, wy: 560, wh: 150 };
 scene(120, 134.01, (ctx, t) => {
-  bg(ctx, C.night);
+  // the night returns as a disc opening from the month, never a crossfade
+  const dusk = eIn(P(t, B(120), 0.55));
+  if (dusk < 1) { bg(ctx, C.mist); circ(ctx, 960, 560, lerp(0, 1300, dusk)); ctx.fillStyle = C.night; ctx.fill(); }
+  else bg(ctx, C.night);
   const fold = eInOut(P(t, B(128.5), B(0.8)));
   const punch = t >= B(128) ? spr(t, B(128), 14, 0.7) * (1 - eInOut(P(t, B(128.5), B(0.6)))) : 0;
   const solid = spr(t, B(129.25), 15, 0.9);
