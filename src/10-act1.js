@@ -54,7 +54,7 @@ scene(4, 8, (ctx, t) => {
   ctx.save();
   shadowOn(ctx, 0.6); rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
   rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.clip();
-  pic(ctx, 'p_headphones', 1530, cy + 70 + (1 - k) * 120, 1000);
+  pic(ctx, 'p_headphones', 1530, cy + 70 + (1 - k) * 120, 1000 * (1 + 0.07 * P(t, B(4), B(4))));   // slow push-in
   ctx.restore();
   CHIPS.forEach(([ic, label], i) => {
     const q = spr(t, B(5 + i) + 0.08, 17);
@@ -152,14 +152,14 @@ scene(20, 28, (ctx, t) => {
   if (t >= B(23) && t < B(24.6)) {
     const so = { size: 230, w: 800, ls: -8 };
     const wa = TW(ctx, 'Relevance ', so), wb = TW(ctx, 'is.', so);
-    const p = eOut(P(t, B(23), 0.24)), po = eIn(P(t, B(24), 0.34));
+    const p = eOut(P(t, B(23), 0.24)), po = eIn(P(t, B(24) - 0.12, 0.32));
     const k = lerp(2.4, 1, p);
     ctx.save(); ctx.translate(960, 600 - po * 900); ctx.scale(k, k);
     T(ctx, 'Relevance ', -(wa + wb) / 2, 80, { ...so, c: C.leaf });
     T(ctx, 'is.', -(wa + wb) / 2 + wa, 80, { ...so, c: C.mist });
     ctx.restore();
   }
-  rise(ctx, t, 'Winning apps are built on', 960, 340, { size: 66, w: 500, c: C.fog, align: 'center' }, B(24) + 0.05, B(27));
+  rise(ctx, t, 'Winning apps are built on', 960, 340, { size: 66, w: 500, c: C.fog, align: 'center' }, B(24) + 0.2, B(27));
   rise(ctx, t, 'not monthly utility.', 960, 850, { size: 66, w: 500, c: C.fog, align: 'center' }, B(26), B(27) + 0.05);
   {
     const sw = TW(ctx, 'not monthly utility.', { size: 66, w: 500 });

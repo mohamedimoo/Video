@@ -4,6 +4,9 @@ const FOUND = [['Data', 'Database01'], ['AI', 'AiBrain01'], ['Engineering', 'Cod
 const MEAS = ['Business outcomes', 'Customer outcomes', 'Experience KPIs', 'Leading indicators', 'Continuous optimisation'];
 const CULT = 'Customer Obsessed  ·  Agile & Adaptive  ·  Empowered Teams  ·  Data-Driven  ·  Learn Fast  ·  Own It';
 const PIL_X = i => 360 + i * 255;
+// each pillar's own colour: white until its beat, then it fills from the ground up
+const ACCENT = [C.green, C.teal, C.leaf, C.neon, C.deep];
+const ON_ACCENT = [C.white, C.white, C.white, C.night, C.white];
 // which pillars become the three forces
 const FORCE = [0, 1, 3];
 const STRIP = k => ({ x: 180, y: 434 + k * 120 - 40, w: 1560, h: 80 });
@@ -25,6 +28,7 @@ scene(51, 69, (ctx, t) => {
   const sp = eInOut(P(crispT(t), B(51.4), 0.55));
   const yTop = lerp(540, -30, sp), yBot = lerp(540, 900, sp);
   ctx.fillStyle = C.mist; ctx.fillRect(0, yTop, W, yBot - yTop);
+  if (sp > 0.99) dotGrid(ctx, '#D6E0D9', 1300);
   const sink = eIn(P(t, B(66), B(1))) * 1400;   // the house sinks on beat 66
   ctx.save(); ctx.translate(0, sink);
 
@@ -50,7 +54,7 @@ scene(51, 69, (ctx, t) => {
     const p = eOut(P(t, B(53), 0.45));
     if (p > 0) {
       ctx.save(); ctx.beginPath(); ctx.rect(360, 0, 1200 * p, H); ctx.clip();
-      rr(ctx, 360, 786, 1200, 52, 16); ctx.fillStyle = C.teal; ctx.fill();
+      rr(ctx, 360, 786, 1200, 52, 16); ctx.fillStyle = C.deep; ctx.fill();
       T(ctx, 'CULTURE', 386, 819, { size: 18, w: 700, c: C.neon, ls: 4 });
       T(ctx, CULT, 520, 818, { size: 17, w: 500, c: C.mist });
       ctx.restore();
@@ -69,30 +73,43 @@ scene(51, 69, (ctx, t) => {
     T(ctx, n, -(tw + 30) / 2 + 30, 6, { size: 17, w: 600, c: C.deep });
     ctx.restore();
   });
-  // pillars, each with its real 3D icon
+  // pillars: white cards that fill with their own colour, one per beat
   PILLARS.forEach(([n, im], i) => {
     const k = spr(t, B(55) + i * 0.08, 15, 0.85); if (k <= 0.01) return;
     if (FORCE.includes(i) && t >= B(66)) return;     // drawn by the lift-out below
     const lift = pillarLift(t, i);
     const x0 = PIL_X(i), h = 296 * k, y0 = 712 - h - lift;
-    const flash = Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 2.2);
-    rr(ctx, x0, y0, 180, h, 26); ctx.fillStyle = mixC(i === 3 ? C.neon : C.deep, i === 3 ? C.deep : C.green, flash * 0.85); ctx.fill();
-    ctx.save(); rr(ctx, x0, y0, 180, h, 26); ctx.clip();
+    const acc = ACCENT[i], on = ON_ACCENT[i];
     const q = spr(t, B(56) + i * 0.06, 16, 0.8);
-    const pop = 1 + 0.28 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 3);
-    // simple line icon in a ring (Hugeicons, from the team's icon file)
-    const iy = y0 + 104 + (1 - q) * 300, ic = i === 3 ? C.deep : C.neon;
-    ctx.save(); ctx.translate(x0 + 90, iy); ctx.scale(pop, pop);
-    ctx.strokeStyle = ic; ctx.lineWidth = 3; circ(ctx, 0, 0, 52); ctx.stroke();
-    icon(ctx, im, 0, 0, 56, ic, 1.1);
-    ctx.restore();
-    T(ctx, n, x0 + 90, y0 + h - 30 + (1 - q) * 200, { size: 18, w: 700, c: i === 3 ? C.night : C.mist, align: 'center', ls: 2 });
-    ctx.restore();
+    const pop = 1 + 0.22 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.15) * 3);
+    const fill = eOut(P(t, B(60 + i), 0.45)), fy = y0 + h * (1 - fill);
+    const body = () => rr(ctx, x0, y0, 180, h, 26);
+    // the card
+    shadowOn(ctx); body(); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    if (fill < 1) { body(); ctx.strokeStyle = '#D5E3D8'; ctx.lineWidth = 1.5; ctx.stroke(); }
+    // its content, drawn twice: on white, and again inside the rising colour (where colours invert)
+    const content = (filled) => {
+      const iy = y0 + 104 + (1 - q) * 300;
+      ctx.save(); ctx.translate(x0 + 90, iy); ctx.scale(pop, pop);
+      circ(ctx, 0, 0, 46); ctx.fillStyle = filled ? (i === 3 ? C.deep : C.white) : acc; ctx.fill();
+      icon(ctx, im, 0, 0, 50, filled ? (i === 3 ? C.neon : acc) : (i === 3 ? C.night : C.white), 1.15);
+      ctx.restore();
+      T(ctx, n, x0 + 90, y0 + h - 40 + (1 - q) * 200, { size: 18, w: 700, c: filled ? on : C.deep, align: 'center', ls: 2 });
+      if (!filled) { const bw = 132 * eOut(P(t, B(56) + i * 0.06 + 0.15, 0.4)); rr(ctx, x0 + 90 - bw / 2, y0 + h - 22, bw, 6, 3); ctx.fillStyle = acc; ctx.fill(); }
+    };
+    ctx.save(); body(); ctx.clip(); content(false); ctx.restore();
+    if (fill > 0) {
+      ctx.save(); body(); ctx.clip(); ctx.beginPath(); ctx.rect(x0 - 2, fy, 184, h + 4); ctx.clip();
+      ctx.fillStyle = acc; ctx.fillRect(x0 - 2, fy, 184, h + 4);
+      content(true);
+      ctx.restore();
+    }
   });
   // roof
   if (t >= B(57)) {
     const dy = (1 - spr(t, B(57), 20, 0.9)) * -700;
     roofPath(ctx, 960, 236 + dy, 1300, 164); ctx.fillStyle = C.deep; ctx.fill();
+    { const e = eOut(P(t, B(57) + 0.25, 0.5)); if (e > 0) { ctx.fillStyle = C.neon; ctx.fillRect(960 - 600 * e, 236 + dy + 160, 1200 * e, 4); } }
     const q = eOut(P(t, B(58), 0.4));
     if (q > 0) {
       ctx.save(); roofPath(ctx, 960, 236 + dy, 1300, 164); ctx.clip();
@@ -125,8 +142,8 @@ scene(51, 69, (ctx, t) => {
       const x = lerp(x0, s.x, lay), y = lerp(y0, s.y, lay), w = lerp(180, s.w, lay), h = lerp(296, s.h, lay);
       const rot = Math.sin(lay * Math.PI) * 0.22 * (k - 1);
       ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot);
-      rr(ctx, -w / 2, -h / 2, w, h, lerp(26, 40, lay)); ctx.fillStyle = mixC(pi === 3 ? C.neon : C.deep, STRIP_COL[k], lay); ctx.fill();
-      if (lay < 0.4) icon(ctx, PILLARS[pi][1], 0, -h / 2 + 104, 56 * (1 - lay * 2.5), pi === 3 ? C.deep : C.neon, 1.1);
+      rr(ctx, -w / 2, -h / 2, w, h, lerp(26, 40, lay)); ctx.fillStyle = mixC(ACCENT[pi], STRIP_COL[k], lay); ctx.fill();
+      if (lay < 0.4) { const ik = 1 - lay * 2.5; circ(ctx, 0, -h / 2 + 104, 46 * ik); ctx.fillStyle = pi === 3 ? C.deep : C.white; ctx.fill(); icon(ctx, PILLARS[pi][1], 0, -h / 2 + 104, 50 * ik, pi === 3 ? C.neon : ACCENT[pi], 1.15); }
       ctx.restore();
     });
   }
@@ -145,7 +162,7 @@ function eaiCentre(t) {
   const a = spr(t, BN(78), 9, 0.92), b = spr(t, BN(86.4), 7, 0.95);
   return [lerp(lerp(960, 560, a), WHEEL_C[0], b), lerp(lerp(500, 520, a), WHEEL_C[1], b), lerp(lerp(1, 0.86, a), 0.93, b)];
 }
-const ringAng = (t, k) => t * (0.55 + k * 0.22) + k * 2.1;
+const ringAng = (t, k) => t * (0.55 + k * 0.22) + k * 2.1 + 3.4 * (1 + k * 0.3) * eInOut(P(t, BV(87), BV(2.2)));   // spins up while the AI thinks
 scene(67.9, 81, (ctx, t) => {
   if (t >= B(68)) bg(ctx, C.night);
   if (t < B(68)) return;
@@ -210,20 +227,132 @@ scene(67.9, 81, (ctx, t) => {
     parts.forEach((p, i) => { rise(ctx, t, p[0], x, 980, { ...o, c: p[1] }, BN(77) + i * 0.06, BN(78)); x += ws[i] + sp; });
   }
   // one intelligent experience
-  rise(ctx, t, 'One intelligent', 1000, 470, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(79), BN(81));
-  rise(ctx, t, 'experience.', 1000, 580, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(79) + 0.12, BN(81) + 0.04);
-  rise(ctx, t, 'A new kind of ecosystem.', 1004, 660, { size: 40, w: 500, c: C.fog }, BN(80), BN(81) + 0.08);
-  // the AI assistant, live: real screens from the Salam app
+  rise(ctx, t, 'One intelligent', 1000, 470, { size: 96, w: 700, c: C.mist, ls: -2 }, BN(79), BN(81) - 0.3);
+  rise(ctx, t, 'experience.', 1000, 580, { size: 96, w: 700, c: C.neon, ls: -2 }, BN(79) + 0.12, BN(81) - 0.26);
+  rise(ctx, t, 'A new kind of ecosystem.', 1004, 660, { size: 40, w: 500, c: C.fog }, BN(80), BN(81) - 0.22);
+  // the AI assistant, live: real screens from the Salam app, with the plan story drawn around it
+  const out = eIn3(P(t, BV(94), 0.6));   // a gentle accelerate-away: the bright card never smears
   {
-    const k = spr(t, BN(81.3), 14, 0.86), out = eIn(P(t, BN(86), 0.45));
-    if (k > 0.01 && out < 1) phone(ctx, t, [['s_ai_main', BN(81.3)], ['s_ai_typing', BN(83)], ['s_ai_answer', BN(85)]], 1390 + out * 900, lerp(1500, 545, k), 900, { shadow: 0.5 });
+    const k = spr(t, BN(81.3), 14, 0.86);
+    if (k > 0.01 && out < 1) phone(ctx, t, [['s_ai_main', BN(81.3)], ['s_ai_typing', BV(86.4)], ['s_ai_answer', BV(89.6)]], PH_X + out * 900, lerp(1500, 545, k), 900, { shadow: 0.5 });
   }
+  if (t >= BV(85.8) && out < 1) planStory(ctx, t, cx, cy, sc, out);
   const co = { size: 48, w: 600, align: 'center' };
-  rise(ctx, t, 'Ask anything.', 560, 960, { ...co, c: C.mist }, BN(82), BN(84) - 0.24);
-  rise(ctx, t, 'Get the right plan.', 560, 960, { ...co, c: C.mist }, BN(84), BN(85.6) - 0.24);
+  rise(ctx, t, 'Ask anything.', 560, 960, { ...co, c: C.mist }, BV(86), BV(88.75));
+  rise(ctx, t, 'Get the right plan.', 560, 960, { ...co, c: C.mist }, BV(89), BV(92.7));
   {
     const a = TW(ctx, 'Together, ', co), b = TW(ctx, 'as one.', co);
-    rise(ctx, t, 'Together,', 560 - (a + b) / 2, 960, { ...co, align: 'left', c: C.mist }, BN(85.6), BN(86.4));
-    rise(ctx, t, 'as one.', 560 - (a + b) / 2 + a, 960, { ...co, align: 'left', c: C.neon }, BN(85.7), BN(86.45));
+    rise(ctx, t, 'Together,', 560 - (a + b) / 2, 960, { ...co, align: 'left', c: C.mist }, BV(93), BV(94.4));
+    rise(ctx, t, 'as one.', 560 - (a + b) / 2 + a, 960, { ...co, align: 'left', c: C.neon }, BV(93.1), BV(94.45));
   }
 });
+
+// --- the plan story: question -> what the AI knows -> the right plan -> activated (real beats 86-94) ---
+const PH_X = 1470;
+const CARD2 = { x: 958, y: 262, w: 384, h: 580 };
+const INSIGHTS = [
+  { ic: 'Analytics01', chip: '38 GB a month', row: 'Unlimited data' },
+  { ic: 'Airplane01', chip: 'Dubai, every month', row: '40 GB GCC roaming' },
+  { ic: 'PlayCircle', chip: 'Streams every day', row: 'Shahid VIP included' },
+];
+function planStory(ctx, t, ecx, ecy, esc, out) {
+  ctx.save(); ctx.translate(out * 900, 0);
+  const q = 'Which plan fits my month?';
+  // 1) the question, typed into a bubble that pops out of the phone
+  {
+    const k = spr(t, BV(86), 15, 0.86);
+    const n = Math.round(q.length * clamp((t - BV(86.15)) / 0.62));
+    const o = { size: 26, w: 600 }, w = TW(ctx, q, o) + 56, x1 = 1342, y = 168;
+    ctx.save(); ctx.translate(lerp(PH_X, x1, k), lerp(320, y, k)); ctx.scale(k, k);
+    rr(ctx, -w, -30, w, 60, 22); ctx.fillStyle = C.neon; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-22, 26); ctx.lineTo(0, 40); ctx.lineTo(-6, 18); ctx.closePath(); ctx.fill();
+    T(ctx, q.slice(0, n), -w + 28, 9, { ...o, c: C.night });
+    if (n < q.length && Math.floor(t * 4) % 2 === 0) { ctx.fillStyle = C.night; ctx.fillRect(-w + 30 + TW(ctx, q.slice(0, n), o), -12, 3, 26); }
+    ctx.restore();
+  }
+  // 2) thinking: three dots pulse in turn
+  {
+    const k = spr(t, BV(87), 16, 0.86) * (1 - eIn(P(t, BV(88.8), 0.3)));
+    if (k > 0.01) {
+      ctx.save(); ctx.translate(CARD2.x, 238); ctx.scale(k, k);
+      rr(ctx, 0, -28, 112, 56, 22); ctx.fillStyle = '#123630'; ctx.fill();
+      for (let i = 0; i < 3; i++) { const ph = (t * 2.4 - i * 0.18) % 1, r = 6 + 3 * Math.max(0, Math.sin(ph * Math.PI)); circ(ctx, 30 + i * 26, 0, r); ctx.fillStyle = mixC('#5E8C82', C.neon, Math.max(0, Math.sin(ph * Math.PI))); ctx.fill(); }
+      ctx.restore();
+    }
+  }
+  // 4) the right plan pops out of the phone
+  const ck = spr(t, BV(89.05), 12, 0.88);
+  if (ck > 0.01) {
+    const { x, y, w, h } = CARD2;
+    ctx.save(); ctx.translate(lerp(PH_X - 40, x + w / 2, ck), lerp(560, y + h / 2, ck)); ctx.scale(lerp(0.25, 1, ck), lerp(0.25, 1, ck)); ctx.translate(-(x + w / 2), -(y + h / 2));
+    shadowOn(ctx); rr(ctx, x, y, w, h, 30); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    // match ring
+    const mp = eOut(P(t, BV(89.5), 0.9)), mx = x + w - 66, my = y + 74;
+    ctx.lineCap = 'round'; ctx.lineWidth = 8;
+    ctx.strokeStyle = '#E3ECE5'; circ(ctx, mx, my, 40); ctx.stroke();
+    if (mp > 0) { ctx.strokeStyle = C.green; ctx.beginPath(); ctx.arc(mx, my, 40, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.98 * mp); ctx.stroke(); }
+    T(ctx, Math.round(98 * mp) + '%', mx, my + 3, { size: 22, w: 800, c: C.deep, align: 'center' });
+    T(ctx, 'match', mx, my + 21, { size: 12, w: 600, c: '#5B6B66', align: 'center', ls: 0.5 });
+    // badge, title, price
+    const bk = spr(t, BV(89.4), 16, 0.8);
+    if (bk > 0.01) { ctx.save(); ctx.translate(x + 28, y + 52); ctx.scale(bk, bk); rr(ctx, 0, -18, 148, 36, 18); ctx.fillStyle = C.neon; ctx.fill(); T(ctx, 'BEST MATCH', 74, 6, { size: 15, w: 800, c: C.night, align: 'center', ls: 2.5 }); ctx.restore(); }
+    rise(ctx, t, 'Solo Unlimited', x + 28, y + 152, { size: 36, w: 800, c: C.deep, ls: -0.5 }, BV(89.45));
+    const price = Math.round(149 * eOut(P(t, BV(89.7), 0.6)));
+    rise(ctx, t, String(price), x + 28, y + 240, { size: 70, w: 800, c: C.deep, ls: -2 }, BV(89.7));
+    rise(ctx, t, 'SAR / month', x + 36 + TW(ctx, '149', { size: 70, w: 800, ls: -2 }), y + 238, { size: 22, w: 600, c: '#5B6B66' }, BV(89.8));
+    ctx.fillStyle = '#E3ECE5'; ctx.fillRect(x + 28, y + 282, (w - 56) * eOut(P(t, BV(89.6), 0.5)), 2);
+    // the button: tapped, it fills and confirms
+    const bt = spr(t, BV(90.8), 15, 0.86);
+    if (bt > 0.01) {
+      const bx = x + 28, by = y + h - 94, bw = w - 56, bh = 64;
+      ctx.save(); ctx.translate(bx + bw / 2, by + bh / 2); ctx.scale(bt * (1 - 0.04 * Math.sin(Math.PI * P(t, BV(91.6), 0.25))), bt); ctx.translate(-(bx + bw / 2), -(by + bh / 2));
+      rr(ctx, bx, by, bw, bh, 32); ctx.fillStyle = C.deep; ctx.fill();
+      const fill = eOut(P(t, BV(91.7), 0.4));
+      if (fill > 0) { ctx.save(); rr(ctx, bx, by, bw, bh, 32); ctx.clip(); ctx.fillStyle = C.neon; ctx.fillRect(bx, by, bw * fill, bh); ctx.restore(); }
+      ctx.save(); rr(ctx, bx, by, bw, bh, 32); ctx.clip();
+      const sw = eInOut(P(t, BV(91.95), 0.35));
+      T(ctx, 'Activate in one tap', bx + bw / 2, by + 41 - sw * 60, { size: 23, w: 700, c: C.mist, align: 'center' });
+      icon(ctx, 'Tick02', bx + bw / 2 - 64, by + 32 + (1 - sw) * 60, 26, C.night, 1.8);
+      T(ctx, 'Activated', bx + bw / 2 + 16, by + 41 + (1 - sw) * 60, { size: 23, w: 800, c: C.night, align: 'center' });
+      ctx.restore();
+      // the tap: a ring that opens from the touch point (flat, no glow)
+      const tp = P(t, BV(91.55), 0.4);
+      if (tp > 0 && tp < 1) { ctx.strokeStyle = C.neon; ctx.lineWidth = 3 * (1 - tp); circ(ctx, bx + bw * 0.72, by + bh / 2, 10 + 46 * eOut(tp)); ctx.stroke(); }
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  // 3) what the AI knows: insights fly out of the EAI core along data lines, then become the plan's benefits
+  const toCard = spr(t, BV(89.1), 13, 0.9);
+  INSIGHTS.forEach((ins, i) => {
+    const t0 = BV(87.3) + i * BV(0.5);
+    if (t < t0) return;
+    const fly = spr(t, t0, 9, 0.92);
+    const dock = [CARD2.x + 4, 352 + i * 84];                    // chip left edge, centre y
+    const row = [CARD2.x + 30, CARD2.y + 352 + i * 54];
+    const ox = ecx + 120 * esc, oy = ecy;
+    const x = lerp(lerp(ox, dock[0], fly), row[0], toCard), y = lerp(lerp(oy, dock[1], fly) - 150 * Math.sin(Math.PI * clamp(fly)) * (1 - toCard), row[1], toCard);
+    // data line + a pulse travelling along it
+    const ln = (1 - eIn(P(t, BV(88.9), 0.3)));
+    if (ln > 0.01 && toCard < 0.5) {
+      ctx.strokeStyle = '#1F5F54'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(ox, oy);
+      ctx.quadraticCurveTo((ox + x) / 2, Math.min(oy, y) - 120, lerp(ox, x, ln), lerp(oy, y, ln)); ctx.stroke();
+      const pp = ((t - t0) * 1.6) % 1, bx = (1 - pp) * (1 - pp) * ox + 2 * (1 - pp) * pp * (ox + x) / 2 + pp * pp * x, by = (1 - pp) * (1 - pp) * oy + 2 * (1 - pp) * pp * (Math.min(oy, y) - 120) + pp * pp * y;
+      if (fly > 0.6) { circ(ctx, bx, by, 4.5); ctx.fillStyle = C.neon; ctx.fill(); }
+    }
+    // chip
+    const o = { size: 22, w: 700 }, cw = TW(ctx, ins.chip, o) + 92;
+    const pill = lerp(cw, 30, toCard), ph = lerp(56, 30, toCard), sk = lerp(lerp(0.35, 1, clamp(fly)), 1, toCard);
+    ctx.save(); ctx.translate(x, y); ctx.scale(sk, sk);
+    if (toCard < 0.98) { shadowOn(ctx, 0.5); rr(ctx, 0, -ph / 2, pill, ph, ph / 2); ctx.fillStyle = mixC(C.white, C.neon, toCard); ctx.fill(); shadowOff(ctx); }
+    else { circ(ctx, 15, 0, 15); ctx.fillStyle = C.neon; ctx.fill(); }
+    if (toCard < 0.5) {
+      circ(ctx, 30, 0, 18 * (1 - toCard * 2)); ctx.fillStyle = C.deep; ctx.fill();
+      icon(ctx, ins.ic, 30, 0, 22 * (1 - toCard * 2), C.neon, 1.2);
+    } else icon(ctx, 'Tick02', 15, 0, 20 * (toCard - 0.5) * 2, C.deep, 1.6);
+    ctx.restore();
+    rise(ctx, t, ins.chip, x + 62 * sk, y + 8, { size: 22, w: 700, c: C.deep }, t0 + 0.12, BV(89.1));
+    rise(ctx, t, ins.row, row[0] + 44, row[1] + 8, { size: 23, w: 600, c: C.deep }, BV(89.6) + i * 0.12);
+  });
+  ctx.restore();
+}

@@ -2,6 +2,7 @@
 // Images come from the Salam Figma file (3D icons, app screens, people, logos),
 // line icons from the Hugeicons library used by the team. All are embedded in the page.
 const IMG = {};                       // name -> decoded HTMLImageElement
+let FRAME_T = 0;                      // time of the frame being drawn (set at the top of each frame)
 const ICONS = window.__ICONS || {};
 
 async function loadImages() {

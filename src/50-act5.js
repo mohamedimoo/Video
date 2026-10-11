@@ -1,7 +1,7 @@
 // ===== ACT V — STEP BY STEP, VISION, END TITLE =====
 // --- Step by step: Core -> Beyond -> Ecosystem, built as concentric rings (real beats 123.4–136) ---
 const RC = [1262, 578];
-const SB = { core: 125, beyond: 127.5, eco: 130, sum: 132.5, out: 134.6 };
+const SB = { core: 129, beyond: 131.5, eco: 134, sum: 136.5, out: 138.6 };
 const PHASES = [
   { cap: 'PHASE 01 · CORE', title: ['Merge Mobile + Home'], sub: 'One identity, one bill, one AI assistant.' },
   { cap: 'PHASE 02 · BEYOND', title: ['Open up to partners'], sub: 'Mini-apps, content and AI-guided discovery.' },
@@ -36,15 +36,15 @@ scene(107.4, 112.8, (ctx, t) => {
   dotGrid(ctx, '#D6E0D9', 1000);
   const [cx, cy] = RC;
   // dashed orbit guides
-  const gp = eInOut(P(t, BV(124), 0.9));
+  const gp = eInOut(P(t, BV(128), 0.9));
   if (gp > 0) {
     ctx.save(); ctx.setLineDash([5, 8]); ctx.strokeStyle = '#C3D0C8'; ctx.lineWidth = 1.5;
     [560, 760, 980].forEach((r, i) => { ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(gp * 1.2 - i * 0.1)); ctx.stroke(); });
     ctx.restore();
   }
   // the hub's three phones drop out of frame on the downbeat
-  if (t < BV(124.6)) PHONES3.forEach((ph, k) => {
-    const d = eIn(P(t, BV(123.4) + k * 0.06, 0.45));
+  if (t < BV(128.6)) PHONES3.forEach((ph, k) => {
+    const d = eIn(P(t, BV(127.4) + k * 0.06, 0.45));
     if (d >= 1) return;
     phone(ctx, t, [[ph.s, 0]], ph.x, ph.y + d * 1100, ph.h * (1 - d * 0.2), { rot: ph.rot * (1 + d * 2), shadow: 0.6 });
   });
@@ -110,12 +110,12 @@ scene(107.4, 112.8, (ctx, t) => {
   { const [ex, ey] = ca(50, ecoR); callout(ctx, t, BV(SB.eco + 1.1), BV(SB.out) - 0.2, ex, ey, ex - 120, ey + 52, 'Social & first-party content'); }
 
   // left column: header, title, phase text, stepper
-  rise(ctx, t, 'THE PLAN · STEP BY STEP', 96, 104, { size: 18, w: 700, c: C.deep, ls: 5 }, BV(123.8));
-  { const k = eOut(P(t, BV(123.8), 0.45)); if (k > 0) wordLetters(ctx, 1825 - WORD_W(22), 106, 22, C.deep, [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(123.8) + i * 0.04, 0.4)))); }
-  rise(ctx, t, 'BECOME A SUPERAPP', 96, 170, { size: 18, w: 700, c: C.green, ls: 6 }, BV(124));
+  rise(ctx, t, 'THE PLAN · STEP BY STEP', 96, 104, { size: 18, w: 700, c: C.deep, ls: 5 }, BV(127.8));
+  { const k = eOut(P(t, BV(127.8), 0.45)); if (k > 0) wordLetters(ctx, 1825 - WORD_W(22), 106, 22, C.deep, [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(127.8) + i * 0.04, 0.4)))); }
+  rise(ctx, t, 'BECOME A SUPERAPP', 96, 170, { size: 18, w: 700, c: C.green, ls: 6 }, BV(128));
   const ti = { size: 78, w: 800, ls: -2.5 };
-  rise(ctx, t, 'Step by Step', 96, 254, { ...ti, c: C.deep }, BV(124) + 0.08, BV(SB.sum) - 0.06);
-  rise(ctx, t, 'Approach', 96, 338, { ...ti, c: C.leaf }, BV(124) + 0.16, BV(SB.sum) + 0.02);
+  rise(ctx, t, 'Step by Step', 96, 254, { ...ti, c: C.deep }, BV(128) + 0.08, BV(SB.sum) - 0.06);
+  rise(ctx, t, 'Approach', 96, 338, { ...ti, c: C.leaf }, BV(128) + 0.16, BV(SB.sum) + 0.02);
   {
     // "Core -> Beyond ->" / "Ecosystem"
     const parts = ['Core', '>', 'Beyond', '>'];
@@ -139,12 +139,12 @@ scene(107.4, 112.8, (ctx, t) => {
   });
   const NX = [116, 353, 590], NY = 786;
   const stepOn = i => spr(t, BV([SB.core, SB.beyond, SB.eco][i]), 17, 0.8);
-  if (t >= BV(124.3)) {
-    ctx.strokeStyle = '#C9D5CD'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(NX[0], NY); ctx.lineTo(NX[0] + (NX[2] - NX[0]) * eOut(P(t, BV(124.3), 0.6)), NY); ctx.stroke();
+  if (t >= BV(128.3)) {
+    ctx.strokeStyle = '#C9D5CD'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(NX[0], NY); ctx.lineTo(NX[0] + (NX[2] - NX[0]) * eOut(P(t, BV(128.3), 0.6)), NY); ctx.stroke();
     const prog = clamp(eOut(P(t, BV(SB.beyond), 0.6)) * 0.5 + eOut(P(t, BV(SB.eco), 0.6)) * 0.5);
     if (prog > 0) { ctx.strokeStyle = C.green; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(NX[0], NY); ctx.lineTo(NX[0] + (NX[2] - NX[0]) * prog, NY); ctx.stroke(); }
     ['Core', 'Beyond', 'Ecosystem'].forEach((n, i) => {
-      const k = spr(t, BV(124.3) + i * 0.08, 17, 0.8), on = stepOn(i);
+      const k = spr(t, BV(128.3) + i * 0.08, 17, 0.8), on = stepOn(i);
       if (k <= 0.01) return;
       ctx.save(); ctx.translate(NX[i], NY); ctx.scale(k, k);
       circ(ctx, 0, 0, 20); ctx.fillStyle = mixC(C.mist, C.green, clamp(on)); ctx.fill();
@@ -158,7 +158,7 @@ scene(107.4, 112.8, (ctx, t) => {
   {
     const prog = 0.04 + 0.29 * eOut(P(t, BV(SB.core), 0.6)) + 0.29 * eOut(P(t, BV(SB.beyond), 0.6)) + 0.29 * eOut(P(t, BV(SB.eco), 0.6)) + 0.09 * eOut(P(t, BV(SB.sum), 0.6));
     ctx.fillStyle = '#DCE5DE'; ctx.fillRect(72, 1050, 1776, 3);
-    ctx.fillStyle = C.green; ctx.fillRect(72, 1050, 1776 * prog * eOut(P(t, BV(124), 0.5)), 3);
+    ctx.fillStyle = C.green; ctx.fillRect(72, 1050, 1776 * prog * eOut(P(t, BV(128), 0.5)), 3);
   }
   // a deep green disc opens from the rings into the next scene
   const dg = eIn(P(crispT(t), BV(SB.out), BV(1)));
@@ -179,7 +179,7 @@ scene(111.6, 121.4, (ctx, t) => {
       const cy = lerp(1500, 560, k) - out * 1300;
       ctx.save();
       rr(ctx, 1220, cy - 440, 600, 880, 52); ctx.fillStyle = C.mist; ctx.fill(); ctx.clip();
-      pic(ctx, 'p_friends', 1520, cy + 120 + (1 - k) * 160, 1130);
+      pic(ctx, 'p_friends', 1520, cy + 120 + (1 - k) * 160, 1130 * (1 + 0.06 * P(t, B(112), B(2))));
       ctx.restore();
     }
   }
@@ -197,7 +197,7 @@ scene(111.6, 121.4, (ctx, t) => {
       ctx.save();
       shadowOn(ctx, 0.5); rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
       rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.clip();
-      pic(ctx, 'p_family', 960, cy + 120, 780);
+      pic(ctx, 'p_family', 960, cy + 120, 780 * (1 + 0.06 * P(t, B(114), B(6))));
       ctx.restore();
     }
   }
@@ -244,21 +244,21 @@ scene(120, 134.01, (ctx, t) => {
   if (dusk < 1) { bg(ctx, C.mist); circ(ctx, 960, 560, lerp(0, 1300, dusk)); ctx.fillStyle = C.deep; ctx.fill(); }
   else bg(ctx, C.deep);
   if (dusk >= 1) dotGrid(ctx, '#0A4339', 900);
-  const punch = t >= B(128) ? spr(t, B(128), 14, 0.7) * (1 - eInOut(P(t, BV(152.5), BV(0.6)))) : 0;
+  const punch = t >= B(128) ? spr(t, B(128), 14, 0.7) * (1 - eInOut(P(t, BV(156.5), BV(0.6)))) : 0;
   const lit = DAY_T.filter(x => t >= x).length;
   // the end card's concentric guides draw themselves as the days lift off the grid
-  const gp = eInOut(P(t, BV(152.5), 0.9)), endOut = eIn(P(crispT(t), BV(160.7), 0.6));
+  const gp = eInOut(P(t, BV(156.5), 0.9)), endOut = eIn(P(crispT(t), BV(164.7), 0.6));
   if (gp > 0) {
     ctx.strokeStyle = '#0E4D43'; ctx.lineWidth = 1.5;
     [240, 450, 690, 930].forEach((r, i) => {
-      const rp = r + 14 * Math.sin(Math.PI * P(t, BV(159) + i * 0.1, 0.5));
+      const rp = r + 14 * Math.sin(Math.PI * P(t, BV(163) + i * 0.1, 0.5));
       ctx.beginPath(); ctx.arc(OC[0], OC[1], rp, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(gp * 1.3 - i * 0.1)); ctx.stroke();
     });
   }
   // small moments keep orbiting the guides while the end title reads
-  const ok = eOut(P(t, BV(156), 0.6)) * (1 - endOut);
+  const ok = eOut(P(t, BV(160), 0.6)) * (1 - endOut);
   if (ok > 0) [[450, 0.32, 0.2], [690, -0.21, 2.1], [930, 0.15, 4.0]].forEach(([r, w, ph]) => {
-    const a = ph + w * (t - BV(156));
+    const a = ph + w * (t - BV(160));
     circ(ctx, OC[0] + Math.cos(a) * r, OC[1] + Math.sin(a) * r, 6 * ok); ctx.fillStyle = C.neon; ctx.fill();
   });
   // the 30 days: grid -> lit -> icon tiles on an orbit -> spiral into the wordmark
@@ -272,9 +272,9 @@ scene(120, 134.01, (ctx, t) => {
     x += (x - 960) * punch * 0.22; y += (y - 560) * punch * 0.22;
     let size = lerp(40, GRIDC.r * 2, form) * pop;
     // to the orbit
-    const m = clamp(spr(t, BV(152.4) + d * 0.012, 7, 0.92));
-    const sp = eIn(P(t, BV(153.6) + d * 0.018, 1.05));
-    const orbit = 0.18 * Math.max(0, t - BV(152.6)) + 2.4 * sp;
+    const m = clamp(spr(t, BV(156.4) + d * 0.012, 7, 0.92));
+    const sp = eIn(P(t, BV(157.6) + d * 0.018, 1.05));
+    const orbit = 0.18 * Math.max(0, t - BV(156.6)) + 2.4 * sp;
     const th = -Math.PI / 2 + d / 30 * Math.PI * 2 + orbit, R = 400 * (1 - sp);
     x = lerp(x, OC[0] + Math.cos(th) * R, m); y = lerp(y, OC[1] + Math.sin(th) * R, m);
     size = lerp(size, 52, m) * (1 - sp * sp);
@@ -300,10 +300,10 @@ scene(120, 134.01, (ctx, t) => {
   if (endOut > 0) { circ(ctx, OC[0], 500, lerp(0, 1300, endOut)); ctx.fillStyle = C.night; ctx.fill(); }
   // the wordmark: letters rise as the tiles arrive, breathe gently, then shrink into the app icon's label
   {
-    const toLabel = eInOut(P(t, BV(160.6), 0.75));
-    const breathe = 1 + 0.02 * eInOut(P(t, BV(156), BV(4)));
+    const toLabel = eInOut(P(t, BV(164.6), 0.75));
+    const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
     const h = lerp(96 * breathe, 30, toLabel), y = lerp(OC[1] + 48, 660, toLabel);
-    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(155) + i * 0.07, 0.45)));
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
     if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, mixC(C.mist, C.dim, toLabel), rv);
   }
   // "Making [the joy of technology]" / "accessible for everyone, everyday."
@@ -311,10 +311,10 @@ scene(120, 134.01, (ctx, t) => {
     const o = { size: 54, w: 500 }, ob = { size: 54, w: 700 };
     const wm = TW(ctx, 'Making ', o), wj = TW(ctx, 'the joy of technology', ob);
     const x0 = 960 - (wm + 20 + wj) / 2, xj = x0 + wm + 20, y1 = 664, y2 = 738;
-    rise(ctx, t, 'Making', x0, y1, { ...o, c: C.mist }, BV(156), BV(160.4));
-    rise(ctx, t, 'the joy of technology', xj, y1, { ...ob, c: C.mist }, BV(156) + 0.15, BV(160.4) + 0.03);
+    rise(ctx, t, 'Making', x0, y1, { ...o, c: C.mist }, BV(160), BV(164.4));
+    rise(ctx, t, 'the joy of technology', xj, y1, { ...ob, c: C.mist }, BV(160) + 0.15, BV(164.4) + 0.03);
     // the highlight sweeps in on the off-beat and the type turns deep green inside it
-    const hp = eOut(P(t, BV(156.5), 0.42)), ho = eIn(P(t, BV(160.4), 0.3));
+    const hp = eOut(P(t, BV(160.5), 0.42)), ho = eIn(P(t, BV(164.4), 0.3));
     if (hp > 0 && ho < 1) {
       const hx = xj - 14, hw = (wj + 28) * hp, hy = y1 - 50 - ho * 90;
       ctx.save(); ctx.beginPath(); ctx.rect(0, y1 - 62, W, 84); ctx.clip();
@@ -323,24 +323,24 @@ scene(120, 134.01, (ctx, t) => {
       T(ctx, 'the joy of technology', xj, y1 - ho * 90, { ...ob, c: C.deep });
       ctx.restore();
     }
-    rise(ctx, t, 'accessible for everyone, everyday.', 960, y2, { ...o, c: '#D6E2DC', align: 'center' }, BV(157.25), BV(160.45));
+    rise(ctx, t, 'accessible for everyone, everyday.', 960, y2, { ...o, c: '#D6E2DC', align: 'center' }, BV(161.25), BV(164.45));
     {
       // "everyday." gets underlined on the beat after it lands
       const w1 = TW(ctx, 'accessible for everyone, ', o), w2 = TW(ctx, 'everyday.', o), x = 960 - (w1 + w2) / 2 + w1;
-      const up = eOut(P(t, BV(158.5), 0.4)), uo = eIn(P(t, BV(160.45), 0.3));
+      const up = eOut(P(t, BV(162.5), 0.4)), uo = eIn(P(t, BV(164.45), 0.3));
       if (up > 0 && uo < 1) { ctx.fillStyle = C.neon; ctx.fillRect(x, y2 + 14 + uo * 120, (w2 - 10) * up, 6); }
     }
-    rise(ctx, t, 'BEYOND TELCO · CLOSER TO LIFE', 960, 826, { size: 20, w: 700, c: C.fog, align: 'center', ls: 7 }, BV(158), BV(160.5));
+    rise(ctx, t, 'BEYOND TELCO · CLOSER TO LIFE', 960, 826, { size: 20, w: 700, c: C.fog, align: 'center', ls: 7 }, BV(162), BV(164.5));
   }
   // the progress line along the bottom completes with the film (as in the reference end card)
-  if (t >= BV(152.6) && endOut < 1) {
-    const pg = eOut(P(t, BV(152.6), 0.6)), fill = 0.06 + 0.94 * eInOut(P(t, BV(153), BV(7.4)));
+  if (t >= BV(156.6) && endOut < 1) {
+    const pg = eOut(P(t, BV(156.6), 0.6)), fill = 0.06 + 0.94 * eInOut(P(t, BV(157), BV(7.4)));
     ctx.fillStyle = '#0E4D43'; ctx.fillRect(72, 1050, 1776 * pg, 3);
     ctx.fillStyle = C.neon; ctx.fillRect(72, 1050, 1776 * pg * fill, 3);
   }
   // the app icon returns: last frame == first frame
   {
-    const k = spr(t, BV(160.9), 15, 0.86);
+    const k = spr(t, BV(164.9), 15, 0.86);
     if (k > 0.01) appIcon(ctx, 960, 500, 200 * k, 0);
   }
 });

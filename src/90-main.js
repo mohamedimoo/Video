@@ -15,6 +15,7 @@ const smctx = sm.getContext('2d', { willReadFrequently: true });
 
 function drawFrame(c, t) {
   t = ((t % DUR) + DUR) % DUR;      // the film loops: last frame == first frame
+  FRAME_T = t;
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.globalAlpha = 1; c.globalCompositeOperation = 'source-over';
   bg(c, C.night);

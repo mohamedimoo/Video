@@ -2,6 +2,7 @@
 const NM = 140;
 const CIRC = [[560, 560], [960, 560], [1360, 560]], CR = 150;
 const RING = { cx: 960, cy: 560, r0: 190, r1: 262 };
+const HAB_LO = { size: 30, w: 700, c: C.mist, align: 'center' };
 const GAP = 0.09;
 const ROT_W = 0.75;
 function ringRot(t) {
@@ -138,7 +139,7 @@ scene(27.5, 40.2, (ctx, t) => {
     });
   }
   // real 3D icons: inside the circles first, then riding the loop's sectors
-  const HAB_IC = ['ContentWriting', 'UserGroup', 'ShoppingBag01'];
+  const HAB_IC = ['ContentWriting', 'UserGroup', 'ShoppingBag01'], labels = [];
   ['Content', 'Community', 'Commerce'].forEach((lab, i) => {
     const q = spr(t, B(29) + i * 0.08, 15, 0.8) * (1 - eIn(P(t, BN(39) + 0.1, 0.3)));
     if (t < B(36) && q > 0.01) {
@@ -148,9 +149,9 @@ scene(27.5, 40.2, (ctx, t) => {
       const ix = lerp(CIRC[i][0], sx, toSector), iy = lerp(CIRC[i][1], sy, toSector);
       if (toSector > 0.05) { circ(ctx, ix, iy, 40 * k * q * toSector); ctx.fillStyle = C.night; ctx.fill(); }
       icon(ctx, HAB_IC[i], ix, iy, lerp(120, 44 * k, toSector) * q, mixC(C.deep, C.neon, toSector), 1.1);
-      const lr = 372, lx = RING.cx + Math.cos(am) * lr, ly = RING.cy + Math.sin(am) * lr + 12;
-      const pl = [lerp(CIRC[i][0], lx, toSector), lerp(CIRC[i][1] + CR + 70, ly, toSector)];
-      rise(ctx, t, lab, pl[0], pl[1], { size: lerp(38, 30, toSector), w: 700, c: C.mist, align: 'center' }, B(29) + 0.1 + i * 0.08, BN(36));
+      // the label hugs the outside of the ring: its box never comes closer than 20 px to the band
+      const hw = TW(ctx, lab, HAB_LO) / 2 + 12, d = RING.r1 + 20 + Math.abs(Math.cos(am)) * hw + Math.abs(Math.sin(am)) * 23;
+      labels.push([lab, i, RING.cx + Math.cos(am) * d, RING.cy + Math.sin(am) * d + 10, hw]);
     }
   });
   // plus signs
@@ -162,10 +163,10 @@ scene(27.5, 40.2, (ctx, t) => {
   rise(ctx, t, 'THE HABIT LOOP', 960, 110, { size: 26, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(28.75), BN(36));
   // stats around the loop: white cards with the partner's real logo, wired to the loop
   const STATS = [
-    ['TIKTOK', 95, ' min/day', 150, 420, 'left', '', 'l_tiktok'],
-    ['SPOTIFY', 30, ' min/day', 1770, 420, 'right', '', 'l_spotify'],
-    ['STARBUCKS', 1, ' pay app in US', 1770, 780, 'right', '#', 'l_starbucks'],
-    ['ALIPAY', 1, 'B daily users', 150, 780, 'left', '', 'l_alipay'],
+    ['TIKTOK', 95, ' min/day', 96, 330, 'left', '', 'l_tiktok'],
+    ['SPOTIFY', 30, ' min/day', 1824, 330, 'right', '', 'l_spotify'],
+    ['STARBUCKS · US', 1, ' pay app', 1824, 840, 'right', '#', 'l_starbucks'],
+    ['ALIPAY', 1, 'B daily users', 96, 840, 'left', '', 'l_alipay'],
   ];
   STATS.forEach(([k, v, suf, x, y, al, pre, logo], i) => {
     const t0 = B(32 + i);
@@ -180,7 +181,7 @@ scene(27.5, 40.2, (ctx, t) => {
     const ex = al === 'left' ? x0 + cw : x0, ang = Math.atan2(y - RING.cy, ex - RING.cx);
     const lp = eOut(P(t, t0 + 0.15, 0.35)) * (1 - out);
     if (lp > 0) {
-      const rx = RING.cx + Math.cos(ang) * (RING.r1 + 26), ry = RING.cy + Math.sin(ang) * (RING.r1 + 26);
+      const rx = RING.cx + Math.cos(ang) * (RING.r1 + 12), ry = RING.cy + Math.sin(ang) * (RING.r1 + 12);
       ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(ex, y); ctx.lineTo(lerp(ex, rx, lp), lerp(y, ry, lp)); ctx.stroke();
       circ(ctx, lerp(ex, rx, lp), lerp(y, ry, lp), 6); ctx.fillStyle = C.neon; ctx.fill();
     }
@@ -188,6 +189,14 @@ scene(27.5, 40.2, (ctx, t) => {
     pic(ctx, logo, x0 + 70, y, 82);
     T(ctx, k, x0 + 140, y - 16, { size: 20, w: 700, c: C.leaf, ls: 6 });
     T(ctx, stat, x0 + 140, y + 36, { size: 44, w: 700, c: C.deep, ls: -1 });
+  });
+  // the ring labels sit on top of the connectors: a knockout in the background colour lets the lines pass behind them
+  // (under the circles first; they leave as the circles become the loop and return hugging the ring)
+  labels.forEach(([lab, i, x, y, hw]) => {
+    rise(ctx, t, lab, CIRC[i][0], CIRC[i][1] + CR + 70, { ...HAB_LO, size: 38 }, B(29) + 0.1 + i * 0.08, B(31) - 0.05);
+    const t1 = B(31) + 0.5 + i * 0.06;
+    if (t > t1 && t < BN(36) + 0.3) { rr(ctx, x - hw, y - 33, hw * 2, 46, 23); ctx.fillStyle = C.deep; ctx.fill(); }
+    rise(ctx, t, lab, x, y, HAB_LO, t1, BN(36));
   });
   rise(ctx, t, 'daily', 960, 578, { size: 44, w: 700, c: C.mist, align: 'center' }, B(31.6), BN(36));
   // the inserted bar: thirty days, two kinds of app
@@ -228,27 +237,75 @@ function strokeVis(ctx, pts, front) {
   }
   ctx.stroke();
 }
-// the globe is a field of dots (Fibonacci sphere): the same dots later become Nafath's identity rings
-const GN = 560;
-const GDOTS = Array.from({ length: GN }, (_, i) => {
-  const y = 1 - 2 * (i + 0.5) / GN;
-  return { lat: Math.asin(y) / D2R, lon: (i * 137.50776) % 360 };
-});
-function globeDot(z, k) { return { r: (z >= 0 ? 2.2 + 2.6 * z : 1.7) * k, c: z >= 0 ? mixC(C.teal, C.leaf, 0.35 + 0.65 * z) : '#0B2B26' }; }
-function drawGlobe(ctx, lc, tilt, cx, cy, R, reveal, t, skip) {
-  // back dots first, then front dots
-  for (const pass of [0, 1]) {
-    GDOTS.forEach((d, i) => {
-      if (skip && skip(i)) return;
-      const q = gProj(d.lat, d.lon, lc, tilt, cx, cy, R);
-      if ((q[2] >= 0) !== (pass === 1)) return;
-      const dist = Math.hypot(q[0] - cx, q[1] - cy) / R;
-      const k = reveal(dist, i);
-      if (k <= 0.01) return;
-      const g = globeDot(q[2], k);
-      circ(ctx, q[0], q[1], g.r); ctx.fillStyle = g.c; ctx.fill();
-    });
+// the globe: a dark body, a graticule, an orbit and the land as a dot matrix (Natural Earth 50m, 1.8 deg grid)
+const LAND = (window.__LAND || []).map(([lat, lon], i) => ({ lat, lon, i }));
+const LAND_LV = 8;
+const landCol = lv => mixC('#1C6B5C', C.leaf, Math.min(1, 0.12 + 0.98 * lv / (LAND_LV - 1)));
+function globeDot(z, k) { return { r: (1.2 + 2.0 * z) * k, c: landCol(Math.min(LAND_LV - 1, Math.floor(z * LAND_LV))) }; }
+function graticule(ctx, lc, tilt, cx, cy, R, f) {
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = '#0E352F'; ctx.lineWidth = 1.2;
+  for (let k = -9; k < 9; k++) {
+    const lon = lc + k * 20 * f + 0.0001, pts = [];
+    for (let i = 0; i <= 60; i++) pts.push(gProj(-90 + i * 3, lon, lc, tilt, cx, cy, R));
+    strokeVis(ctx, pts, true);
   }
+  for (let j = -4; j <= 4; j++) {
+    const lat = j * 20 * f, pts = [];
+    for (let i = 0; i <= 120; i++) pts.push(gProj(lat, lc - 180 + i * 3, lc, tilt, cx, cy, R));
+    ctx.strokeStyle = j === 0 ? '#17594D' : '#0E352F'; ctx.lineWidth = j === 0 ? 1.7 : 1.2;
+    strokeVis(ctx, pts, true);
+  }
+}
+// opt: body (radius factor for body + graticule), bodyC (their centre), f (graticule spread), skip(i)
+function drawGlobe(ctx, lc, tilt, cx, cy, R, reveal, opt = {}) {
+  const body = opt.body ?? 1, f = opt.f ?? 1, [bx, by] = opt.bodyC || [cx, cy];
+  if (body > 0.002) {
+    const Rb = R * body;
+    circ(ctx, bx, by, Rb); ctx.fillStyle = '#061E1A'; ctx.fill();
+    graticule(ctx, lc, tilt, bx, by, Rb, f);
+    circ(ctx, bx, by, Rb); ctx.strokeStyle = C.teal; ctx.lineWidth = 2; ctx.stroke();
+  }
+  // land dots, front hemisphere only, batched by facing so the globe draws in a few fills
+  const lv = Array.from({ length: LAND_LV }, () => []);
+  for (const d of LAND) {
+    if (opt.skip && opt.skip(d.i)) continue;
+    const q = gProj(d.lat, d.lon, lc, tilt, cx, cy, R);
+    if (q[2] < 0.04) continue;
+    const k = reveal(Math.hypot(q[0] - cx, q[1] - cy) / R, d.i);
+    if (k <= 0.01) continue;
+    lv[Math.min(LAND_LV - 1, Math.floor(q[2] * LAND_LV))].push(q[0], q[1], (1.2 + 2.0 * q[2]) * k);
+  }
+  lv.forEach((arr, l) => {
+    if (!arr.length) return;
+    ctx.beginPath();
+    for (let i = 0; i < arr.length; i += 3) { ctx.moveTo(arr[i] + arr[i + 2], arr[i + 1]); ctx.arc(arr[i], arr[i + 1], arr[i + 2], 0, Math.PI * 2); }
+    ctx.fillStyle = landCol(l); ctx.fill();
+  });
+}
+// a thin inclined orbit with a satellite: back half before the globe, front half after
+function orbit(ctx, t, cx, cy, R, front, k) {
+  if (k <= 0.01) return;
+  const Ro = R * 1.24, a = 0.32, b = -0.38, pts = [];
+  for (let i = 0; i <= 160; i++) {
+    const th = i / 160 * Math.PI * 2, X = Ro * Math.cos(th), Yp = Ro * Math.sin(th) * Math.sin(a), Zp = Ro * Math.sin(th) * Math.cos(a);
+    pts.push([cx + (X * Math.cos(b) - Yp * Math.sin(b)) * k, cy - (X * Math.sin(b) + Yp * Math.cos(b)) * k, Zp]);
+  }
+  ctx.strokeStyle = front ? '#1F5F54' : '#0E3A33'; ctx.lineWidth = front ? 1.4 : 1.2;
+  strokeVis(ctx, pts, front);
+  const th = t * 1.05, X = Ro * Math.cos(th), Yp = Ro * Math.sin(th) * Math.sin(a), Zp = Ro * Math.sin(th) * Math.cos(a);
+  if ((Zp >= 0) !== front) return;
+  const sx = cx + (X * Math.cos(b) - Yp * Math.sin(b)) * k, sy = cy - (X * Math.sin(b) + Yp * Math.cos(b)) * k;
+  circ(ctx, sx, sy, (front ? 7.5 : 5.5) * k); ctx.fillStyle = C.night; ctx.fill();
+  circ(ctx, sx, sy, (front ? 5.5 : 4) * k); ctx.fillStyle = front ? C.neon : '#1E5C50'; ctx.fill();
+}
+// a point along the great circle between two lat/lon points, raised above the surface
+function gcPoint(a, b, u, lc, tilt, cx, cy, R, lift) {
+  const v = ([la, lo]) => [Math.cos(la * D2R) * Math.cos(lo * D2R), Math.sin(la * D2R), Math.cos(la * D2R) * Math.sin(lo * D2R)];
+  const A = v(a), Bv = v(b), m = A.map((x, i) => lerp(x, Bv[i], u)), n = Math.hypot(...m);
+  const lat = Math.asin(m[1] / n) / D2R, lon = Math.atan2(m[2], m[0]) / D2R;
+  const q = gProj(lat, lon, lc, tilt, 0, 0, R * (1 + lift * Math.sin(u * Math.PI)));
+  return [cx + q[0], cy + q[1], q[2]];
 }
 const PINS = [
   { n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
@@ -287,13 +344,13 @@ function nafathMap() {
   if (_NFMAP) return _NFMAP;
   const [cx, cy] = globeFinalCentre();
   const front = [];
-  GDOTS.forEach((d, i) => {
+  LAND.forEach(d => {
     const q = gProj(d.lat, d.lon, RIYADH.lon, GLOBE_TILT, cx, cy, 330);
-    if (q[2] >= 0) front.push({ i, x: q[0], y: q[1], z: q[2], a: (Math.atan2(q[1] - NF.cy, q[0] - NF.cx) + Math.PI / 2 + 4 * Math.PI) % (2 * Math.PI) });
+    if (q[2] >= 0.12) front.push({ i: d.i, x: q[0], y: q[1], z: q[2], a: (Math.atan2(q[1] - NF.cy, q[0] - NF.cx) + Math.PI / 2 + 4 * Math.PI) % (2 * Math.PI) });
   });
   front.sort((p, q) => p.a - q.a);
   const nS = NF_SLOTS.length, map = new Map();
-  for (let s = 0; s < nS; s++) map.set(front[Math.floor(s * front.length / nS)].i, { s, from: front[Math.floor(s * front.length / nS)] });
+  for (let s = 0; s < nS; s++) { const fr = front[Math.floor(s * front.length / nS)]; map.set(fr.i, { s, from: fr }); }
   return (_NFMAP = map);
 }
 function ringR(t, k) {
@@ -307,18 +364,24 @@ scene(40, 52.2, (ctx, t) => {
   if (t >= BV(52.6)) dotGrid(ctx, '#0B201D', 1100);
   const f = eOut(P(t, B(40), 0.7));
   const toRiyadh = eInOut(P(t, B(48), 0.7));
-  const lc = lerp(lerp(98, 88, P(t, B(40), B(8))), RIYADH.lon, toRiyadh);
+  const lc = lerp(lerp(112, 84, eInOut(P(t, B(40), B(8)))), RIYADH.lon, toRiyadh);   // the globe keeps turning
   const tilt = GLOBE_TILT, R = 330;
   const [fx, fy] = globeFinalCentre();
   const cx = lerp(960, fx, toRiyadh), cy = lerp(600, fy, toRiyadh);
   const fly0 = BV(53);
   const map = nafathMap();
-  // dots that are not part of the stream shrink away as the stream starts
+  // the body and graticule shrink into the identity ring; land dots that are not part of the stream shrink away
   const drop = eIn(P(t, fly0, 0.45));
-  if (drop < 1) drawGlobe(ctx, lc, tilt, cx, cy, R, (dist, i) => {
+  const shrink = eInOut(P(t, fly0, 0.6)), bodyOut = eIn(P(crispT(t), BV(58.2), 0.5));
+  const bodyF = lerp(f, NF.ring / R, shrink) * (1 - bodyOut);
+  const bodyC = [lerp(cx, NF.cx, shrink), lerp(cy, NF.cy, shrink)];
+  const ok = eOut(P(t, B(40.6), 0.6)) * (1 - eIn(P(t, fly0, 0.35)));
+  orbit(ctx, t, cx, cy, R, false, ok);
+  if (drop < 1 || bodyF > 0) drawGlobe(ctx, lc, tilt, cx, cy, R, (dist, i) => {
     const k = spr(t, B(40) + dist * 0.45 + (i % 7) * 0.01, 16, 0.8);
     return t >= fly0 ? k * (1 - drop) : k;
-  }, t, i => t >= fly0 && map.has(i));
+  }, { body: bodyF, bodyC, f, skip: i => t >= fly0 && map.has(i) });
+  orbit(ctx, t, cx, cy, R, true, ok);
   if (t < B(40.2)) { ctx.fillStyle = C.neon; ctx.fillRect(957, 600 - 330, 6, 660); ctx.fillRect(630, 597, 660, 6); }
 
   {
@@ -351,16 +414,18 @@ scene(40, 52.2, (ctx, t) => {
   });
   // the light thread jumps pin to pin, then to Riyadh
   const rq = gProj(RIYADH.lat, RIYADH.lon, lc, tilt, cx, cy, R);
-  const route = [0, 1, 2, 3, 4].map(i => pp[i]).concat([rq]);
-  const tp = eInOut(P(t, B(47), B(1.4))) * (route.length - 1);
+  const routeLL = [0, 1, 2, 3, 4].map(i => [PINS[i].lat, PINS[i].lon]).concat([[RIYADH.lat, RIYADH.lon]]);
+  const tp = eInOut(P(t, B(47), B(1.4))) * (routeLL.length - 1);
   const th = eIn(P(t, B(49), 0.3));
   if (tp > 0 && t < B(49.4)) {
-    ctx.strokeStyle = C.neon; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.beginPath();
+    ctx.strokeStyle = C.neon; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     const tail = Math.max(0, tp - 1.6 + th * 2);
-    for (let s = tail; s <= tp; s += 0.02) {
-      const i = Math.min(Math.floor(s), route.length - 2), u = s - i, a = route[i], b = route[i + 1];
-      const x = lerp(a[0], b[0], u), y = lerp(a[1], b[1], u) - Math.sin(u * Math.PI) * 60;
-      s === tail ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    let pen = false;
+    for (let s = tail; s <= tp + 1e-6; s += 0.02) {
+      const i = Math.min(Math.floor(s), routeLL.length - 2), u = s - i;
+      const q = gcPoint(routeLL[i], routeLL[i + 1], u, lc, tilt, cx, cy, R, 0.16);
+      if (q[2] < 0) { pen = false; continue; }
+      pen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); pen = true;
     }
     ctx.stroke();
   }

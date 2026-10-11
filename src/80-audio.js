@@ -2,7 +2,7 @@
 // Kick on every beat, a riser into the last full bar, a hit on each scene change,
 // and every number on screen is also a note (sonification).
 const SCENE_HITS = [4, 8, 16, 20, 28, 31, 36, 40, 48, 52, 60, 66, 68, 72, 80, 86, 88, 92, 100, 102, 104, 108, 112, 116, 120, 128, 132];
-const SCENE_HITS_V = [36, 53, 80, 125, 127.5, 130, 132.5, 134.6, 153.6, 156.5];   // real beats: inserted bars, step-by-step phases, end card
+const SCENE_HITS_V = [36, 53, 80, 87, 91, 129, 131.5, 134, 136.5, 138.6, 157.6, 160.5];   // real beats: inserted bars, step-by-step phases, end card
 const PROG = [[38, [62, 66, 69]], [35, [59, 62, 66]], [31, [55, 59, 62]], [33, [57, 61, 64]]]; // D  Bm  G  A
 const PENTA = [0, 2, 4, 7, 9];
 const degMidi = d => 62 + 12 * Math.floor(d / 5) + PENTA[((d % 5) + 5) % 5];
@@ -32,11 +32,11 @@ function sonicEvents() {
   for (let j = 0; j < 10; j++) ev.push([B(81) + j * 0.075, 2 + j, 0.28, 'pluck'], [B(82) + j * 0.075, 11 - j, 0.24, 'pluck']);
   [83, 84, 85].forEach(n => ev.push([B(n), 0, 0.3, 'tick']));
   // step by step: one note per phase, ticks for the icons and callouts
-  [125, 127.5, 130].forEach((n, i) => ev.push([BV(n), 3 + i * 3, 0.55, 'pluck']));
-  [128, 128.6, 130.5, 131.1].forEach(n => [0, 1, 2].forEach(i => ev.push([BV(n) + i * 0.08, 0, 0.22, 'tick'])));
-  ev.push([BV(134.6), 0, 0.5, 'whoosh']);
+  [129, 131.5, 134].forEach((n, i) => ev.push([BV(n), 3 + i * 3, 0.55, 'pluck']));
+  [132, 132.6, 134.5, 135.1].forEach(n => [0, 1, 2].forEach(i => ev.push([BV(n) + i * 0.08, 0, 0.22, 'tick'])));
+  ev.push([BV(138.6), 0, 0.5, 'whoosh']);
   // end card: the spiral, the wordmark, the line
-  ev.push([BV(153.6), 0, 0.45, 'whoosh'], [BV(155), 7, 0.5, 'pluck'], [BV(156), 9, 0.45, 'pluck'], [BV(157.25), 11, 0.4, 'pluck'], [BV(158), 12, 0.35, 'pluck'], [BV(158.5), 14, 0.35, 'pluck']);
+  ev.push([BV(157.6), 0, 0.45, 'whoosh'], [BV(159), 7, 0.5, 'pluck'], [BV(160), 9, 0.45, 'pluck'], [BV(161.25), 11, 0.4, 'pluck'], [BV(162), 12, 0.35, 'pluck'], [BV(162.5), 14, 0.35, 'pluck']);
   // soft UI ticks on cards and tiles
   [10, 11, 12, 13, 14, 29, 30, 42, 43, 44, 45, 46, 90, 91, 103, 105, 106, 108, 109, 110, 116, 117, 118, 119].forEach(n => ev.push([B(n) + 0.02, 0, 0.25, 'tick']));
   return ev;
@@ -93,7 +93,7 @@ window.renderAudio = async function () {
     }
   }
   // pad: enters at the strategy house, opens at the EAI orb
-  for (let bar = 15; bar < 40; bar++) {
+  for (let bar = 15; bar < 41; bar++) {
     const t = bar * BAR, [, chord] = PROG[bar % 4];
     const lvl = bar < 18 ? 0.035 : bar < 22 ? 0.05 : 0.06;
     const cutoff = bar < 18 ? 900 : bar < 22 ? 1800 : 2600;
@@ -139,14 +139,14 @@ window.renderAudio = async function () {
   }
   // a short second riser into the last full bar ("the joy of technology")
   {
-    const t0 = BV(154.5), t1 = BV(156.5);
+    const t0 = BV(158.5), t1 = BV(160.5);
     const s2 = noise(t0, t1 - t0), f = ac.createBiquadFilter(), g = ac.createGain();
     f.type = 'bandpass'; f.Q.value = 2; f.frequency.setValueAtTime(500, t0); f.frequency.exponentialRampToValueAtTime(8000, t1);
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t1 - 0.02); g.gain.linearRampToValueAtTime(0, t1);
     s2.connect(f); f.connect(g); g.connect(center);
   }
   // the final resolve on the end title
-  [[B(128), 1.6, 0.06], [BV(156.5), 2.2, 0.07], [B(132), 1.1, 0.05]].forEach(([t, d, l]) => {
+  [[B(128), 1.6, 0.06], [BV(160.5), 2.2, 0.07], [B(132), 1.1, 0.05]].forEach(([t, d, l]) => {
     [50, 57, 62, 66, 69, 74].forEach((m, i) => {
       const o = ac.createOscillator(), g = ac.createGain();
       o.type = i < 2 ? 'sine' : 'triangle'; o.frequency.value = mtof(m);

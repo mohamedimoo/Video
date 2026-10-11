@@ -36,7 +36,8 @@ function arrowGlyph(ctx, x, y, up, col) {
 // faint dot grid, stronger towards the right edge (texture, not light)
 function dotGrid(ctx, col, x0 = 700, sp = 34) {
   ctx.fillStyle = col;
-  for (let x = x0; x < W; x += sp) {
+  const drift = (FRAME_T * 9) % sp;                    // the texture drifts slowly left: nothing is ever static
+  for (let x = x0 + sp - drift; x < W; x += sp) {
     const r = 0.5 + 1.1 * (x - x0) / (W - x0);
     for (let y = 18; y < H; y += sp) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
   }
@@ -155,31 +156,46 @@ const BARRIERS = [
   { b: 'Too expensive', q: '“I don’t see enough value.”', p: 17, c: C.purple, ic: 'MoneyBag01', a: 'Value, reframed', s: 'Bundles · rewards & loyalty', im: 'Coins01' },
 ];
 const GREYT = '#9AA6A2';
+// chart tokens: one hue per series, hairline recessive grid, values in ink at the bar tips
+const GRID_C = '#DCE5DE', TICK_C = '#7A8A85', MUTED = '#5B6B66', ALERT = C.red, ALERT_T = '#FBE4E4', GOOD_T = '#DDF3E2';
+function hbar(ctx, x0, y, len, th, col) {               // a bar: square at the baseline, 4px rounded data-end
+  if (len <= 0.5) return;
+  ctx.beginPath(); ctx.roundRect(x0, y - th / 2, len, th, [0, Math.min(4, len), Math.min(4, len), 0]); ctx.fillStyle = col; ctx.fill();
+}
+function xAxis(ctx, t, t0, x0, x1, yTop, yBot, ticks, fmt) {
+  ticks.forEach((v, i) => {
+    const k = eOut(P(t, t0 + i * 0.04, 0.4)); if (k <= 0) return;
+    const x = lerp(x0, x1, v / ticks[ticks.length - 1]);
+    ctx.fillStyle = GRID_C; ctx.fillRect(x - 0.5, yBot - (yBot - yTop) * k, 1, (yBot - yTop) * k);
+    T(ctx, fmt(v), x, yBot + 26, { size: 16, w: 600, c: TICK_C, align: 'center' });
+  });
+}
 scene(88, 102.2, (ctx, t) => {
   bg(ctx, C.mist);
   const split = eIn(P(t, B(92), 0.42));
-  // left: usage, each row with its line icon
+  // ---- left: what users do every day (share of users, daily) ----
   ctx.save(); ctx.translate(-split * 1300, 0);
-  rise(ctx, t, 'What users do every day', 120, 200, { size: 52, w: 700, c: C.deep, ls: -1 }, B(88));
+  rise(ctx, t, 'What users do every day', 120, 190, { size: 52, w: 700, c: C.deep, ls: -1 }, B(88));
+  rise(ctx, t, 'Share of users, daily', 120, 232, { size: 22, w: 500, c: MUTED }, B(88) + 0.15);
+  const UX0 = 420, UX1 = 860;
+  xAxis(ctx, t, B(88) + 0.2, UX0, UX1, 286, 790, [0, 25, 50, 75, 100], v => v + (v === 100 ? '%' : ''));
   USAGE.forEach(([n, v, ic], i) => {
-    const t0 = B(88 + Math.floor(i / 2)) + (i % 2) * 0.15, y = 290 + i * 112;
+    const t0 = B(88 + Math.floor(i / 2)) + (i % 2) * 0.15, y = 330 + i * 100;
     const k = spr(t, t0, 17, 0.8);
-    if (k > 0.01) { circ(ctx, 150, y + 26, 30 * k); ctx.fillStyle = C.deep; ctx.fill(); icon(ctx, ic, 150, y + 26, 30 * k, C.neon, 1.1); }
-    rise(ctx, t, n, 200, y + 38, { size: 32, w: 600, c: C.ink }, t0);
-    const p = eOut(P(t, t0 + 0.05, 0.5));
-    if (p > 0) {
-      rr(ctx, 400, y, 460, 52, 26); ctx.fillStyle = '#DCE6DE'; ctx.fill();
-      rr(ctx, 400, y, Math.max(52, 460 * v / 100 * p), 52, 26); ctx.fillStyle = C.green; ctx.fill();
-      T(ctx, Math.round(v * p) + '%', 400 + 460 * v / 100 * p - 18, y + 37, { size: 28, w: 700, c: C.white, align: 'right' });
-    }
+    if (k > 0.01) { circ(ctx, 150, y, 26 * k); ctx.fillStyle = C.deep; ctx.fill(); icon(ctx, ic, 150, y, 28 * k, C.neon, 1.1); }
+    rise(ctx, t, n, 196, y + 11, { size: 30, w: 600, c: C.ink }, t0);
+    const g = spr(t, t0 + 0.05, 11, 0.86), len = (UX1 - UX0) * v / 100 * g;
+    hbar(ctx, UX0, y, len, 24, C.green);
+    if (g > 0.05) T(ctx, Math.round(v * clamp(g)) + '%', UX0 + len + 12, y + 9, { size: 24, w: 700, c: C.ink });
   });
+  ctx.fillStyle = TICK_C; ctx.fillRect(UX0 - 1, 286 * eOut(P(t, B(88) + 0.2, 0.4)) + 790 * (1 - eOut(P(t, B(88) + 0.2, 0.4))), 2, 790 - (286 * eOut(P(t, B(88) + 0.2, 0.4)) + 790 * (1 - eOut(P(t, B(88) + 0.2, 0.4)))));
   ctx.restore();
   if (t >= B(90) && t < B(92)) {
     const pu = 1 + 0.25 * Math.max(0, 1 - ((t - B(90)) % BEAT) * 4), k = spr(t, B(90), 16);
-    ctx.save(); ctx.translate(1000, 560); ctx.scale(pu * k, pu * k);
+    ctx.save(); ctx.translate(1010, 560); ctx.scale(pu * k, pu * k);
     T(ctx, '»', 0, 30, { size: 110, w: 700, c: C.leaf, align: 'center' }); ctx.restore();
   }
-  // right: the real Salam app, and what it could add
+  // ---- right: the real Salam app, and what it could add ----
   ctx.save(); ctx.translate(split * 1300, 0);
   {
     const k = spr(t, B(90), 14, 0.86);
@@ -201,51 +217,71 @@ scene(88, 102.2, (ctx, t) => {
   rise(ctx, t, '+ BEYOND', 1520, 195, { size: 22, w: 700, c: C.leaf, ls: 6 }, B(91));
   ctx.restore();
 
-  // 72% -> corner
+  // ---- 72%: a hero figure and a unit chart (one dot = one in a hundred aware users) ----
   const exitAll = eIn(P(t, B(100), 0.4));
   if (t >= B(92)) {
-    const v = Math.round(72 * eOut(P(t, B(92), 0.55)));
     const m = eInOut(P(t, B(94), 0.5));
-    const sc = lerp(1, 0.4, m), x = lerp(960, 120, m), y = lerp(640, 250, m) - exitAll * 1100;
-    const o = { size: 330, w: 800, ls: -12 };
-    const wn = TW(ctx, String(v), o), wp = TW(ctx, '%', o);
+    const v = Math.round(72 * eOut(P(t, B(92), 0.75)));
+    const sc = lerp(1, 0.4, m), x = lerp(160, 120, m), y = lerp(600, 250, m) - exitAll * 1100;
+    const o = { size: 280, w: 800, ls: -10 };
+    const wn = TW(ctx, String(v), o);
     ctx.save(); ctx.translate(x, y); ctx.scale(sc, sc);
-    const left = lerp(-(wn + wp) / 2, 0, m);
-    T(ctx, String(v), left, 0, { ...o, c: C.deep });
-    T(ctx, '%', left + wn, 0, { ...o, c: C.leaf });
+    T(ctx, String(v), 0, 0, { ...o, c: C.deep });
+    T(ctx, '%', wn, 0, { ...o, c: C.leaf });
     ctx.restore();
-    const co = { size: lerp(46, 28, m), w: 500, c: C.ink, align: m < 0.5 ? 'center' : 'left' };
-    rise(ctx, t, "of aware users still don't consider Salam.", m < 0.5 ? 960 : 450, lerp(760, 236, m) - exitAll * 1100, co, B(93));
+    const co = { size: lerp(42, 28, m), w: 500, c: C.ink };
+    rise(ctx, t, m < 0.5 ? 'of aware users still' : "of aware users still don't consider Salam.", m < 0.5 ? 168 : 450, lerp(700, 236, m) - exitAll * 1100, co, m < 0.5 ? B(93) : B(94) + 0.2);
+    if (m < 0.5) rise(ctx, t, "don't consider Salam.", 168, 756, co, B(93) + 0.1, B(94) - 0.05);
+    // the unit chart: dots fill in a wave, then leave in one
+    const gone = (r, c) => eIn(P(t, B(94) - 0.1 + (r + c) * 0.012, 0.3));
+    for (let r = 0; r < 10; r++) for (let c = 0; c < 10; c++) {
+      const i = r * 10 + c, cx = 1060 + c * 62, cy = 262 + r * 62;
+      const k = spr(t, B(92) + 0.1 + (r + c) * 0.018, 16, 0.82) * (1 - gone(r, c));
+      if (k <= 0.01) continue;
+      const on = i < 72 && t >= B(92) + 0.2 + i * 0.011;
+      const pop = on ? 1 + 0.18 * Math.max(0, 1 - (t - (B(92) + 0.2 + i * 0.011)) * 6) : 1;
+      circ(ctx, cx, cy, 22 * k * pop); ctx.fillStyle = on ? C.deep : '#D3E4D7'; ctx.fill();
+    }
+    // legend
+    const lk = eOut(P(t, B(93) + 0.2, 0.4)) * (1 - eIn(P(t, B(94) - 0.1, 0.3)));
+    if (lk > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(1030, 892, 700, 48); ctx.clip(); ctx.translate(0, (1 - lk) * 48);
+      circ(ctx, 1046, 916, 9); ctx.fillStyle = C.deep; ctx.fill(); T(ctx, "72 don't consider Salam", 1064, 923, { size: 20, w: 600, c: C.ink });
+      circ(ctx, 1356, 916, 9); ctx.fillStyle = '#D3E4D7'; ctx.fill(); T(ctx, '28 consider', 1374, 923, { size: 20, w: 600, c: C.ink });
+      ctx.restore();
+    }
   }
-  // barrier rows: the customer's voice flips into the app's answer
+  // ---- the barriers: one bar chart, one alert hue; each bar turns green when the app answers it ----
+  const BX0 = 790, BX1 = 1150, BMAX = 25;
+  if (t >= B(94)) xAxis(ctx, t, B(94), BX0, BX1, 330 - exitAll * 1100, 900 - exitAll * 1100, [0, 5, 10, 15, 20, 25], v => v + '%');
   BARRIERS.forEach((r, i) => {
     const t0 = B(94 + i), y = 370 + i * 136 - exitAll * 1100;
     if (t < t0) return;
     const flip = B(98 + Math.floor(i / 2)) + (i % 2) * 0.15;
-    const done = P(t, flip + 0.15, 0.2);
+    const done = clamp(P(t, flip + 0.15, 0.25));
     const tc = mixC(C.ink, GREYT, done);
     const k = spr(t, t0, 17, 0.8);
-    circ(ctx, 150, y + 26, 34 * k); ctx.fillStyle = mixC('#FBE4E4', '#E3E9E5', done); ctx.fill();
-    icon(ctx, r.ic, 150, y + 26, 34 * k, mixC(r.c, GREYT, done), 1.2);
-    rise(ctx, t, r.b, 206, y + 40, { size: 36, w: 700, c: tc }, t0);
-    const p = eOut(P(t, t0 + 0.05, 0.5));
-    rr(ctx, 790, y + 14, 260, 18, 9); ctx.fillStyle = '#E1E7E2'; ctx.fill();
-    rr(ctx, 790, y + 14, Math.max(18, 260 * r.p / 25 * p), 18, 9); ctx.fillStyle = mixC(r.c, GREYT, done); ctx.fill();
-    T(ctx, Math.round(r.p * p) + '%', 1170, y + 40, { size: 50, w: 800, c: mixC(r.c, GREYT, done), align: 'right' });
+    circ(ctx, 150, y + 26, 34 * k); ctx.fillStyle = mixC(ALERT_T, GOOD_T, done); ctx.fill();
+    if (done < 0.5) icon(ctx, r.ic, 150, y + 26, 34 * k * (1 - done * 2), ALERT, 1.2);
+    else icon(ctx, 'Tick02', 150, y + 26, 34 * k * (done - 0.5) * 2, C.green, 1.6);
+    rise(ctx, t, r.b, 206, y + 40, { size: 34, w: 700, c: tc }, t0);
+    const g = spr(t, t0 + 0.05, 11, 0.86), len = (BX1 - BX0) * r.p / BMAX * g;
+    hbar(ctx, BX0, y + 24, len, 24, mixC(ALERT, C.green, done));
+    if (g > 0.05) T(ctx, Math.round(r.p * clamp(g)) + '%', BX0 + len + 12, y + 33, { size: 26, w: 700, c: C.ink });
     const f = P(t, flip, 0.36), k1 = spr(t, t0 + 0.1, 16), half = f < 0.5;
     const sy = half ? (f === 0 ? k1 : 1 - eIn(f * 2)) : eOut((f - 0.5) * 2);
     if (sy > 0.001) {
       ctx.save(); ctx.translate(0, y + 24); ctx.scale(1, sy); ctx.translate(0, -(y + 24));
-      shadowOn(ctx, half ? 0.2 : 0.5); rr(ctx, 1240, y - 30, 580, 108, 28); ctx.fillStyle = half ? '#FBE4E4' : C.deep; ctx.fill(); shadowOff(ctx);
-      if (half) T(ctx, r.q, 1272, y + 34, { size: 28, w: 600, c: '#A3373B' });
+      shadowOn(ctx, half ? 0.2 : 0.5); rr(ctx, 1260, y - 30, 560, 108, 28); ctx.fillStyle = half ? ALERT_T : C.deep; ctx.fill(); shadowOff(ctx);
+      if (half) T(ctx, r.q, 1292, y + 34, { size: 27, w: 600, c: '#A3373B' });
       else {
-        circ(ctx, 1298, y + 24, 34); ctx.fillStyle = C.neon; ctx.fill(); icon(ctx, r.im, 1298, y + 24, 38, C.deep, 1.2);
-        T(ctx, r.a, 1362, y + 16, { size: 29, w: 700, c: C.mist }); T(ctx, r.s, 1362, y + 52, { size: 19, w: 500, c: C.fog });
+        circ(ctx, 1318, y + 24, 34); ctx.fillStyle = C.neon; ctx.fill(); icon(ctx, r.im, 1318, y + 24, 38, C.deep, 1.2);
+        T(ctx, r.a, 1382, y + 16, { size: 28, w: 700, c: C.mist }); T(ctx, r.s, 1382, y + 52, { size: 19, w: 500, c: C.fog });
       }
       ctx.restore();
     }
     const cp = P(t, flip - 0.05, 0.3);
-    if (cp > 0 && cp < 1) T(ctx, '›', lerp(1110, 1240, eOut(cp)), y + 44, { size: 70, w: 700, c: C.leaf, align: 'center' });
+    if (cp > 0 && cp < 1) T(ctx, '›', lerp(1200, 1260, eOut(cp)), y + 44, { size: 70, w: 700, c: C.leaf, align: 'center' });
   });
   rise(ctx, t, 'Four barriers. Four experience opportunities.', 120, 1010 - exitAll * 1100, { size: 30, w: 600, c: C.deep }, B(99) + 0.3);
 });

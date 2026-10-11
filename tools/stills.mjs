@@ -12,7 +12,7 @@ await page.goto('file://' + path.resolve('showreel.html'));
 await page.waitForFunction(() => window.ready === true, null, { timeout: 30000 });
 const BEAT = await page.evaluate(() => window.BEAT);
 for (let n = +a; n < +b; n++) {
-  const t = n * BEAT + +off;
+  const t = Math.round((n * BEAT + +off) * 60) / 60;   // on the 60 fps grid, like the render (crisp wipes stay crisp)
   await page.evaluate(t => window.seek(t), t);
   await page.screenshot({ path: `${out}/b${String(n).padStart(3, '0')}.jpg`, type: 'jpeg', quality: 80 });
 }

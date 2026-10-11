@@ -2,12 +2,12 @@
 // Everything is a pure function of t. No state survives between frames.
 const W = 1920, H = 1080;
 const BPM = 84, BEAT = 60 / BPM, BAR = BEAT * 4;
-const DUR = BAR * 40.5;            // ~115.7 s: 40 full bars + final half bar
+const DUR = BAR * 41.5;            // ~118.6 s: 41 full bars + final half bar
 // Scenes are written against "story beats". Bars were inserted in two passes to give sections room:
 // INSERTS maps story beats to v2 beats, INSERTS2 maps v2 beats to real beats.
 // B() addresses story beats, BN() addresses v2 beats, BV() addresses real beats directly.
 const INSERTS = [[36, 4], [72, 4], [106, 4], [112, 4], [132, 4]];
-const INSERTS2 = [[54, 4], [128, 4]];         // Nafath, step by step
+const INSERTS2 = [[54, 4], [83, 4], [128, 4]];   // Nafath, the AI plan story, step by step
 const shiftOf = (n, L) => L.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
 const BN = n => (n + shiftOf(n, INSERTS2)) * BEAT;  // v2 beat -> seconds
 const B = n => BN(n + shiftOf(n, INSERTS));          // story beat -> seconds
@@ -27,6 +27,7 @@ const lerp = (a, b, x) => a + (b - a) * x;
 const P = (t, t0, d) => clamp((t - t0) / d);
 const eOut = x => { x = clamp(x); return x === 1 ? 1 : 1 - Math.pow(2, -10 * x); };
 const eIn = x => { x = clamp(x); return x === 0 ? 0 : Math.pow(2, 10 * x - 10); };
+const eIn3 = x => { x = clamp(x); return x * x * x; };        // gentle accelerate (big bright exits)
 const eInOut = x => {
   x = clamp(x); if (x === 0 || x === 1) return x;
   return x < 0.5 ? Math.pow(2, 20 * x - 10) / 2 : (2 - Math.pow(2, -20 * x + 10)) / 2;
@@ -73,16 +74,39 @@ function setT(ctx, o) {
 function T(ctx, s, x, y, o = {}) { setT(ctx, o); ctx.fillText(s, x, y); }
 function TW(ctx, s, o = {}) { setT(ctx, o); ctx.textAlign = 'left'; return ctx.measureText(s).width; }
 
-// A line that rises out of its own baseline mask at tIn and leaves upward through it at tOut.
+// glyph positions with exact kerning: x of letter i = width(s[0..i]) - width(letter i)
+const _lx = new Map();
+function letterX(ctx, s, o) {
+  const key = s + '|' + (o.size || 64) + '|' + (o.w || 700) + '|' + (o.ls || 0);
+  let v = _lx.get(key);
+  if (!v) {
+    v = { x: [], w: TW(ctx, s, o) };
+    for (let i = 0; i < s.length; i++) v.x.push(TW(ctx, s.slice(0, i + 1), o) - TW(ctx, s[i], o));
+    _lx.set(key, v);
+  }
+  return v;
+}
+// A line that rises out of its own baseline mask at tIn and leaves upward through it at tOut,
+// letter by letter (a short stagger), so every line of type arrives with kinetic energy.
 function rise(ctx, t, s, x, y, o, tIn, tOut = 1e9, d = 0.42) {
-  const pi = eOut(P(t, tIn, d)), po = eIn(P(t, tOut, 0.3));
-  if (pi <= 0 || po >= 1) return;
-  const size = o.size || 64, w = TW(ctx, s, o);
+  if (t < tIn || !s) return;
+  // letters enter one after another; they leave in a tighter cascade that still ends 0.3 s after tOut,
+  // so an outgoing line is always gone before the next line reaches its space
+  const n = s.length, st = Math.min(0.018, 0.3 / Math.max(1, n)), so = Math.min(0.012, 0.08 / Math.max(1, n - 1));
+  if (t >= tOut + 0.3) return;
+  const size = o.size || 64, lx = letterX(ctx, s, o), w = lx.w;
   const al = o.align || 'left';
   const L = al === 'center' ? x - w / 2 : al === 'right' ? x - w : x;
   ctx.save();
   ctx.beginPath(); ctx.rect(L - 30, y - size * 1.02, w + 60, size * 1.32); ctx.clip();
-  T(ctx, s, x, y + (1 - pi) * size * 1.25 - po * size * 1.3, o);
+  setT(ctx, { ...o, align: 'left' });
+  if (t >= tIn + st * (n - 1) + d && t < tOut) ctx.fillText(s, L, y);   // settled: draw whole line
+  else for (let i = 0; i < n; i++) {
+    if (s[i] === ' ') continue;
+    const pi = eOut(P(t, tIn + i * st, d)), po = eIn(P(t, tOut + i * so, 0.3 - so * (n - 1)));
+    if (pi <= 0 || po >= 1) continue;
+    ctx.fillText(s[i], L + lx.x[i], y + (1 - pi) * size * 1.25 - po * size * 1.3);
+  }
   ctx.restore();
 }
 // Words that rise one after another; words: [[text, colour]], times: per-word start

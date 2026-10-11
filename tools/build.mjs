@@ -9,6 +9,7 @@ const html = src('src/template.html').toString()
   .replace('__TTF__', () => src('assets/Geist-Bold.ttf').toString('base64'))
   .replace('__OPENTYPE__', () => src('assets/opentype.min.js').toString())
   .replace('__ICONS__', () => src('assets/icons.json').toString())
+  .replace('__LAND__', () => src('assets/land.json').toString())
   .replace('__IMGS__', () => JSON.stringify(Object.fromEntries(fs.readdirSync(path.join(root, 'assets/packed')).filter(f => f.endsWith('.webp'))
     .map(f => [f.replace('.webp', ''), 'data:image/webp;base64,' + src('assets/packed/' + f).toString('base64')]))))
   .replace('__MAIN__', () => js);
