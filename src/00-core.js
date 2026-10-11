@@ -162,17 +162,6 @@ function drawLeaf(ctx, cx, cy, s, col = C.green, ang = -Math.PI / 4, rib = null)
     ctx.lineTo(cx + Math.cos(ang) * s * 0.3, cy + Math.sin(ang) * s * 0.3); ctx.stroke();
   }
 }
-// The app icon used for the first and the last frame
-function appIcon(ctx, cx, cy, s, labelP = 1) {
-  rr(ctx, cx - s / 2, cy - s / 2, s, s, s * 0.24); ctx.fillStyle = C.deep; ctx.fill();
-  drawLeaf(ctx, cx, cy, s * 0.62, C.green, -Math.PI / 4, C.deep);
-  if (labelP > 0) {
-    ctx.save(); ctx.beginPath(); ctx.rect(cx - 200, cy + s / 2 + 12, 400, 60); ctx.clip();
-    T(ctx, 'salam', cx, cy + s / 2 + 58 + (1 - labelP) * 60, { size: 34, w: 600, c: C.dim, align: 'center', ls: 1 });
-    ctx.restore();
-  }
-}
-
 // ---- glyph outlines (opentype) for type that turns into shapes ----
 let FONT = null;
 function flatten(cmds) {

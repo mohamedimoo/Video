@@ -1,96 +1,23 @@
-// ===== ACT III — 2D TO 3D (bars 14–20, beats 51–79) =====
-// The strategy house is drawn flat as an elevation, then extruded and orbited.
-const HY = 575;  // world origin on screen
-const LIGHT = (() => { const l = [-0.35, -0.85, -0.55], m = Math.hypot(...l); return l.map(v => v / m); })();
-function shade(base, n) {
-  const f = n[0] * LIGHT[0] + n[1] * LIGHT[1] + n[2] * LIGHT[2];
-  return f > 0.5 ? mixC(base, '#FFFFFF', (f - 0.5) * 0.45) : mixC(base, '#000000', (0.5 - f) * 0.5);
-}
-// extrude a screen-space polygon (front at z0) into faces
-function prism(cam, pts, z0, z1, tag) {
-  const F = pts.map(([x, y]) => cam.p(x - 960, y - HY, z0)), Bk = pts.map(([x, y]) => cam.p(x - 960, y - HY, z1));
-  const out = [];
-  const add = (q, n, kind) => { if (area(q) > 0.3) out.push({ pts: q, z: q.reduce((a, p) => a + p[2], 0) / q.length, n, kind, tag }); };
-  add(F, [0, 0, -1], 'front');
-  if (out.length) {
-    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
-    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
-    out[0].bb = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]].map(([x, y]) => cam.p(x - 960, y - HY, z0));
-    out[0].bw = x1 - x0; out[0].bh = y1 - y0;
-  }
-  if (z1 - z0 > 0.5) {
-    add(Bk.slice().reverse(), [0, 0, 1], 'back');
-    for (let i = 0; i < pts.length; i++) {
-      const j = (i + 1) % pts.length, ex = pts[j][0] - pts[i][0], ey = pts[j][1] - pts[i][1], m = Math.hypot(ex, ey) || 1;
-      add([Bk[i], Bk[j], F[j], F[i]], [ey / m, -ex / m, 0], 'side');
-    }
-  }
-  return out;
-}
-const rectP = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+// ===== ACT III — THE STRATEGY HOUSE, FLAT AND RICH (bars 14–20, beats 51–79) =====
+const PILLARS = [['EXPERIENCE', 'i_sparkles'], ['INTELLIGENCE', 'i_ai'], ['GROWTH', 'i_rocket'], ['ECOSYSTEM', 'i_globe'], ['TRUST', 'i_shield']];
+const FOUND = [['Data', 'Database01'], ['AI', 'AiBrain01'], ['Engineering', 'CodeIcon'], ['Content', 'ContentWriting'], ['Operations', 'Settings01'], ['Security', 'SecurityLock'], ['Governance', 'JusticeScale01']];
+const MEAS = ['Business outcomes', 'Customer outcomes', 'Experience KPIs', 'Leading indicators', 'Continuous optimisation'];
+const CULT = 'Customer Obsessed  ·  Agile & Adaptive  ·  Empowered Teams  ·  Data-Driven  ·  Learn Fast  ·  Own It';
+const PIL_X = i => 360 + i * 255;
+// which pillars become the three forces
+const FORCE = [0, 1, 3];
+const STRIP = k => ({ x: 180, y: 434 + k * 120 - 40, w: 1560, h: 80 });
+const STRIP_COL = [C.mist, C.neon, C.leaf];
 
-const PILLARS = ['EXPERIENCE', 'INTELLIGENCE', 'GROWTH', 'ECOSYSTEM', 'TRUST'];
-const FOUND = ['Data', 'AI', 'Engineering', 'Content', 'Operations', 'Security', 'Governance'];
-function pillarIcon(ctx, i, cx, cy, r, col) {
-  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  circ(ctx, cx, cy, r); ctx.stroke();
-  const s = r * 0.5;
+// a rounded pediment: the roof
+function roofPath(ctx, cx, top, w, h) {
+  const l = cx - w / 2, r = cx + w / 2, b = top + h, k = 26;
   ctx.beginPath();
-  if (i === 0) { ctx.moveTo(cx, cy + s * 0.8); ctx.bezierCurveTo(cx - s * 1.4, cy - s * 0.2, cx - s * 0.6, cy - s * 1.2, cx, cy - s * 0.4); ctx.bezierCurveTo(cx + s * 0.6, cy - s * 1.2, cx + s * 1.4, cy - s * 0.2, cx, cy + s * 0.8); ctx.stroke(); }
-  if (i === 1) { circ(ctx, cx, cy, s * 0.55); ctx.fill(); ctx.beginPath(); ctx.ellipse(cx, cy, s * 1.1, s * 0.45, -0.5, 0, Math.PI * 2); ctx.stroke(); }
-  if (i === 2) { ctx.moveTo(cx - s, cy + s * 0.6); ctx.lineTo(cx - s * 0.2, cy - s * 0.1); ctx.lineTo(cx + s * 0.2, cy + s * 0.3); ctx.lineTo(cx + s, cy - s * 0.6); ctx.moveTo(cx + s * 0.4, cy - s * 0.6); ctx.lineTo(cx + s, cy - s * 0.6); ctx.lineTo(cx + s, cy); ctx.stroke(); }
-  if (i === 3) { const pts = [[0, -1], [-0.9, 0.6], [0.9, 0.6]].map(([a, b]) => [cx + a * s, cy + b * s]); ctx.moveTo(...pts[0]); ctx.lineTo(...pts[1]); ctx.lineTo(...pts[2]); ctx.closePath(); ctx.stroke(); pts.forEach(p => { circ(ctx, p[0], p[1], s * 0.28); ctx.fill(); }); }
-  if (i === 4) { ctx.moveTo(cx, cy - s); ctx.lineTo(cx + s * 0.85, cy - s * 0.6); ctx.lineTo(cx + s * 0.75, cy + s * 0.3); ctx.lineTo(cx, cy + s); ctx.lineTo(cx - s * 0.75, cy + s * 0.3); ctx.lineTo(cx - s * 0.85, cy - s * 0.6); ctx.closePath(); ctx.stroke(); }
-}
-
-// house elements in screen-space elevation; each knows how to grow in 2D and how to label its front face
-function houseEls(t) {
-  const els = [];
-  const reveal = (t0) => eOut(P(t, B(t0), 0.45));
-  // measurement + culture rows reveal left->right
-  {
-    const p = reveal(52); if (p > 0) els.push({ id: 'meas', poly: rectP(360, 842, 360 + 1200 * p, 900), d: 230, col: C.stone, tc: C.deep,
-      label: (c, w, h) => { T(c, 'MEASUREMENT', 26, 38, { size: 20, w: 700, c: C.deep, ls: 4 }); T(c, 'Business outcomes  ›  Customer outcomes  ›  Experience KPIs  ›  Leading indicators  ›  Continuous optimisation', 240, 37, { size: 17, w: 500, c: C.deep }); } });
-  }
-  {
-    const p = reveal(53); if (p > 0) els.push({ id: 'cult', poly: rectP(360, 782, 360 + 1200 * p, 834), d: 230, col: C.teal, tc: C.mist,
-      label: (c) => { T(c, 'CULTURE', 26, 34, { size: 20, w: 700, c: C.mist, ls: 4 }); T(c, 'Customer Obsessed  ·  Agile & Adaptive  ·  Empowered Teams  ·  Data-Driven  ·  Learn Fast  ·  Own It', 200, 33, { size: 17, w: 500, c: C.mist }); } });
-  }
-  const bw = (1200 - 6 * 8) / 7;
-  FOUND.forEach((n, i) => {
-    const k = spr(t, B(54) + i * 0.05, 18); if (k <= 0.001) return;
-    const x0 = 360 + i * (bw + 8), cx = x0 + bw / 2, cy = 748, w = bw * k, h = 52 * k;
-    els.push({ id: 'f' + i, poly: rectP(cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2), d: 230, col: C.deep, tc: C.mist,
-      label: (c, ww, hh) => T(c, n, ww / 2, hh / 2 + 6, { size: 18, w: 600, c: C.mist, align: 'center' }) });
-  });
-  PILLARS.forEach((n, i) => {
-    const k = spr(t, B(55) + i * 0.08, 15, 0.85); if (k <= 0.001) return;
-    const x0 = 360 + i * 255, h = 284 * k;
-    els.push({ id: 'p' + i, pillar: i, poly: rectP(x0, 714 - h, x0 + 180, 714), d: 200, col: i === 3 ? C.neon : C.green, tc: C.night,
-      label: (c, w, hh) => {
-        const q = eOut(P(t, B(56) + i * 0.06, 0.35)); if (q <= 0) return;
-        c.save(); c.beginPath(); c.rect(0, 0, w, hh); c.clip();
-        pillarIcon(c, i, w / 2, 76 + (1 - q) * 300, 38, C.night);
-        T(c, n, w / 2, hh - 30 + (1 - q) * 200, { size: 18, w: 700, c: C.night, align: 'center', ls: 2 });
-        c.restore();
-      } });
-  });
-  {
-    const k = spr(t, B(57), 20, 0.9);
-    if (t >= B(57)) {
-      const dy = (1 - k) * -700;
-      els.push({ id: 'roof', poly: [[300, 416 + dy], [960, 244 + dy], [1620, 416 + dy]], d: 260, col: C.deep, tc: C.mist, roof: true,
-        label: (c, w, h) => {
-          const q = eOut(P(t, B(58), 0.4)); if (q <= 0) return;
-          c.save(); c.beginPath(); c.rect(0, 0, w, h); c.clip();
-          drawLeaf(c, w / 2 - 92, 96 + (1 - q) * 120, 52, C.green, -Math.PI / 4, C.deep);
-          T(c, 'salam', w / 2 - 58, 112 + (1 - q) * 120, { size: 44, w: 700, c: C.mist });
-          T(c, 'Making the joy of technology accessible for everyone, everyday.', w / 2, 150 + (1 - q) * 120, { size: 17, w: 500, c: C.fog, align: 'center' });
-          c.restore();
-        } });
-    }
-  }
-  return els;
+  ctx.moveTo(l + k, b);
+  ctx.lineTo(r - k, b); ctx.quadraticCurveTo(r, b, r - k * 0.9, b - k * 0.45);
+  ctx.lineTo(cx + k * 1.4, top + k * 0.5); ctx.quadraticCurveTo(cx, top - k * 0.1, cx - k * 1.4, top + k * 0.5);
+  ctx.lineTo(l + k * 0.9, b - k * 0.45); ctx.quadraticCurveTo(l, b, l + k, b);
+  ctx.closePath();
 }
 
 scene(51, 69, (ctx, t) => {
@@ -98,216 +25,176 @@ scene(51, 69, (ctx, t) => {
   const sp = eInOut(P(t, B(51.4), 0.55));
   const yTop = lerp(540, -30, sp), yBot = lerp(540, 900, sp);
   ctx.fillStyle = C.mist; ctx.fillRect(0, yTop, W, yBot - yTop);
-  // 3D state
-  const ex = eInOut(P(t, B(60), 0.7));                     // extrusion depth
-  const orb = eInOut(P(t, B(60), B(3.2)));
-  const sink = eIn(P(t, B(66), B(1)));
-  const yaw = -0.62 * orb - 0.18 * P(t, B(63), B(5));
-  const pitch = 0.36 * orb + 0.06 * P(t, B(63), B(5));
-  const cam = cam3(yaw, pitch, 2600, 960, HY + 20 * orb);
-  const fill = eOut(P(t, B(60), 0.5));
-  const els = houseEls(t);
-  let faces = [];
-  els.forEach(e => {
-    const lift = e.pillar === 0 || e.pillar === 1 || e.pillar === 3 ? 0 : sink * 1400;
-    const poly2 = e.poly.map(([x, y]) => [x, y + lift]);
-    prism(cam, poly2, 0, e.d * ex, e).forEach(f => faces.push(f));
+  const sink = eIn(P(t, B(66), B(1))) * 1400;   // the house sinks on beat 66
+  ctx.save(); ctx.translate(0, sink);
+
+  // measurement row
+  {
+    const p = eOut(P(t, B(52), 0.45));
+    if (p > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(360, 0, 1200 * p, H); ctx.clip();
+      const flash = Math.max(0, 1 - Math.abs(t - B(65) - 0.1) * 3);
+      rr(ctx, 360, 846, 1200, 54, 16); ctx.fillStyle = mixC(C.stone, C.leaf, flash * 0.6); ctx.fill();
+      T(ctx, 'MEASUREMENT', 386, 881, { size: 18, w: 700, c: C.deep, ls: 4 });
+      let x = 560;
+      MEAS.forEach((m, i) => {
+        T(ctx, m, x, 880, { size: 16, w: 600, c: C.deep });
+        x += TW(ctx, m, { size: 16, w: 600 }) + 14;
+        if (i < MEAS.length - 1) { icon(ctx, 'ArrowRight01', x + 10, 874, 20, C.green, 1.4); x += 36; }
+      });
+      ctx.restore();
+    }
+  }
+  // culture row
+  {
+    const p = eOut(P(t, B(53), 0.45));
+    if (p > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(360, 0, 1200 * p, H); ctx.clip();
+      rr(ctx, 360, 786, 1200, 52, 16); ctx.fillStyle = C.teal; ctx.fill();
+      T(ctx, 'CULTURE', 386, 819, { size: 18, w: 700, c: C.neon, ls: 4 });
+      T(ctx, CULT, 520, 818, { size: 17, w: 500, c: C.mist });
+      ctx.restore();
+    }
+  }
+  // foundation chips with Hugeicons line icons
+  const bw = (1200 - 6 * 10) / 7;
+  FOUND.forEach(([n, ic], i) => {
+    const k = spr(t, B(54) + i * 0.05, 17, 0.8); if (k <= 0.01) return;
+    const cx = 360 + i * (bw + 10) + bw / 2, cy = 750;
+    ctx.save(); ctx.translate(cx, cy); ctx.scale(k, k);
+    rr(ctx, -bw / 2, -28, bw, 56, 16); ctx.fillStyle = C.white; ctx.fill();
+    ctx.strokeStyle = '#CFE0D3'; ctx.lineWidth = 1.5; ctx.stroke();
+    const tw = TW(ctx, n, { size: 17, w: 600 });
+    icon(ctx, ic, -(tw + 30) / 2 + 11, 0, 22, C.green, 1.2);
+    T(ctx, n, -(tw + 30) / 2 + 30, 6, { size: 17, w: 600, c: C.deep });
+    ctx.restore();
   });
-  faces.sort((a, b) => b.z - a.z);
-  faces.forEach(f => {
-    const e = f.tag;
-    if (e.pillar !== undefined && [0, 1, 3].includes(e.pillar) && t >= B(66)) return; // drawn on top later
-    drawFace(ctx, f, e, fill, t);
+  // pillars, each with its real 3D icon
+  PILLARS.forEach(([n, im], i) => {
+    const k = spr(t, B(55) + i * 0.08, 15, 0.85); if (k <= 0.01) return;
+    if (FORCE.includes(i) && t >= B(66)) return;     // drawn by the lift-out below
+    const lift = pillarLift(t, i);
+    const x0 = PIL_X(i), h = 296 * k, y0 = 712 - h - lift;
+    rr(ctx, x0, y0, 180, h, 26); ctx.fillStyle = i === 3 ? C.neon : C.deep; ctx.fill();
+    ctx.save(); rr(ctx, x0, y0, 180, h, 26); ctx.clip();
+    const q = spr(t, B(56) + i * 0.06, 16, 0.8);
+    const pop = 1 + 0.12 * Math.max(0, 1 - Math.abs(t - B(60 + i) - 0.12) * 4);
+    pic(ctx, im, x0 + 90, y0 + 118 + (1 - q) * 300, 150 * pop);
+    T(ctx, n, x0 + 90, y0 + h - 30 + (1 - q) * 200, { size: 18, w: 700, c: i === 3 ? C.night : C.mist, align: 'center', ls: 2 });
+    ctx.restore();
   });
-  // ground band
+  // roof
+  if (t >= B(57)) {
+    const dy = (1 - spr(t, B(57), 20, 0.9)) * -700;
+    roofPath(ctx, 960, 236 + dy, 1300, 164); ctx.fillStyle = C.deep; ctx.fill();
+    const q = eOut(P(t, B(58), 0.4));
+    if (q > 0) {
+      ctx.save(); roofPath(ctx, 960, 236 + dy, 1300, 164); ctx.clip();
+      const lw = WORD_W(40), gx = 960 - (lw + 66) / 2;
+      glass(ctx, gx + 22, 330 + dy + (1 - q) * 120, 60);
+      wordLetters(ctx, gx + 66, 346 + dy + (1 - q) * 120, 40, C.mist);
+      T(ctx, 'Making the joy of technology accessible for everyone, everyday.', 960, 384 + dy + (1 - q) * 120, { size: 17, w: 500, c: C.fog, align: 'center' });
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+
+  // headlines (kinetic, flat): the house, then what it is built from and measured by
+  const ho = { size: 64, w: 700, ls: -1 };
+  riseWords(ctx, t, [['Our', C.deep], ['Strategy', C.deep], ['House.', C.leaf]], 120, 150, ho, [B(59), B(59) + .08, B(59) + .16], B(61));
+  riseWords(ctx, t, [['Built', C.deep], ['from', C.deep], ['Joy.', C.leaf]], 120, 150, ho, [B(61), B(61) + .08, B(61) + .16], B(63));
+  riseWords(ctx, t, [['Measured', C.deep], ['for', C.deep], ['Impact.', C.leaf]], 120, 150, ho, [B(63), B(63) + .08, B(63) + .16], B(66));
+
+  // ground band, which rises and swallows the frame on beat 66
   const gy = lerp(yBot, -40, eIn(P(t, B(66) + 0.05, B(1) - 0.05)));
   ctx.fillStyle = C.night; ctx.fillRect(0, gy, W, H - gy + 10);
-  if (t < B(60)) { ctx.fillStyle = C.deep; ctx.fillRect(0, gy - 1.5, W, 3); }
-  // the three forces lift out of the house and lay down as flat strips
+
+  // Experience, Intelligence and Ecosystem lift out and lie down as three flat strips
   if (t >= B(66)) {
     const lay = eInOut(P(t, B(66.5), B(1.5)));
-    const camL = cam3(lerp(yaw, 0, lay), lerp(pitch, 0, lay), 2600, 960, HY + 20 * orb);
-    let pf = [];
-    [0, 1, 3].forEach((pi, k) => {
-      const e = els.find(q => q.pillar === pi); if (!e) return;
-      const [x0, y0] = e.poly[0], [x1, y1] = e.poly[2];
-      const tgt = [180, 440 + k * 120 - 40 - 6, 1740, 440 + k * 120 + 40 - 6];
-      const up = eOut(P(t, B(66), 0.4)) * (1 - lay) * -120;
-      const pts = rectP(lerp(x0, tgt[0], lay), lerp(y0, tgt[1], lay) + up, lerp(x1, tgt[2], lay), lerp(y1, tgt[3], lay) + up);
-      prism(camL, pts, 0, e.d * ex * (1 - lay), { ...e, col: mixC(e.col, [C.mist, C.neon, C.leaf][k], lay), strip: lay > 0.15 ? k : undefined }).forEach(f => pf.push(f));
+    FORCE.forEach((pi, k) => {
+      const up = eOut(P(t, B(66), 0.4)) * 140;
+      const x0 = PIL_X(pi), y0 = 712 - 296 - up;
+      const s = STRIP(k);
+      const x = lerp(x0, s.x, lay), y = lerp(y0, s.y, lay), w = lerp(180, s.w, lay), h = lerp(296, s.h, lay);
+      const rot = Math.sin(lay * Math.PI) * 0.22 * (k - 1);
+      ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.rotate(rot);
+      rr(ctx, -w / 2, -h / 2, w, h, lerp(26, 40, lay)); ctx.fillStyle = mixC(pi === 3 ? C.neon : C.deep, STRIP_COL[k], lay); ctx.fill();
+      if (lay < 0.4) pic(ctx, PILLARS[pi][1], 0, -h / 2 + 118, 150 * (1 - lay * 2.5));
+      ctx.restore();
     });
-    pf.sort((a, b) => b.z - a.z).forEach(f => drawFace(ctx, f, f.tag, 1, t));
-  }
-  // 3D type: the headline is extruded, then flips like a split-flap
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (t < B(60.3)) {
-    riseWords(ctx, t, [['Our', C.deep], ['Strategy', C.deep], ['House.', C.leaf]], 120, 150, { size: 64, w: 700, ls: -1 }, [B(59), B(59) + .08, B(59) + .16], B(60.05));
-  }
-  if (t >= B(60.3) && t < B(66.6)) {
-    const flip1 = eInOut(P(t, B(61), 0.42)), flip2 = eInOut(P(t, B(63), 0.42));
-    const out = eIn(P(t, B(66), 0.4));
-    let str, a;
-    if (flip1 < 0.5) { str = 'Our Strategy House.'; a = flip1 * Math.PI; }
-    else if (flip2 < 0.5) { str = 'Built from Joy.'; a = (flip1 - 1) * Math.PI + flip2 * Math.PI; }
-    else { str = 'Measured for Impact.'; a = (flip2 - 1) * Math.PI; }
-    const k = spr(t, B(60.3), 15);
-    extruded(ctx, cam, str, -700, -470 - out * 900, 0, 84, 46 * k, a, C.deep, C.teal);
   }
 });
-
-function drawFace(ctx, f, e, fill, t) {
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  poly(ctx, f.pts);
-  const front = f.kind === 'front';
-  if (fill > 0) {
-    let col = shade(e.col, f.n);
-    // pillar colour pulses run left to right on beats 63-65
-    if (e.pillar !== undefined && front) { const pu = Math.max(0, 1 - Math.abs(t - (B(63) + e.pillar * 0.3)) * 4); if (pu > 0) col = mixC(col, C.white, pu * 0.35); }
-    ctx.save(); ctx.clip();
-    // fill sweeps up from the ground on beat 60
-    const sweepY = lerp(1100, -200, fill);
-    ctx.fillStyle = col; ctx.fillRect(0, sweepY, W, H - sweepY + 200);
-    ctx.restore();
-    poly(ctx, f.pts);
-  }
-  ctx.lineWidth = 2; ctx.strokeStyle = fill >= 1 ? 'rgba(240,245,240,0.28)' : C.deep; ctx.lineJoin = 'round'; ctx.stroke();
-  if (front && e.label && e.strip === undefined && f.bb) {
-    const w = f.bw, h = f.bh;
-    if (w < 20 || h < 20) return;
-    ctx.save(); poly(ctx, f.pts); ctx.clip();
-    onQuad(ctx, f.bb, w, h);
-    e.label(ctx, w, h);
-    ctx.restore();
-  }
+function pillarLift(t, i) {
+  // each pillar lifts a little on its own beat (60–64), settling on a damped spring
+  const t0 = B(60 + i);
+  if (t < t0) return 0;
+  return 26 * (spr(t, t0, 16, 0.75) - spr(t, t0 + 0.32, 16, 0.75));
 }
 
-// slice-stacked extrusion: the same line of type drawn at 14 depths, back to front
-function extruded(ctx, cam, str, X, Y, Z, size, depth, flip, colFront, colSide) {
-  const o = { size, w: 800, ls: -3 };
-  const w = TW(ctx, str, o), h = size * 1.1;
-  const N = 14;
-  const ca = Math.cos(flip), sa = Math.sin(flip);
-  const pt = (u, v, z) => { const vv = v - h / 2; return cam.p(X + u, Y + h / 2 + vv * ca, z + vv * sa); };
-  for (let k = 0; k <= N; k++) {
-    const z = Z + depth * (1 - k / N);
-    const p0 = pt(0, 0, z), p1 = pt(w, 0, z), p3 = pt(0, h, z);
-    if (Math.abs((p1[0] - p0[0]) * (p3[1] - p0[1]) - (p1[1] - p0[1]) * (p3[0] - p0[0])) < 50) continue;
-    ctx.setTransform((p1[0] - p0[0]) / w, (p1[1] - p0[1]) / w, (p3[0] - p0[0]) / h, (p3[1] - p0[1]) / h, p0[0], p0[1]);
-    T(ctx, str, 0, size * 0.86, { ...o, c: k === N ? colFront : mixC(colSide, C.deep, k / N * 0.6) });
-  }
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-}
-
-// --- Three forces: ribbons twist together into the EAI sphere (beats 68–80) ---
-const RIB = [
-  { n: 'EXPERIENCE', c: C.mist, b: '#9DB5AE' },
-  { n: 'AI', c: C.neon, b: '#2E8F35' },
-  { n: 'VALUE-ADDED SERVICES', c: C.leaf, b: '#2D6B22' },
-];
-const RM = 96;
-const ORB = { R: 280 };
-// orientation of each band around the sphere
-function bandBasis(k, t) {
-  const fl = eInOut(P(t, B(78), B(1.2)));
-  const tilt = lerp([0.35, 1.25, -0.6][k], 0, fl), spin = [0, 2.1, 4.2][k] + t * 0.5 * (1 - fl);
-  // normal starts tilted around x then rotated around y by spin
-  let n = [0, Math.cos(tilt), Math.sin(tilt)];
-  const cs = Math.cos(spin), sn = Math.sin(spin);
-  n = [n[0] * cs + n[2] * sn, n[1], -n[0] * sn + n[2] * cs];
-  n = [lerp(n[0], 0, fl), lerp(n[1], 0, fl), lerp(n[2], -1, fl)];
-  const m = Math.hypot(...n) || 1; n = n.map(v => v / m);
-  let u = Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
-  const d = u[0] * n[0] + u[1] * n[1] + u[2] * n[2];
-  u = u.map((v, i) => v - d * n[i]); const um = Math.hypot(...u); u = u.map(v => v / um);
-  const v = [n[1] * u[2] - n[2] * u[1], n[2] * u[0] - n[0] * u[2], n[0] * u[1] - n[1] * u[0]];
-  return { n, u, v };
+// --- Three forces: flat ribbons converge into the EAI rings around the real Salam glass logo (68–80) ---
+const RIB = [{ n: 'EXPERIENCE', c: C.mist }, { n: 'AI', c: C.neon }, { n: 'VALUE-ADDED SERVICES', c: C.leaf }];
+const RM = 120;
+function eaiCentre(t) {
+  const a = eInOut(P(t, B(73), 0.5)), b = eInOut(P(t, B(78), B(1.6)));
+  return [lerp(lerp(960, 520, a), 1220, b), lerp(lerp(540, 500, a), 540, b), lerp(lerp(1, 0.82, a), 0.62, b)];
 }
 scene(67.9, 81, (ctx, t) => {
   if (t >= B(68)) bg(ctx, C.night);
   if (t < B(68)) return;
   const amp = eInOut(P(t, B(68), B(1.5))) * 80;
-  const tw = eInOut(P(t, B(68.3), B(1.5)));
   const conv = eInOut(P(t, B(70), B(1.2)));
-  const toBand = eInOut(P(t, B(71.2), B(1.1)));
-  const move = eInOut(P(t, B(78), B(1.6)));
-  const cx = lerp(960, 1220, move), cy = 540;
-  const shrink = eInOut(P(t, B(79), B(0.9)));
-  const R = lerp(ORB.R, 175, shrink);
-  const quads = [];
+  const wrap = eInOut(P(t, B(71.2), B(1.1)));
+  const collapse = eInOut(P(t, B(78.6), B(1.2)));
+  const [cx, cy, sc] = eaiCentre(t);
   RIB.forEach((r, k) => {
-    const bb = bandBasis(k, t);
-    const pts = [];
+    const R = lerp([250, 300, 350][k] * sc, 175, collapse);
+    const hw = lerp(40, lerp(14, 2, collapse), wrap);
+    const top = [], bot = [];
     for (let j = 0; j <= RM; j++) {
       const s = j / RM;
-      // ribbon state (screen space)
+      const tap = s < 0.18 ? eInOut(s / 0.18) : 1;
       const baseY = lerp(434 + k * 120, 554, conv);
       const braid = conv * 90 * Math.sin(s * Math.PI * 2 * 1.3 - t * 4 + k * 2.094);
-      const tap = s < 0.18 ? eInOut(s / 0.18) : 1;
-      let x = lerp(180, 1740, s), y = baseY + tap * amp * Math.sin(Math.PI * 2 * 1.1 * s - t * 3 + k * 1.3) * (1 - conv) + braid * tap;
-      const th = tap * tw * (Math.PI * 2 * 0.9 * s - t * 2.4 + k);
-      let wx = 0, wy = 40 * Math.cos(th), front = Math.cos(th) >= 0, z = 0;
-      // band state
-      const ph = s * Math.PI * 2 + t * 1.2;
-      const P3 = [0, 1, 2].map(i => R * (Math.cos(ph) * bb.u[i] + Math.sin(ph) * bb.v[i]));
-      const hw = lerp(22, 3, shrink);
-      const bx = cx + P3[0], by = cy + P3[1];
-      x = lerp(x, bx, toBand); y = lerp(y, by, toBand);
-      wx = lerp(wx, bb.n[0] * hw, toBand); wy = lerp(wy, bb.n[1] * hw, toBand);
-      z = P3[2] * toBand;
-      if (toBand > 0.5) front = z <= 0;
-      pts.push({ x, y, wx, wy, z, front });
+      let x = lerp(180, 1740, s), y = baseY + tap * (amp * Math.sin(Math.PI * 2 * 1.1 * s - t * 3 + k * 1.3) * (1 - conv) + braid);
+      // rings: each ribbon becomes an arc that keeps turning
+      const a = s * Math.PI * 2 * 0.86 + t * (0.6 + k * 0.25) + k * 2.1;
+      x = lerp(x, cx + Math.cos(a) * R, wrap); y = lerp(y, cy + Math.sin(a) * R, wrap);
+      // normal for the ribbon width
+      const nx = lerp(0, Math.cos(a), wrap), ny = lerp(1, Math.sin(a), wrap);
+      top.push([x + nx * hw, y + ny * hw]); bot.push([x - nx * hw, y - ny * hw]);
     }
-    for (let j = 0; j < RM; j++) {
-      const a = pts[j], b = pts[j + 1];
-      quads.push({ q: [[a.x - a.wx, a.y - a.wy], [b.x - b.wx, b.y - b.wy], [b.x + b.wx, b.y + b.wy], [a.x + a.wx, a.y + a.wy]], z: (a.z + b.z) / 2, col: a.front ? r.c : r.b, k });
-    }
+    poly(ctx, top.concat(bot.reverse())); ctx.fillStyle = r.c; ctx.fill();
   });
-  const fillQ = q => { poly(ctx, q.q); ctx.fillStyle = q.col; ctx.fill(); ctx.strokeStyle = q.col; ctx.lineWidth = 1; ctx.stroke(); };
-  if (toBand < 0.02) quads.forEach(fillQ);
-  else {
-    quads.filter(q => q.z > 0).sort((a, b) => b.z - a.z).forEach(fillQ);
-    // the sphere
-    const k = spr(t, B(71.6), 14);
-    if (k > 0.01) {
-      circ(ctx, cx, cy, R * k); ctx.fillStyle = mixC(C.night, C.neon, shrink); ctx.fill();
-      if (shrink < 0.95) drawGlobe(ctx, t * 25, 0.4 + 0.9 * move, cx, cy, R * k * (1 - shrink * 0.5), 1, 1.4);
-    }
-    quads.filter(q => q.z <= 0).sort((a, b) => b.z - a.z).forEach(fillQ);
-  }
-  // labels ride the strips at first
-  RIB.forEach((r, k) => {
-    rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, B(68) + 0.1 + k * 0.08, B(70.4));
-  });
+  RIB.forEach((r, k) => rise(ctx, t, r.n, 180, 434 + k * 120 - 56, { size: 24, w: 700, c: r.c, ls: 6 }, B(68) + 0.1 + k * 0.08, B(70.4)));
   rise(ctx, t, 'One app.', 120, 200, { size: 96, w: 700, c: C.mist, ls: -2 }, B(68), B(71));
   rise(ctx, t, 'Three forces.', 120, 310, { size: 96, w: 700, c: C.neon, ls: -2 }, B(69), B(71) + 0.05);
-  // EAI -> AI
-  if (t >= B(72)) {
-    const k = spr(t, B(72), 16);
-    const eOff = eIn(P(t, B(79), 0.35));
-    const o = { size: 150, w: 800, ls: -4 };
-    const we = TW(ctx, 'E', o), wa = TW(ctx, 'AI', o);
-    const sz = lerp(1, 0.62, shrink);
-    ctx.save(); ctx.translate(cx, cy + 52 * sz); ctx.scale(k * sz, k * sz);
-    const left = lerp(-(we + wa) / 2, -wa / 2 - we, eOff);
-    ctx.save(); ctx.beginPath(); ctx.rect(-600, -200, 1200, 260); ctx.clip();
-    setT(ctx, o); ctx.lineWidth = 12; ctx.lineJoin = 'round'; ctx.strokeStyle = C.night; ctx.strokeText('E', left, eOff * 220);
-    T(ctx, 'E', left, 0 + eOff * 220, { ...o, c: C.mist });
-    ctx.restore();
-    ctx.lineWidth = 12; ctx.lineJoin = 'round'; ctx.strokeStyle = C.night;
-    if (shrink < 0.5) { setT(ctx, o); ctx.strokeText('AI', left + we, 0); }
-    T(ctx, 'AI', left + we, 0, { ...o, c: mixC(C.mist, C.night, shrink) });
-    ctx.restore();
+  // the core: a night disc and the real glass logo
+  if (t >= B(71.6)) {
+    const k = spr(t, B(71.6), 14, 0.82);
+    const dr = lerp(200 * sc, 140, collapse) * k;
+    circ(ctx, cx, cy, dr); ctx.fillStyle = mixC(C.night, '#06231F', 1); ctx.fill();
+    glass(ctx, cx, cy, lerp(330 * sc, 220, collapse) * k);
   }
-  rise(ctx, t, 'ONE INTELLIGENT EXPERIENCE', 960, 940, { size: 28, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(73), B(78));
+  // EAI / ONE INTELLIGENT EXPERIENCE
   {
-    const o = { size: 60, w: 600 }, a = TW(ctx, 'A new kind of ', o), b = TW(ctx, 'ecosystem.', o);
-    rise(ctx, t, 'A new kind of', 960 - (a + b) / 2, 150, { ...o, c: C.mist }, B(74), B(76));
-    rise(ctx, t, 'ecosystem.', 960 - (a + b) / 2 + a, 150, { ...o, c: C.neon }, B(74) + 0.1, B(76) + 0.04);
+    const o = { size: 220, w: 800, ls: -8 };
+    rise(ctx, t, 'EAI', 1000, 600, { ...o, c: C.mist }, B(73) + 0.1, B(74));
+    rise(ctx, t, 'ONE INTELLIGENT EXPERIENCE', 1006, 680, { size: 28, w: 700, c: C.leaf, ls: 10 }, B(73) + 0.25, B(74) + 0.05);
   }
-  rise(ctx, t, 'Experience, AI and value-added services', 960, 120, { size: 46, w: 500, c: C.fog, align: 'center' }, B(76), B(78));
+  // the AI assistant, live: real screens from the Salam app
   {
-    const o = { size: 60, w: 600 }, a = TW(ctx, 'now come together ', o), b = TW(ctx, 'as one.', o);
-    rise(ctx, t, 'now come together', 960 - (a + b) / 2, 200, { ...o, c: C.mist }, B(77), B(78));
-    rise(ctx, t, 'as one.', 960 - (a + b) / 2 + a, 200, { ...o, c: C.neon }, B(77) + 0.1, B(78) + 0.04);
+    const k = spr(t, B(74), 14, 0.86), out = eIn(P(t, B(78), 0.45));
+    if (k > 0.01 && out < 1) {
+      phone(ctx, t, [['s_ai_main', B(74)], ['s_ai_typing', B(75)], ['s_ai_answer', B(77)]], 1390 + out * 900, lerp(1500, 545, k), 900, { shadow: 0.5 });
+    }
+  }
+  {
+    const o = { size: 54, w: 600 }, a = TW(ctx, 'A new kind of ', o), b = TW(ctx, 'ecosystem.', o);
+    rise(ctx, t, 'A new kind of', 520 - (a + b) / 2, 900, { ...o, c: C.mist }, B(74) + 0.1, B(76));
+    rise(ctx, t, 'ecosystem.', 520 - (a + b) / 2 + a, 900, { ...o, c: C.neon }, B(74) + 0.2, B(76) + 0.04);
+    const c2 = TW(ctx, 'Together, ', o), d2 = TW(ctx, 'as one.', o);
+    rise(ctx, t, 'Together,', 520 - (c2 + d2) / 2, 900, { ...o, c: C.mist }, B(76), B(78));
+    rise(ctx, t, 'as one.', 520 - (c2 + d2) / 2 + c2, 900, { ...o, c: C.neon }, B(76) + 0.1, B(78) + 0.04);
   }
 });

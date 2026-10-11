@@ -4,8 +4,10 @@
 // direction in proportion to its speed; still elements stay sharp.
 const cv = document.getElementById('c');
 const ctx = cv.getContext('2d');
+ctx.imageSmoothingQuality = 'high';
 const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H;
 const tctx = tmp.getContext('2d');
+tctx.imageSmoothingQuality = 'high';
 window.SAMPLES = 0;          // 0 = adaptive: more sub-samples when the frame moves fast
 window.SHUTTER = 1 / 180;
 const sm = document.createElement('canvas'); sm.width = 240; sm.height = 135;
@@ -58,6 +60,7 @@ window.DUR = DUR; window.BEAT = BEAT;
   const bin = atob(window.__TTF);
   const buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
   FONT = opentype.parse(buf.buffer);
+  await loadImages(); traceGlass();
   await Promise.all([300, 400, 500, 600, 700, 800].map(w => document.fonts.load(`${w} 100px Geist`)));
   window.seek(0);
   window.ready = true;

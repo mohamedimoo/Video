@@ -1,38 +1,37 @@
 // ===== ACT V — END TITLE (bars 28–33.5, beats 108–134) =====
+const GROUND = 980;
 const STAIRS = [
-  { n: 'CORE', x: 260, top: 690, c: C.stone, tc: C.deep, sc: '#4E5F5A', b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'] },
-  { n: 'BEYOND', x: 760, top: 500, c: C.night, tc: C.mist, sc: C.fog, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'] },
-  { n: 'ECOSYSTEM', x: 1260, top: 310, c: C.neon, tc: C.night, sc: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'] },
+  { n: 'CORE', x: 260, top: 760, c: C.stone, tc: C.deep, sc: '#4E5F5A', b: ['Mobile + Home, merged', 'Unified identity & billing', 'AI assistant'], ph: 0 },
+  { n: 'BEYOND', x: 760, top: 620, c: C.night, tc: C.mist, sc: C.fog, b: ['Mini-apps', 'Content partnerships', 'AI-guided recommendations'], ph: 2 },
+  { n: 'ECOSYSTEM', x: 1260, top: 480, c: C.neon, tc: C.night, sc: C.deep, b: ['Salam-owned platforms', 'First-party content', 'Social & engagement'], ph: 1 },
 ];
-const GROUND = 920;
-scene(107.5, 112.8, (ctx, t) => {
+scene(107.4, 112.8, (ctx, t) => {
   bg(ctx, C.mist);
-  // grid tiles regroup into three rising blocks
   STAIRS.forEach((s, k) => {
-    const form = eInOut(P(t, B(107.5) + k * 0.12, B(0.9)));
     const rise_ = spr(t, B(108 + k), 15, 0.86);
     const h = (GROUND - s.top) * rise_;
-    for (let q = 0; q < 4; q++) {
-      const g = GRID[k * 4 + q], st = tileState(k * 4 + q, B(107.4));
-      const tx = s.x, tw = 500, th = Math.max(h, 1) / 4, ty = GROUND - Math.max(h, 1) + q * th;
-      const x = lerp(st.x, tx, form), y = lerp(st.y, ty, form), w = lerp(st.w, tw, form), hh = lerp(st.h, th + 1, form);
-      rr(ctx, x, y, w, hh, lerp(20, 0, form)); ctx.fillStyle = mixC(g.c, s.c, form); ctx.fill();
-    }
-    if (rise_ > 0.05) {
+    if (h > 1) {
+      rr(ctx, s.x, GROUND - h, 500, h + 40, 0); ctx.fillStyle = s.c; ctx.fill();
       ctx.save(); ctx.beginPath(); ctx.rect(s.x, GROUND - h, 500, h); ctx.clip();
       const y0 = GROUND - h;
-      T(ctx, s.n, s.x + 34, y0 + 60, { size: 28, w: 800, c: s.tc, ls: 6 });
-      s.b.forEach((b, i) => T(ctx, b, s.x + 34, y0 + 108 + i * 38, { size: 24, w: 500, c: s.sc }));
+      T(ctx, s.n, s.x + 30, y0 + 56, { size: 26, w: 800, c: s.tc, ls: 6 });
+      s.b.forEach((b, i) => T(ctx, b, s.x + 30, y0 + 100 + i * 34, { size: 21, w: 500, c: s.sc }));
       ctx.restore();
     }
+    // the matching phone from the previous scene walks onto its step
+    const ph = PHONES3[s.ph];
+    const m = eInOut(P(t, B(107.4) + k * 0.1, B(1) + 0.2));
+    const tx = s.x + 400, th = 400, ty = GROUND - h + 60 - th / 2;   // rides on top of its block
+    const x = lerp(ph.x, tx, m), y = lerp(ph.y, ty, m);
+    phone(ctx, t, [[ph.s, 0]], x, y, lerp(ph.h, th, m), { rot: lerp(ph.rot, 0, m), shadow: 0.6 });
   });
   rise(ctx, t, 'BECOME A SUPERAPP', 120, 170, { size: 24, w: 700, c: C.leaf, ls: 8 }, B(108));
   rise(ctx, t, 'Step by step.', 120, 250, { size: 72, w: 700, c: C.deep, ls: -2 }, B(108) + 0.1);
   // the thread climbs the staircase on beat 111
   const tp = eInOut(P(t, B(111), 0.55));
   if (tp > 0) {
-    const path = [[180, GROUND], [260, 690], [760, 690], [760, 500], [1260, 500], [1260, 310], [1760, 310], [2000, 60]];
-    const L = []; let tot = 0; for (let i = 1; i < path.length; i++) { tot += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]); L.push(tot); }
+    const path = [[180, GROUND], [260, 760], [760, 760], [760, 620], [1260, 620], [1260, 480], [1760, 480], [2000, 220]];
+    let tot = 0; for (let i = 1; i < path.length; i++) tot += Math.hypot(path[i][0] - path[i - 1][0], path[i][1] - path[i - 1][1]);
     const head = tp * tot, tail = Math.max(0, head - 900);
     ctx.strokeStyle = C.green; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     let acc = 0, started = false;
@@ -52,75 +51,84 @@ scene(107.5, 112.8, (ctx, t) => {
   const op = eIn(P(t, B(111.6), B(0.4) + 0.1));
   if (op > 0) {
     const s = STAIRS[1];
-    rr(ctx, lerp(s.x, -40, op), lerp(s.top, -40, op), lerp(500, W + 80, op), lerp(GROUND - s.top, H + 80, op), 0);
+    rr(ctx, lerp(s.x, -40, op), lerp(s.top, -40, op), lerp(500, W + 80, op), lerp(GROUND - s.top + 40, H + 80, op), 0);
     ctx.fillStyle = C.night; ctx.fill();
   }
 });
 
-// --- Beyond Telco. Closer to Life. / Everyday moments (beats 112–121) ---
-const MOMENTS = ['Mobile', 'Home', 'Travel', 'Entertainment', 'Wellbeing', 'Deals', 'Faith'];
-const ARC = { cx: 960, cy: 1400, R: 1000, a0: 218 * Math.PI / 180, a1: 322 * Math.PI / 180 };
+// --- Beyond Telco. Closer to Life. / Everyday moments with real Salam customers (beats 112–121) ---
+const MOMENTS = [['Mobile', 'SmartPhone01'], ['Home', 'Home01'], ['Travel', 'Airplane01'], ['Entertainment', 'PlayCircle'], ['Wellbeing', 'Yoga01'], ['Deals', 'DiscountTag01'], ['Faith', 'Mosque01']];
+const ARC = { cx: 960, cy: 1180, R: 780, a0: 205 * Math.PI / 180, a1: 335 * Math.PI / 180 };
 const momentPos = i => { const a = lerp(ARC.a0, ARC.a1, i / 6); return [ARC.cx + Math.cos(a) * ARC.R, ARC.cy + Math.sin(a) * ARC.R]; };
-function momentIcon(ctx, i, x, y, s, col) {
-  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 3.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.beginPath();
-  if (i === 0) { rr(ctx, x - s * 0.4, y - s * 0.65, s * 0.8, s * 1.3, s * 0.18); ctx.stroke(); }
-  if (i === 1) { ctx.moveTo(x - s * 0.7, y - s * 0.05); ctx.lineTo(x, y - s * 0.65); ctx.lineTo(x + s * 0.7, y - s * 0.05); ctx.moveTo(x - s * 0.5, y - s * 0.2); ctx.lineTo(x - s * 0.5, y + s * 0.6); ctx.lineTo(x + s * 0.5, y + s * 0.6); ctx.lineTo(x + s * 0.5, y - s * 0.2); ctx.stroke(); }
-  if (i === 2) { ctx.moveTo(x - s * 0.7, y + s * 0.1); ctx.lineTo(x + s * 0.7, y - s * 0.5); ctx.lineTo(x - s * 0.1, y + s * 0.65); ctx.lineTo(x - s * 0.15, y + s * 0.15); ctx.closePath(); ctx.stroke(); }
-  if (i === 3) { ctx.moveTo(x - s * 0.35, y - s * 0.55); ctx.lineTo(x + s * 0.6, y); ctx.lineTo(x - s * 0.35, y + s * 0.55); ctx.closePath(); ctx.fill(); }
-  if (i === 4) { ctx.moveTo(x, y + s * 0.6); ctx.bezierCurveTo(x - s * 1.1, y - s * 0.1, x - s * 0.5, y - s * 0.9, x, y - s * 0.3); ctx.bezierCurveTo(x + s * 0.5, y - s * 0.9, x + s * 1.1, y - s * 0.1, x, y + s * 0.6); ctx.stroke(); }
-  if (i === 5) { T(ctx, '%', x, y + s * 0.42, { size: s * 1.4, w: 700, c: col, align: 'center' }); }
-  if (i === 6) { ctx.arc(x, y, s * 0.6, 0.6, Math.PI * 2 - 0.6); ctx.arc(x + s * 0.28, y - s * 0.05, s * 0.48, Math.PI * 2 - 0.75, 0.75, true); ctx.closePath(); ctx.fill(); }
-}
 scene(111.6, 121.4, (ctx, t) => {
   if (t >= B(112)) bg(ctx, C.night);
   if (t < B(112)) return;
-  const o = { size: 170, w: 800, ls: -6 };
-  rise(ctx, t, 'Beyond Telco.', 120, 470, { ...o, c: C.mist }, B(112), B(114));
-  rise(ctx, t, 'Closer to Life.', 120, 680, { ...o, c: C.leaf }, B(113), B(114) + 0.05);
-  // the arc draws, the moments sit on it
-  const ap = eInOut(P(t, B(114) + 0.1, B(1.6)));
+  // Beyond Telco: a real customer, on a mist card
+  {
+    const k = spr(t, B(112) + 0.15, 14, 0.86), out = eIn(P(t, B(114), 0.4));
+    if (k > 0.01 && out < 1) {
+      const cy = lerp(1500, 560, k) - out * 1300;
+      ctx.save();
+      rr(ctx, 1220, cy - 440, 600, 880, 52); ctx.fillStyle = C.mist; ctx.fill(); ctx.clip();
+      pic(ctx, 'p_friends', 1520, cy + 120 + (1 - k) * 160, 1130);
+      ctx.restore();
+    }
+  }
+  const o = { size: 160, w: 800, ls: -6 };
+  rise(ctx, t, 'Beyond Telco.', 110, 470, { ...o, c: C.mist }, B(112), B(114));
+  rise(ctx, t, 'Closer to Life.', 110, 670, { ...o, c: C.leaf }, B(113), B(114) + 0.05);
+  // everyday moments: a family photo, the arc of moments around it
   const toDots = eInOut(P(t, B(120), B(0.9)));
+  {
+    const k = spr(t, B(114) + 0.1, 14, 0.86), out = eIn(P(t, B(120), 0.4));
+    if (k > 0.01 && out < 1) {
+      const cy = lerp(1500, 790, k) + out * 900;
+      ctx.save();
+      rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.mist; ctx.fill(); ctx.clip();
+      pic(ctx, 'p_family', 960, cy + 120, 780);
+      ctx.restore();
+    }
+  }
+  const ap = eInOut(P(t, B(114) + 0.1, B(1.6)));
   if (ap > 0 && toDots < 1) {
     ctx.strokeStyle = C.teal; ctx.lineWidth = 3; ctx.beginPath();
-    ctx.arc(ARC.cx, ARC.cy, ARC.R, ARC.a0 - 0.15, lerp(ARC.a0 - 0.15, ARC.a1 + 0.15, ap) * (1 - toDots) + (ARC.a0 - 0.15) * toDots); ctx.stroke();
+    ctx.arc(ARC.cx, ARC.cy, ARC.R, ARC.a0 - 0.12, lerp(ARC.a0 - 0.12, ARC.a1 + 0.12, ap * (1 - toDots))); ctx.stroke();
   }
-  MOMENTS.forEach((m, i) => {
+  MOMENTS.forEach(([m, ic], i) => {
     const t0 = B(114) + 0.1 + B(1.6) * (i / 6) * 0.8;
     const k = spr(t, t0, 16) * (1 - eIn(P(t, B(120), 0.3)));
     if (k <= 0.001) return;
     const [x, y] = momentPos(i);
     const lit = B(116 + Math.floor(i / 2)) + (i % 2) * 0.15;
     const lp = spr(t, lit, 18);
-    circ(ctx, x, y, 66 * k * (1 + 0.12 * Math.max(0, 1 - (t - lit) * 4) * (t > lit ? 1 : 0)));
-    ctx.fillStyle = mixC(C.deep, C.green, clamp(lp)); ctx.fill();
-    ctx.save(); ctx.translate(x, y); ctx.scale(k, k); momentIcon(ctx, i, 0, 0, 34, t > lit ? C.night : C.mist); ctx.restore();
-    rise(ctx, t, m, x, y + 112, { size: 24, w: 600, c: C.mist, align: 'center' }, t0 + 0.1, B(120));
+    const pop = 1 + 0.12 * (t > lit ? Math.max(0, 1 - (t - lit) * 4) : 0);
+    circ(ctx, x, y, 62 * k * pop); ctx.fillStyle = mixC(C.deep, C.green, clamp(lp)); ctx.fill();
+    icon(ctx, ic, x, y, 54 * k, t > lit ? C.night : C.mist, 1.1);
+    rise(ctx, t, m, x, y - 84, { size: 24, w: 600, c: C.mist, align: 'center' }, t0 + 0.1, B(120));
   });
-  rise(ctx, t, 'Everyday moments.', 960, 160, { size: 84, w: 700, c: C.mist, align: 'center', ls: -2 }, B(116), B(120));
-  rise(ctx, t, 'All in one place.', 960, 262, { size: 84, w: 700, c: C.neon, align: 'center', ls: -2 }, B(119), B(120) + 0.05);
+  rise(ctx, t, 'Everyday moments.', 960, 150, { size: 84, w: 700, c: C.mist, align: 'center', ls: -2 }, B(116), B(120));
+  rise(ctx, t, 'All in one place.', 960, 250, { size: 84, w: 700, c: C.neon, align: 'center', ls: -2 }, B(119), B(120) + 0.05);
 });
 
-// --- 30 days light up, then fold into the leaf, the end title, and back to the icon (beats 120–134) ---
+// --- 30 days light up, then fold into the Salam logo, the end title, and back to the icon (beats 120–134) ---
 const GRIDC = { x0: 660, y0: 320, sp: 120, r: 36 };
 const dayPos = d => [GRIDC.x0 + (d % 6) * GRIDC.sp, GRIDC.y0 + Math.floor(d / 6) * GRIDC.sp];
-// when each of the 30 days lights: slow, then faster and faster into the last full bar
 const DAY_T = (() => {
   const counts = [[121, 1], [122, 3], [123, 7], [124, 12], [125, 18], [126, 24], [127, 29], [128, 30]];
   const out = []; let prev = 0;
   counts.forEach(([b, n]) => { const m = n - prev; for (let i = 0; i < m; i++) out.push(B(b) + B(1) * i / m); prev = n; });
   return out;
 })();
-const END = { lx: 650, ly: 470, ls: 300, wx: 820, wy: 560 };
+const END = { gx: 640, gy: 460, gh: 380, wx: 860, wy: 560, wh: 150 };
 scene(120, 134.01, (ctx, t) => {
   bg(ctx, C.night);
   const fold = eInOut(P(t, B(128.5), B(0.8)));
   const punch = t >= B(128) ? spr(t, B(128), 14, 0.7) * (1 - eInOut(P(t, B(128.5), B(0.6)))) : 0;
   const solid = spr(t, B(129.25), 15, 0.9);
   const collapse = eInOut(P(t, B(133), 0.42));
-  const leafPtsFinal = resample(leafPts(END.lx, END.ly, END.ls, -Math.PI / 4, 300), 30);
+  const glassFinal = glassPts(END.gx, END.gy, END.gh, 30);
   const lit = DAY_T.filter(x => t >= x).length;
-  // dots
+  // the 30 days
   if (solid < 0.98) {
     for (let d = 0; d < 30; d++) {
       const src = momentPos(Math.min(6, Math.floor(d * 7 / 30)));
@@ -128,28 +136,27 @@ scene(120, 134.01, (ctx, t) => {
       const form = eInOut(P(t, B(120) + d * 0.008, B(0.9)));
       let x = lerp(src[0], gp[0], form), y = lerp(src[1], gp[1], form);
       let r = lerp(20, GRIDC.r, form);
-      const lt = DAY_T[d];
-      const on = t >= lt;
+      const lt = DAY_T[d], on = t >= lt;
       const pop = on ? 1 + 0.25 * Math.max(0, 1 - (t - lt) * 5) : 1;
-      // the hit: the whole month pulses outward, then folds into the leaf outline
       const hit = punch * 0.22;
-      x = lerp(x + (x - 960) * hit, leafPtsFinal[d][0], fold);
-      y = lerp(y + (y - 560) * hit, leafPtsFinal[d][1], fold);
+      x = lerp(x + (x - 960) * hit, glassFinal[d][0], fold);
+      y = lerp(y + (y - 560) * hit, glassFinal[d][1], fold);
       r = lerp(r * pop, 22, fold) * (1 - solid);
       circ(ctx, x, y, r); ctx.fillStyle = on ? C.neon : C.teal; ctx.fill();
     }
   }
-  // the leaf fills from the dots
+  // the real glass logo is revealed through the shape the dots have drawn
   if (solid > 0) {
-    const L = lerp(END.ls * 0.92, END.ls, solid);
-    const cx = lerp(END.lx, 960, collapse), cy = lerp(END.ly, 500, collapse);
-    const size = lerp(L, 180 * 0.62, collapse);
+    const cx = lerp(END.gx, 960, collapse), cy = lerp(END.gy, 500, collapse);
+    const h = lerp(END.gh, 200 * 0.82, collapse);
     if (collapse > 0) {
       const k = spr(t, B(133) + 0.12, 16, 0.9);
-      rr(ctx, 960 - 90 * k, 500 - 90 * k, 180 * k, 180 * k, 180 * 0.24 * k); ctx.fillStyle = C.deep; ctx.fill();
+      rr(ctx, 960 - 100 * k, 500 - 100 * k, 200 * k, 200 * k, 200 * 0.26 * k); ctx.fillStyle = C.deep; ctx.fill();
     }
-    ctx.save(); ctx.translate(cx, cy); ctx.scale(solid, solid); ctx.translate(-cx, -cy);
-    drawLeaf(ctx, cx, cy, size, C.green, -Math.PI / 4, collapse > 0.5 ? C.deep : C.night);
+    ctx.save();
+    const sc = lerp(0.85, 1.35, solid);
+    poly(ctx, glassPts(cx, cy, h * sc, 60)); ctx.clip();
+    glass(ctx, cx, cy, h);
     ctx.restore();
   }
   // day counter and the "once a month" callback
@@ -162,22 +169,25 @@ scene(120, 134.01, (ctx, t) => {
     rise(ctx, t, 'every', 1730, 620, { size: 110, w: 800, c: C.neon, align: 'right', ls: -4 }, B(126), B(128) + 0.05);
     rise(ctx, t, 'day.', 1730, 730, { size: 110, w: 800, c: C.neon, align: 'right', ls: -4 }, B(126) + 0.3, B(128) + 0.1);
   }
-  // end title
-  rise(ctx, t, 'salam', END.wx, END.wy, { size: 230, w: 700, c: C.mist, ls: -8 }, B(129.5), B(132.9));
+  // end title: the real wordmark letters rise one by one
+  {
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, B(129.5) + i * 0.06, 0.4)) * (1 - eIn(P(t, B(132.9) + i * 0.02, 0.25))));
+    if (rv.some(v => v > 0)) wordLetters(ctx, END.wx, END.wy, END.wh, C.mist, rv);
+  }
   const tw = { size: 46, w: 500 };
-  riseWords(ctx, t, [['Making', C.mist], ['the', C.mist], ['joy', C.mist], ['of', C.mist], ['technology', C.mist], ['accessible', C.mist]], 960, 760, { ...tw, align: 'center' }, [0, 1, 2, 3, 4, 5].map(i => B(130) + i * 0.07), B(132.6));
-  riseWords(ctx, t, [['for', C.mist], ['everyone,', C.mist], ['everyday.', C.neon]], 960, 830, { ...tw, align: 'center' }, [0, 1, 2].map(i => B(131) + i * 0.1), B(132.7));
-  // final half bar: underline lands under "everyday." on the downbeat
+  riseWords(ctx, t, [['Making', C.mist], ['the', C.mist], ['joy', C.mist], ['of', C.mist], ['technology', C.mist], ['accessible', C.mist]], 960, 770, { ...tw, align: 'center' }, [0, 1, 2, 3, 4, 5].map(i => B(130) + i * 0.07), B(132.6));
+  riseWords(ctx, t, [['for', C.mist], ['everyone,', C.mist], ['everyday.', C.neon]], 960, 840, { ...tw, align: 'center' }, [0, 1, 2].map(i => B(131) + i * 0.1), B(132.7));
   {
     const w1 = TW(ctx, 'for everyone, ', tw), w2 = TW(ctx, 'everyday.', tw), x = 960 - (w1 + w2) / 2 + w1;
     const p = eOut(P(t, B(132), 0.35)), q = eIn(P(t, B(132.7), 0.3));
-    if (p > 0 && q < 1) { ctx.fillStyle = C.neon; ctx.fillRect(x, 850 + q * 200, w2 * p, 6); }
+    if (p > 0 && q < 1) { ctx.fillStyle = C.neon; ctx.fillRect(x, 860 + q * 200, w2 * p, 6); }
   }
   // the app icon label returns: last frame == first frame
   if (collapse > 0) {
     const lp = eOut(P(t, B(133) + 0.2, 0.25));
-    ctx.save(); ctx.beginPath(); ctx.rect(960 - 200, 500 + 90 + 12, 400, 60); ctx.clip();
-    T(ctx, 'salam', 960, 500 + 90 + 58 + (1 - lp) * 60, { size: 34, w: 600, c: C.dim, align: 'center', ls: 1 });
+    ctx.save(); ctx.beginPath(); ctx.rect(960 - 200, 500 + 100 + 12, 400, 70); ctx.clip();
+    const lh = 30, lw = WORD_W(lh);
+    wordLetters(ctx, 960 - lw / 2, 500 + 100 + 60 + (1 - lp) * 70, lh, C.dim);
     ctx.restore();
   }
 });

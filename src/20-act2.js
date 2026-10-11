@@ -89,8 +89,13 @@ scene(27.5, 40.2, (ctx, t) => {
       if (exit > 0) ctx.restore();
     });
   }
-  // labels inside circles
-  ['Content', 'Community', 'Commerce'].forEach((s, i) => rise(ctx, t, s, CIRC[i][0], CIRC[i][1] + 14, { size: 40, w: 700, c: C.deep, align: 'center' }, B(29) + i * 0.08, B(31) - 0.15));
+  // real 3D icons sit inside the circles, labels underneath
+  const HAB_IC = ['i_bulb', 'i_info', 'i_gift'];
+  ['Content', 'Community', 'Commerce'].forEach((lab, i) => {
+    const q = spr(t, B(29) + i * 0.08, 15, 0.8) * (1 - eIn(P(t, B(31) - 0.15, 0.25)));
+    if (q > 0.01) pic(ctx, HAB_IC[i], CIRC[i][0], CIRC[i][1], 190 * q);
+    rise(ctx, t, lab, CIRC[i][0], CIRC[i][1] + CR + 70, { size: 38, w: 700, c: C.mist, align: 'center' }, B(29) + 0.1 + i * 0.08, B(31) - 0.15);
+  });
   // plus signs
   [760, 1160].forEach((x, i) => {
     const k = spr(t, B(30) + i * 0.08, 18) * (1 - eIn(P(t, B(31) - 0.1, 0.25)));
@@ -98,18 +103,22 @@ scene(27.5, 40.2, (ctx, t) => {
     ctx.fillStyle = C.neon; ctx.fillRect(x - 28 * k, 556, 56 * k, 8); ctx.fillRect(x - 4, 560 - 28 * k, 8, 56 * k);
   });
   rise(ctx, t, 'THE HABIT LOOP', 960, 250, { size: 26, w: 700, c: C.leaf, align: 'center', ls: 10 }, B(28.75), B(36));
-  // stats around the loop
+  // stats around the loop, each with the partner's real logo
   const STATS = [
-    ['TIKTOK', 95, ' min/day', 160, 440, 'left'],
-    ['SPOTIFY', 30, ' min/day', 1760, 440, 'right'],
-    ['STARBUCKS', 1, ' pay app in US', 1760, 800, 'right', '#'],
-    ['ALIPAY', 1, 'B daily users', 160, 800, 'left'],
+    ['TIKTOK', 95, ' min/day', 160, 440, 'left', '', 'l_tiktok'],
+    ['SPOTIFY', 30, ' min/day', 1760, 440, 'right', '', 'l_spotify'],
+    ['STARBUCKS', 1, ' pay app in US', 1760, 800, 'right', '#', 'l_starbucks'],
+    ['ALIPAY', 1, 'B daily users', 160, 800, 'left', '', 'l_alipay'],
   ];
-  STATS.forEach(([k, v, suf, x, y, al, pre], i) => {
+  STATS.forEach(([k, v, suf, x, y, al, pre, logo], i) => {
     const t0 = B(32 + i);
-    rise(ctx, t, k, x, y - 74, { size: 24, w: 700, c: C.leaf, align: al, ls: 6 }, t0, B(36));
+    const q = spr(t, t0, 16, 0.8) * (1 - eIn(P(t, B(36), 0.3)));
+    const lx = al === 'left' ? x + 48 : x - 48;
+    if (q > 0.01) pic(ctx, logo, lx, y - 32, 96 * q);
+    const tx = al === 'left' ? x + 116 : x - 116;
+    rise(ctx, t, k, tx, y - 62, { size: 22, w: 700, c: C.leaf, align: al, ls: 6 }, t0, B(36));
     const n = Math.round(v * eOut(P(t, t0, 0.45)));
-    rise(ctx, t, (pre || '') + n + suf, x, y, { size: 58, w: 700, c: C.mist, align: al, ls: -1 }, t0 + 0.05, B(36) + 0.04);
+    rise(ctx, t, (pre || '') + n + suf, tx, y, { size: 50, w: 700, c: C.mist, align: al, ls: -1 }, t0 + 0.05, B(36) + 0.04);
   });
   rise(ctx, t, 'daily', 960, 578, { size: 44, w: 700, c: C.mist, align: 'center' }, B(31.6), B(36));
   // "7–" joins, caption
@@ -165,6 +174,12 @@ const PINS = [
   { n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
+const NAFATH_TEAL = '#2F9B95';
+function rrPts(x, y, w, h, r, N) {
+  const o = [], c = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
+  c.forEach(([cx, cy, a0]) => { for (let i = 0; i <= 10; i++) { const a = a0 + i / 10 * Math.PI / 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } });
+  return resample(o, N);
+}
 const SHIELD = (() => {
   const pts = [[-1, -0.95], [0, -1.2], [1, -0.95], [1, 0.1]];
   for (let i = 1; i < 16; i++) { const u = i / 16; pts.push([1 - u, 0.1 + Math.sin(u * Math.PI / 2) * 1.1]); }
@@ -233,24 +248,26 @@ scene(40, 52.2, (ctx, t) => {
     }
     ctx.stroke();
   }
-  // Riyadh -> Nafath shield -> leaf
+  // Riyadh -> the Nafath tile -> the Salam mark -> a line
   if (t >= B(48.4)) {
     const k = spr(t, B(48.4), 18);
-    const toShield = eInOut(P(t, B(49), 0.5)), toLeaf = eInOut(P(t, B(50), 0.5));
+    const toTile = eInOut(P(t, B(49), 0.5)), toMark = eInOut(P(t, B(50), 0.5));
     const flat = eInOut(P(t, B(51), 0.42));
     const c0 = circlePts(rq[0], rq[1], 12 * k, NM);
-    const sh = align(c0, shieldPts(960, 500, 150));
-    let pts = mixPts(c0, sh, toShield);
-    if (toLeaf > 0) pts = mixPts(pts, align(sh, leafPts(960, 500, 400, -Math.PI / 4, NM)), toLeaf);
-    if (flat > 0) {
-      const lf = align(sh, leafPts(960, 500, 400, -Math.PI / 4, NM));
-      pts = mixPts(pts, align(lf, rectPts(-20, 538, 1960, 4, NM)), flat);
-    }
-    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.green, C.mist, flat) : C.green; ctx.fill();
-    if (toShield > 0.5 && toLeaf < 0.5) {
-      const q = spr(t, B(49) + 0.2, 18) * (1 - eIn(P(t, B(50), 0.2)));
+    const tile = align(c0, rrPts(960 - 160, 500 - 160, 320, 320, 76, NM));
+    const mk = align(tile, markPts(960, 500, 460, NM));
+    let pts = mixPts(c0, tile, toTile);
+    if (toMark > 0) pts = mixPts(pts, mk, toMark);
+    if (flat > 0) pts = mixPts(pts, align(mk, rectPts(-20, 538, 1960, 4, NM)), flat);
+    const col = toMark > 0 ? mixC(NAFATH_TEAL, C.green, toMark) : toTile > 0 ? mixC(C.neon, NAFATH_TEAL, toTile) : C.neon;
+    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.green, C.mist, flat) : col; ctx.fill();
+    // the real Nafath logo sits in the tile
+    const q = spr(t, B(49) + 0.2, 17) * (1 - eIn(P(t, B(50) - 0.05, 0.22)));
+    if (q > 0.01) {
       ctx.save(); ctx.translate(960, 500); ctx.scale(q, q);
-      T(ctx, 'NAFATH', 0, 14, { size: 40, w: 800, c: C.night, align: 'center', ls: 4 }); ctx.restore();
+      rr(ctx, -128, -128, 256, 256, 54); ctx.fillStyle = C.white; ctx.fill();
+      pic(ctx, 'l_nafath', 0, 0, 250);
+      ctx.restore();
     }
     rise(ctx, t, 'RIYADH', 960, 590, { size: 24, w: 700, c: C.leaf, align: 'center', ls: 8 }, B(48.4), B(49));
   }
