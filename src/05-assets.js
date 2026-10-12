@@ -33,16 +33,27 @@ function shadowOff(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; c
 const PHONE_AR = 393 / 852;
 function phone(ctx, t, screens, cx, cy, h, opts = {}) {
   if (h < 4) return;
-  const w = h * PHONE_AR, b = h * 0.024, r = h * 0.118;
+  // a modern phone: thin metal frame, an even black bezel, concentric corners, side buttons, a Dynamic Island
+  const w = h * PHONE_AR, f = h * 0.0075, b = h * 0.014, r = h * 0.118;   // frame, bezel, screen corner
+  const X = cx - w / 2, Y = cy - h / 2, R = r + b + f;
   ctx.save();
   if (opts.rot) { ctx.translate(cx, cy); ctx.rotate(opts.rot); ctx.translate(-cx, -cy); }
+  // side buttons sit just proud of the frame
+  const bw = Math.max(1.5, h * 0.0045), btn = (x, y0, len) => { rr(ctx, x, Y + h * y0, bw + f, h * len, bw); ctx.fillStyle = '#3A4442'; ctx.fill(); };
+  btn(X - b - f - bw, 0.165, 0.04); btn(X - b - f - bw, 0.235, 0.075); btn(X - b - f - bw, 0.33, 0.075);
+  btn(X + w + b, 0.255, 0.11);
+  // the metal frame with a contact shadow, then its edge highlights
   if (opts.shadow !== false) shadowOn(ctx, opts.shadow || 1);
-  rr(ctx, cx - w / 2 - b, cy - h / 2 - b, w + 2 * b, h + 2 * b, r + b);
-  ctx.fillStyle = '#0D1715'; ctx.fill(); shadowOff(ctx);
-  ctx.strokeStyle = '#3A4744'; ctx.lineWidth = Math.max(1, h * 0.003); ctx.stroke();
+  rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = '#2B3331'; ctx.fill(); shadowOff(ctx);
+  ctx.lineWidth = Math.max(1, h * 0.0016);
+  ctx.strokeStyle = '#6F7B78'; ctx.stroke();
+  rr(ctx, X - b - f * 0.45, Y - b - f * 0.45, w + 2 * b + f * 0.9, h + 2 * b + f * 0.9, R - f * 0.55);
+  ctx.strokeStyle = '#46504E'; ctx.lineWidth = Math.max(0.75, h * 0.001); ctx.stroke();
+  // the black glass bezel
+  rr(ctx, X - b, Y - b, w + 2 * b, h + 2 * b, r + b); ctx.fillStyle = '#030606'; ctx.fill();
   ctx.save();
-  rr(ctx, cx - w / 2, cy - h / 2, w, h, r); ctx.clip();
-  ctx.fillStyle = C.mist; ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
+  rr(ctx, X, Y, w, h, r); ctx.clip();
+  ctx.fillStyle = C.mist; ctx.fillRect(X, Y, w, h);
   // the newest screen that has arrived slides up over the one before it
   let cur = 0;
   screens.forEach(([, tIn], i) => { if (t >= tIn) cur = i; });
@@ -50,13 +61,17 @@ function phone(ctx, t, screens, cx, cy, h, opts = {}) {
   const p = cur > 0 ? eInOut(P(t, tIn, 0.5)) : 1;
   if (cur > 0 && p < 1) {
     const prev = screens[cur - 1][0];
-    ctx.drawImage(IMG[prev], cx - w / 2, cy - h / 2 - p * h * 0.35, w, h);
+    ctx.drawImage(IMG[prev], X, Y - p * h * 0.35, w, h);
   }
   const sy = (opts.scroll || 0) * h;
-  if (IMG[name]) ctx.drawImage(IMG[name], cx - w / 2, cy - h / 2 + (1 - p) * h - sy, w, h);
+  if (IMG[name]) ctx.drawImage(IMG[name], X, Y + (1 - p) * h - sy, w, h);
+  // a faint flat glass reflection across the upper corner
+  ctx.beginPath(); ctx.moveTo(X + w * 0.42, Y); ctx.lineTo(X + w * 0.78, Y); ctx.lineTo(X, Y + h * 0.5); ctx.lineTo(X, Y + h * 0.3); ctx.closePath();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.07)'; ctx.fill();
   ctx.restore();
-  // dynamic island
-  rr(ctx, cx - w * 0.15, cy - h / 2 + h * 0.014, w * 0.3, h * 0.034, h * 0.017); ctx.fillStyle = '#05100E'; ctx.fill();
+  // Dynamic Island
+  rr(ctx, cx - w * 0.15, Y + h * 0.014, w * 0.3, h * 0.036, h * 0.018); ctx.fillStyle = '#000000'; ctx.fill();
+  circ(ctx, cx + w * 0.105, Y + h * 0.032, h * 0.007); ctx.fillStyle = '#0C1416'; ctx.fill();
   ctx.restore();
 }
 
