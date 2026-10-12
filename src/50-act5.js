@@ -195,7 +195,7 @@ scene(111.6, 121.4, (ctx, t) => {
     if (k > 0.01 && out < 1) {
       const cy = lerp(1500, 790, k) + out * 900;
       // the cutout sits straight on the scene, with no card behind it; it fills the space inside the arc
-      pic(ctx, 'p_beanbag', 860, cy + 130, 768 * (1 + 0.06 * P(t, B(114), B(6))));
+      pic(ctx, 'p_beanbag', 800, cy + 130, 768 * (1 + 0.06 * P(t, B(114), B(6))));
     }
   }
   const ap = eInOut(P(t, B(114) + 0.28, B(1.6)));
