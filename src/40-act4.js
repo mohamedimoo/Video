@@ -57,11 +57,41 @@ scene(80, 88.2, (ctx, t) => {
   const out = eIn(P(t, B(86), 0.35));
   // behind-the-scenes band and the divider
   const dv = eInOut(P(t, B(80.25), 0.55)) * (1 - out);
+  // day above the horizon, night below: the sky rises out of the divider, the night band sweeps in under it
+  const day = dv, dc = (n, d) => mixC(n, d, day);
+  if (dv > 0) { ctx.fillStyle = '#071613'; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy); }
+  dotGrid(ctx, '#0D2420');
   if (dv > 0) {
-    ctx.fillStyle = '#071613'; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy);
+    const top = WH.cy * (1 - dv);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, WH.cy - top); ctx.clip();
+    ctx.fillStyle = C.mist; ctx.fillRect(0, top, W, WH.cy - top);
+    dotGrid(ctx, '#DCE5DE');
+    // the sun, top right of the day half
+    const sk = spr(t, B(81.3), 14, 0.85) * (1 - out);
+    if (sk > 0.01) {
+      ctx.save(); ctx.translate(1748, 330); ctx.rotate((t - B(80)) * 0.15); ctx.scale(sk, sk);
+      circ(ctx, 0, 0, 30); ctx.fillStyle = C.neon; ctx.fill();
+      ctx.strokeStyle = C.green; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 44, Math.sin(a) * 44); ctx.lineTo(Math.cos(a) * 58, Math.sin(a) * 58); ctx.stroke(); }
+      ctx.restore();
+    }
+    ctx.restore();
+    // stars and a crescent moon in the night half
+    ctx.save(); ctx.beginPath(); ctx.rect(0, WH.cy, W * dv, H - WH.cy); ctx.clip();
+    for (let k = 0; k < 90; k++) {
+      const x = (k * 337.7 + 61) % W, y = WH.cy + 24 + (k * 151.3 + 17) % (H - WH.cy - 40);
+      const tw = 0.55 + 0.45 * Math.sin(t * (1.3 + (k % 5) * 0.37) + k * 2.1);
+      circ(ctx, x, y, (k % 7 === 0 ? 2.2 : 1.3) * tw); ctx.fillStyle = mixC('#071613', C.mist, 0.35 + 0.5 * tw); ctx.fill();
+    }
+    const mk = spr(t, B(82.3), 14, 0.85) * (1 - out);
+    if (mk > 0.01) {
+      ctx.save(); ctx.translate(1748, 800); ctx.scale(mk, mk); ctx.beginPath();
+      ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.arc(14, -10, 28, 0, Math.PI * 2, true); ctx.fillStyle = C.mist; ctx.fill('evenodd');
+      ctx.restore();
+    }
+    ctx.restore();
     ctx.fillStyle = '#22322E'; ctx.fillRect(110, WH.cy - 1, 1700 * dv, 2);
   }
-  dotGrid(ctx, '#0D2420');
   // core: dark disc, neon ring, dotted inner circle; the neon disc from EAI hollows out into the ring
   const coreK = 1 - eIn(P(t, B(86), 0.4));
   if (coreK > 0) {
@@ -94,7 +124,7 @@ scene(80, 88.2, (ctx, t) => {
       return;
     }
     const base = () => { ctx.beginPath(); poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rOut, a0 + rot, a1 + rot, 60)); };
-    base(); ctx.fillStyle = up ? '#13221F' : '#0F1C19'; ctx.fill();
+    base(); ctx.fillStyle = up ? dc('#13221F', '#DCE5DE') : '#0F1C19'; ctx.fill();
     if (fill > 0) {
       const rf = lerp(WH.r0, rOut, fill);
       const fp = () => poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rf, a0 + rot, a1 + rot, 60));
@@ -110,7 +140,7 @@ scene(80, 88.2, (ctx, t) => {
     const lx = WH.cx + Math.cos(am) * ra, ly = WH.cy + Math.sin(am) * ra + 7 + Math.sin(am) * 12;
     const al = Math.cos(am) < -0.02 ? 'right' : Math.cos(am) > 0.02 ? 'left' : 'center';   // near-vertical pairs split apart
     const name = up ? DOMAINS[j] : CAPS[j];
-    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: mixC('#41524E', C.mist, clamp(fill * 2)), align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
+    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: up ? mixC(dc('#41524E', '#9AA6A2'), dc(C.mist, C.deep), clamp(fill * 2)) : mixC('#41524E', C.mist, clamp(fill * 2)), align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
   });
   // light pulses run from the core outward along the spokes
   if (unroll <= 0) PULSES.forEach(([n, list]) => list.forEach((sp, q) => {
@@ -123,25 +153,25 @@ scene(80, 88.2, (ctx, t) => {
   // headline (top right) and the two blocks on the left
   {
     const o = { size: 54, w: 700, ls: -1.5 }, wa = TW(ctx, 'AI ', o), wb = TW(ctx, 'cross-cuts every', o);
-    rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: C.neon }, B(80.5), B(86));
-    rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: C.mist }, B(80.5) + 0.06, B(86));
-    rise(ctx, t, 'capability.', 1810, 172, { ...o, c: C.mist, align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
+    rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: dc(C.neon, C.green) }, B(80.5), B(86));
+    rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: dc(C.mist, C.deep) }, B(80.5) + 0.06, B(86));
+    rise(ctx, t, 'capability.', 1810, 172, { ...o, c: dc(C.mist, C.deep), align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
   }
-  const block = (y, t0, cap, title, sub, capCol, mark) => {
+  const block = (y, t0, cap, title, sub, capCol, mark, lit) => {
     const k = spr(t, t0, 16, 0.85) * (1 - out);
     if (k > 0.01) { ctx.save(); ctx.translate(119, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
     rise(ctx, t, cap, 140, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
-    rise(ctx, t, title, 110, y + 62, { size: 40, w: 700, c: C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
-    rise(ctx, t, sub, 110, y + 104, { size: 22, w: 500, c: C.fog }, t0 + 0.16, B(86) + 0.06);
+    rise(ctx, t, title, 110, y + 62, { size: 40, w: 700, c: lit ? dc(C.mist, C.deep) : C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
+    rise(ctx, t, sub, 110, y + 104, { size: 22, w: 500, c: lit ? dc(C.fog, '#5B6B66') : C.fog }, t0 + 0.16, B(86) + 0.06);
   };
-  block(252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', C.neon, () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = C.neon; ctx.fill(); });
+  block(252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', dc(C.neon, C.green), () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = dc(C.neon, C.green); ctx.fill(); }, true);
   block(700, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
     rr(ctx, -9, -9, 18, 18, 3); ctx.strokeStyle = '#8FA39E'; ctx.lineWidth = 1.6; ctx.stroke(); hatch(ctx, () => rr(ctx, -9, -9, 18, 18, 3), '#8FA39E', 5);
   });
   // front of house / behind the scenes
   const fk = spr(t, B(81.3), 16, 0.85) * (1 - out), bk = spr(t, B(82.3), 16, 0.85) * (1 - out);
-  rise(ctx, t, 'FRONT OF HOUSE', 1788, WH.cy - 20, { size: 17, w: 700, c: C.neon, ls: 5, align: 'right' }, B(81.3), B(86));
-  if (fk > 0.01) arrowGlyph(ctx, 1804, WH.cy - 26, true, C.neon);
+  rise(ctx, t, 'FRONT OF HOUSE', 1788, WH.cy - 20, { size: 17, w: 700, c: dc(C.neon, C.green), ls: 5, align: 'right' }, B(81.3), B(86));
+  if (fk > 0.01) arrowGlyph(ctx, 1804, WH.cy - 26, true, dc(C.neon, C.green));
   rise(ctx, t, 'BEHIND THE SCENES', 1788, WH.cy + 40, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
   if (bk > 0.01) arrowGlyph(ctx, 1804, WH.cy + 34, false, '#8FA39E');
 });
