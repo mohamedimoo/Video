@@ -61,7 +61,7 @@ window.renderAudio = async function () {
   const duck = ac.createGain(); duck.connect(center);
   const nBeats = Math.round(DUR / BEAT);
   for (let n = 0; n < nBeats; n++) {
-    const t = BV(n);
+    const t = n * BEAT;                     // the groove runs on the final grid, holds included
     duck.gain.setValueAtTime(0.35, t); duck.gain.setTargetAtTime(1, t + 0.02, 0.09);
     // kick
     const o = ac.createOscillator(), g = ac.createGain();
@@ -72,8 +72,8 @@ window.renderAudio = async function () {
     cf.type = 'highpass'; cf.frequency.value = 3000; cg.gain.setValueAtTime(0.18, t); cg.gain.exponentialRampToValueAtTime(0.001, t + 0.015);
     c.connect(cf); cf.connect(cg); cg.connect(center);
     // hats from Act II, 16ths from Act IV
-    if (n >= 28) {
-      const steps = n >= 92 ? [0.25, 0.5, 0.75] : [0.5];
+    if (n >= RB(28)) {
+      const steps = n >= RB(92) ? [0.25, 0.5, 0.75] : [0.5];
       steps.forEach(s => {
         const ht = t + s * BEAT, h = noise(ht, 0.06), hf = ac.createBiquadFilter(), hg = ac.createGain();
         hf.type = 'highpass'; hf.frequency.value = 7500;
@@ -84,11 +84,11 @@ window.renderAudio = async function () {
     // bass (8ths), from bar 2
     if (n >= 4 && n < nBeats - 1) {
       const [root] = PROG[Math.floor(n / 4) % 4];
-      const subs = n >= 28 ? [0, 0.5] : [0];
+      const subs = n >= RB(28) ? [0, 0.5] : [0];
       subs.forEach(s => {
         const bt = t + s * BEAT, bo = ac.createOscillator(), bf = ac.createBiquadFilter(), bg = ac.createGain();
-        bo.type = 'sawtooth'; bo.frequency.value = mtof(root + (s ? 12 : 0) * (n >= 92 ? 1 : 0));
-        bf.type = 'lowpass'; bf.frequency.setValueAtTime(n >= 92 ? 900 : 480, bt); bf.frequency.exponentialRampToValueAtTime(160, bt + 0.25); bf.Q.value = 4;
+        bo.type = 'sawtooth'; bo.frequency.value = mtof(root + (s ? 12 : 0) * (n >= RB(92) ? 1 : 0));
+        bf.type = 'lowpass'; bf.frequency.setValueAtTime(n >= RB(92) ? 900 : 480, bt); bf.frequency.exponentialRampToValueAtTime(160, bt + 0.25); bf.Q.value = 4;
         bg.gain.setValueAtTime(0.0001, bt); bg.gain.exponentialRampToValueAtTime(0.32, bt + 0.01); bg.gain.exponentialRampToValueAtTime(0.0001, bt + BEAT * 0.48);
         bo.connect(bf); bf.connect(bg); bg.connect(duck); bo.start(bt); bo.stop(bt + BEAT * 0.5);
       });
@@ -96,7 +96,7 @@ window.renderAudio = async function () {
   }
   // pad: enters at the strategy house, opens at the EAI orb
   for (let bar = 15; bar < 41; bar++) {
-    const t = bar * BAR, [, chord] = PROG[bar % 4];
+    const t = BV(bar * 4), [, chord] = PROG[Math.round(t / BAR) % 4];
     const lvl = bar < 18 ? 0.035 : bar < 22 ? 0.05 : 0.06;
     const cutoff = bar < 18 ? 900 : bar < 22 ? 1800 : 2600;
     chord.forEach((m, i) => [-7, 7].forEach(dt => {

@@ -1,11 +1,11 @@
 # Salam — "30 Days Lit"
 
-A 119-second (118.6 s) motion showreel for Salam, built as code.
+A 121-second (121.4 s) motion showreel for Salam, built as code.
 
 **Concept, in one line:** Salam turns the one day a month people open their telco app into all thirty, so the film runs from "Last opened 29 days ago" to thirty days lit.
 
 - `showreel.html`: the whole film in one self-contained 1920×1080 file. Open it and call `window.seek(t)` to render any moment. Every style is computed from `t`. There are no CSS animations, no timers and no state carried between frames.
-- `salam-30-days-lit.mp4`: the final render at 1920×1080 and 60 fps, 118.6 s long, with motion blur and the code-generated soundtrack.
+- `salam-30-days-lit.mp4`: the final render at 1920×1080 and 60 fps, 121.4 s long, with motion blur and the code-generated soundtrack.
 - `STORYBOARD.md`: the beat-by-beat storyboard.
 
 ## Rules the film follows
