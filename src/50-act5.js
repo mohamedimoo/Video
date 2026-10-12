@@ -185,7 +185,7 @@ scene(111.6, 121.4, (ctx, t) => {
     const k = spr(t, B(112) + 0.15, 14, 0.86), out = bOut;
     if (k > 0.01 && out < 1) {
       const cy = lerp(1500, 560, k) - out * 1300, top = cy - 330;
-      const ph = 1130 * (1 + 0.07 * P(t, B(112), B(2))), py = cy + 120 + (1 - k) * 220 - 18 * P(t, B(112), B(2));
+      const ph = 960 * (1 + 0.07 * P(t, B(112), B(2))), py = cy - 2 + (1 - k) * 220 - 18 * P(t, B(112), B(2));
       shadowOn(ctx, 0.6); rr(ctx, 1220, top, 600, 770, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
       ctx.save(); rr(ctx, 1220, top, 600, 770, 52); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
       ctx.save(); ctx.beginPath(); ctx.rect(1100, -200, 900, top + 160 + 200); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
