@@ -2274,6 +2274,16 @@ scene(120, 134.01, (ctx, t) => {
     const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
     if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, mixC(C.mist, C.dim, toLabel), rv);
   }
+  // the 3D glass Salam mark turns in above the wordmark, floats, then shrinks away before the app icon returns
+  {
+    const k = spr(t, BV(158.7), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
+    if (k > 0.01) {
+      const turn = 1 - eOut(P(t, BV(158.7), 0.9)), fl = Math.sin((t - BV(158.7)) * 1.6) * 6;
+      ctx.save(); ctx.translate(960, 300 + fl + (1 - k) * 40); ctx.scale(k * Math.cos(turn * 1.2), k);
+      glass(ctx, 0, 0, 150);
+      ctx.restore();
+    }
+  }
   // "Making [the joy of technology]" / "accessible for everyone, everyday."
   {
     const o = { size: 54, w: 500 }, ob = { size: 54, w: 700 };
