@@ -197,7 +197,7 @@ scene(111.6, 121.4, (ctx, t) => {
       ctx.save();
       shadowOn(ctx, 0.5); rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
       rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.clip();
-      pic(ctx, 'p_family', 960, cy + 120, 780 * (1 + 0.06 * P(t, B(114), B(6))));
+      pic(ctx, 'p_beanbag', 925, cy + 40, 440 * (1 + 0.06 * P(t, B(114), B(6))));
       ctx.restore();
     }
   }
