@@ -20,8 +20,8 @@ const B = n => BN(n + shiftOf(n, INSERTS));          // story beat -> seconds
 const crispT = t => Math.round(t * 60) / 60;
 
 const C = {
-  deep: '#003830', teal: '#005147', night: '#020E0D', leaf: '#52B13C',
-  green: '#00B140', neon: '#54F35D', mist: '#F0F5F0', stone: '#E5DFDC',
+  deep: '#00382D', teal: '#005147', night: '#020E0D', leaf: '#52B13C',
+  green: '#00B140', neon: '#54F35D', mist: '#FFFFFF', stone: '#E5DFDC',
   ink: '#1E1E1E', red: '#E5484D', orange: '#F08A24', purple: '#8E6CEF',
   white: '#FFFFFF', dim: '#6E8F88', line: '#2B5F56', fog: '#9DB5AE'
 };

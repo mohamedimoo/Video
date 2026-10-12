@@ -59,7 +59,7 @@ scene(80, 88.2, (ctx, t) => {
   const dv = eInOut(P(t, B(80.25), 0.55)) * (1 - out);
   // day above the horizon, night below: the sky rises out of the divider, the night band sweeps in under it
   const day = dv, dc = (n, d) => mixC(n, d, day);
-  if (dv > 0) { ctx.fillStyle = '#071613'; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy); }
+  if (dv > 0) { ctx.fillStyle = C.night; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy); }
   dotGrid(ctx, '#0D2420');
   if (dv > 0) {
     const top = WH.cy * (1 - dv);
@@ -81,7 +81,7 @@ scene(80, 88.2, (ctx, t) => {
     for (let k = 0; k < 90; k++) {
       const x = (k * 337.7 + 61) % W, y = WH.cy + 24 + (k * 151.3 + 17) % (H - WH.cy - 40);
       const tw = 0.55 + 0.45 * Math.sin(t * (1.3 + (k % 5) * 0.37) + k * 2.1);
-      circ(ctx, x, y, (k % 7 === 0 ? 2.2 : 1.3) * tw); ctx.fillStyle = mixC('#071613', C.mist, 0.35 + 0.5 * tw); ctx.fill();
+      circ(ctx, x, y, (k % 7 === 0 ? 2.2 : 1.3) * tw); ctx.fillStyle = mixC(C.night, C.mist, 0.35 + 0.5 * tw); ctx.fill();
     }
     const mk = spr(t, B(82.3), 14, 0.85) * (1 - out);
     if (mk > 0.01) {
