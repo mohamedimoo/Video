@@ -54,8 +54,15 @@ scene(4, 8, (ctx, t) => {
   ctx.save();
   shadowOn(ctx, 0.6); rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
   rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.clip();
-  pic(ctx, 'p_headphones', 1530, cy + 70 + (1 - k) * 120, 1000 * (1 + 0.07 * P(t, B(4), B(4))));   // slow push-in
+  const hpY = cy + 70 + (1 - k) * 120, hpH = 1000 * (1 + 0.07 * P(t, B(4), B(4)));   // slow push-in
+  pic(ctx, 'p_headphones', 1500, hpY, hpH);
   ctx.restore();
+  // his elbow breaks out over the card's left edge. The photo is cropped at the elbow, so p_headphones_arm
+  // carries the arm band from the photo's left edge, continued outward into a rounded elbow
+  if (IMG.p_headphones_arm) {
+    const sc = hpH / IMG.p_headphones.height, x0 = 1500 - IMG.p_headphones.width * sc / 2, y0 = hpY - hpH / 2;
+    ctx.drawImage(IMG.p_headphones_arm, x0 - 46 * sc, y0 + 330 * sc, IMG.p_headphones_arm.width * sc, IMG.p_headphones_arm.height * sc);
+  }
   CHIPS.forEach(([ic, label], i) => {
     const q = spr(t, B(5 + i) + 0.08, 17);
     if (q <= 0.01) return;
