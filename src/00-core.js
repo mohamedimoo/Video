@@ -7,7 +7,7 @@ const DUR = BAR * 41.5;            // ~118.6 s: 41 full bars + final half bar
 // INSERTS maps story beats to v2 beats, INSERTS2 maps v2 beats to real beats.
 // B() addresses story beats, BN() addresses v2 beats, BV() addresses real beats directly.
 const INSERTS = [[36, 4], [72, 4], [106, 4], [112, 4], [132, 4]];
-const INSERTS2 = [[54, 4], [83, 4], [128, 4]];   // Nafath, the AI plan story, step by step
+const INSERTS2 = [[54, 4], [83, 4], [128, 4]];   // trust, the AI plan story, step by step
 const shiftOf = (n, L) => L.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
 const BN = n => (n + shiftOf(n, INSERTS2)) * BEAT;  // v2 beat -> seconds
 const B = n => BN(n + shiftOf(n, INSERTS));          // story beat -> seconds
