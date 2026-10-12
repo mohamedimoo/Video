@@ -154,12 +154,6 @@ scene(107.4, 112.8, (ctx, t) => {
       T(ctx, n, NX[i], NY + 42, { size: 18, w: 600, c: mixC('#8A9692', C.deep, clamp(on)), align: 'center' });
     });
   }
-  // progress bar along the bottom
-  {
-    const prog = 0.04 + 0.29 * eOut(P(t, BV(SB.core), 0.6)) + 0.29 * eOut(P(t, BV(SB.beyond), 0.6)) + 0.29 * eOut(P(t, BV(SB.eco), 0.6)) + 0.09 * eOut(P(t, BV(SB.sum), 0.6));
-    ctx.fillStyle = '#DCE5DE'; ctx.fillRect(72, 1050, 1776, 3);
-    ctx.fillStyle = C.green; ctx.fillRect(72, 1050, 1776 * prog * eOut(P(t, BV(128), 0.5)), 3);
-  }
   // a deep green disc opens from the rings into the next scene
   const dg = eIn(P(crispT(t), BV(SB.out), BV(1)));
   if (dg > 0) { circ(ctx, cx, cy, lerp(ecoR + 30, 2300, dg)); ctx.fillStyle = C.deep; ctx.fill(); }
@@ -338,12 +332,6 @@ scene(120, 134.01, (ctx, t) => {
       if (up > 0 && uo < 1) { ctx.fillStyle = C.neon; ctx.fillRect(x, y2 + 14 + uo * 120, (w2 - 10) * up, 6); }
     }
     rise(ctx, t, 'BEYOND TELCO · CLOSER TO LIFE', 960, 826, { size: 20, w: 700, c: C.fog, align: 'center', ls: 7 }, BV(162), BV(164.5));
-  }
-  // the progress line along the bottom completes with the film (as in the reference end card)
-  if (t >= BV(156.6) && endOut < 1) {
-    const pg = eOut(P(t, BV(156.6), 0.6)), fill = 0.06 + 0.94 * eInOut(P(t, BV(157), BV(7.4)));
-    ctx.fillStyle = '#0E4D43'; ctx.fillRect(72, 1050, 1776 * pg, 3);
-    ctx.fillStyle = C.neon; ctx.fillRect(72, 1050, 1776 * pg * fill, 3);
   }
   // the app icon returns: last frame == first frame
   {

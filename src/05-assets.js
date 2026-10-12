@@ -33,45 +33,58 @@ function shadowOff(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; c
 const PHONE_AR = 393 / 852;
 function phone(ctx, t, screens, cx, cy, h, opts = {}) {
   if (h < 4) return;
-  // a modern phone: thin metal frame, an even black bezel, concentric corners, side buttons, a Dynamic Island
-  const w = h * PHONE_AR, f = h * 0.0075, b = h * 0.014, r = h * 0.118;   // frame, bezel, screen corner
-  const X = cx - w / 2, Y = cy - h / 2, R = r + b + f;
+  // a current flagship: the app UI fills the 393x852 display edge to edge, with the display's own corner radius
+  // (55 pt), a thin even bezel, a titanium band, side buttons and the Dynamic Island over the status bar
+  const w = h * PHONE_AR, r = h * 0.0646, b = h * 0.0118, f = h * 0.0068;
+  const X = cx - w / 2, Y = cy - h / 2, rb = r + b, R = rb + f;
+  const lw = v => Math.max(0.6, h * v);
+  const metal = (x0, y0, x1, y1) => {
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, '#6E7977'); g.addColorStop(0.18, '#323B39'); g.addColorStop(0.5, '#262D2C'); g.addColorStop(0.82, '#3C4644'); g.addColorStop(1, '#7D8886');
+    return g;
+  };
   ctx.save();
   if (opts.rot) { ctx.translate(cx, cy); ctx.rotate(opts.rot); ctx.translate(-cx, -cy); }
-  // side buttons sit just proud of the frame
-  const bw = Math.max(1.5, h * 0.0045), btn = (x, y0, len) => { rr(ctx, x, Y + h * y0, bw + f, h * len, bw); ctx.fillStyle = '#3A4442'; ctx.fill(); };
-  btn(X - b - f - bw, 0.165, 0.04); btn(X - b - f - bw, 0.235, 0.075); btn(X - b - f - bw, 0.33, 0.075);
-  btn(X + w + b, 0.255, 0.11);
-  // the metal frame with a contact shadow, then its edge highlights
-  if (opts.shadow !== false) shadowOn(ctx, opts.shadow || 1);
-  rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = '#2B3331'; ctx.fill(); shadowOff(ctx);
-  ctx.lineWidth = Math.max(1, h * 0.0016);
-  ctx.strokeStyle = '#6F7B78'; ctx.stroke();
-  rr(ctx, X - b - f * 0.45, Y - b - f * 0.45, w + 2 * b + f * 0.9, h + 2 * b + f * 0.9, R - f * 0.55);
-  ctx.strokeStyle = '#46504E'; ctx.lineWidth = Math.max(0.75, h * 0.001); ctx.stroke();
-  // the black glass bezel
-  rr(ctx, X - b, Y - b, w + 2 * b, h + 2 * b, r + b); ctx.fillStyle = '#030606'; ctx.fill();
+  // side buttons: action and volume on the left, power on the right
+  const bw = Math.max(1.5, h * 0.0042);
+  const btn = (x, y0, len) => { rr(ctx, x, Y + h * y0, bw + f, h * len, bw); ctx.fillStyle = metal(x, 0, x + bw + f, 0); ctx.fill(); };
+  btn(X - b - f - bw, 0.155, 0.038); btn(X - b - f - bw, 0.225, 0.072); btn(X - b - f - bw, 0.315, 0.072);
+  btn(X + w + b, 0.245, 0.105);
+  // shadow: a soft one for lift and a tight contact one, both darker than any background
+  if (opts.shadow !== false) {
+    const k = Math.min(1, opts.shadow || 1);
+    ctx.shadowColor = `rgba(0, 10, 8, ${0.22 * k})`; ctx.shadowBlur = h * 0.045; ctx.shadowOffsetY = h * 0.022;
+    rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = '#1C2221'; ctx.fill();
+    shadowOn(ctx, k);
+    ctx.fill(); shadowOff(ctx);
+  }
+  // the titanium band, lit from the upper left
+  rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = metal(X - b, Y - b, X + w + b, Y + h + b); ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'; ctx.lineWidth = lw(0.0012); ctx.stroke();
+  // the black glass, with a fine bright edge where the glass meets the frame
+  rr(ctx, X - b, Y - b, w + 2 * b, h + 2 * b, rb); ctx.fillStyle = '#020404'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)'; ctx.lineWidth = lw(0.0009); ctx.stroke();
+  // the display
   ctx.save();
   rr(ctx, X, Y, w, h, r); ctx.clip();
-  ctx.fillStyle = C.mist; ctx.fillRect(X, Y, w, h);
-  // the newest screen that has arrived slides up over the one before it
   let cur = 0;
   screens.forEach(([, tIn], i) => { if (t >= tIn) cur = i; });
   const [name, tIn] = screens[cur];
   const p = cur > 0 ? eInOut(P(t, tIn, 0.5)) : 1;
-  if (cur > 0 && p < 1) {
-    const prev = screens[cur - 1][0];
-    ctx.drawImage(IMG[prev], X, Y - p * h * 0.35, w, h);
-  }
-  const sy = (opts.scroll || 0) * h;
-  if (IMG[name]) ctx.drawImage(IMG[name], X, Y + (1 - p) * h - sy, w, h);
-  // a faint flat glass reflection across the upper corner
-  ctx.beginPath(); ctx.moveTo(X + w * 0.42, Y); ctx.lineTo(X + w * 0.78, Y); ctx.lineTo(X, Y + h * 0.5); ctx.lineTo(X, Y + h * 0.3); ctx.closePath();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.07)'; ctx.fill();
+  ctx.fillStyle = C.mist; ctx.fillRect(X, Y, w, h);
+  // the newest screen slides up over the one before it; the status bar stays put, like a real app transition
+  if (cur > 0 && p < 1) ctx.drawImage(IMG[screens[cur - 1][0]], X, Y - p * h * 0.35, w, h);
+  if (IMG[name]) ctx.drawImage(IMG[name], X, Y + (1 - p) * h, w, h);
+  if (IMG[name] && p < 1) { const sb = 0.06; ctx.drawImage(IMG[name], 0, 0, IMG[name].width, IMG[name].height * sb, X, Y, w, h * sb); }
+  // glass: a faint flat reflection across the upper corner and a hairline inner edge
+  ctx.beginPath(); ctx.moveTo(X + w * 0.46, Y); ctx.lineTo(X + w * 0.8, Y); ctx.lineTo(X, Y + h * 0.5); ctx.lineTo(X, Y + h * 0.32); ctx.closePath();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)'; ctx.fill();
   ctx.restore();
-  // Dynamic Island
-  rr(ctx, cx - w * 0.15, Y + h * 0.014, w * 0.3, h * 0.036, h * 0.018); ctx.fillStyle = '#000000'; ctx.fill();
-  circ(ctx, cx + w * 0.105, Y + h * 0.032, h * 0.007); ctx.fillStyle = '#0C1416'; ctx.fill();
+  rr(ctx, X, Y, w, h, r); ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)'; ctx.lineWidth = lw(0.0012); ctx.stroke();
+  // Dynamic Island, centred on the status bar between the time and the indicators
+  rr(ctx, cx - w * 0.16, Y + h * 0.0129, w * 0.32, h * 0.0434, h * 0.0217); ctx.fillStyle = '#000000'; ctx.fill();
+  circ(ctx, cx + w * 0.115, Y + h * 0.0346, h * 0.0075); ctx.fillStyle = '#0B1518'; ctx.fill();
+  circ(ctx, cx + w * 0.112, Y + h * 0.0336, h * 0.0025); ctx.fillStyle = '#1E3640'; ctx.fill();
   ctx.restore();
 }
 

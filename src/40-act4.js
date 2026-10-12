@@ -229,7 +229,7 @@ scene(88, 102.2, (ctx, t) => {
   ctx.save(); ctx.translate(split * 1300, 0);
   {
     const k = spr(t, B(90), 14, 0.86);
-    if (k > 0.01) phone(ctx, t, [['s_home', B(90)]], 1290, lerp(1600, 548, k), 800, { shadow: 0.7, scroll: 0.08 * eInOut(P(t, B(90.5), B(1.5))) });
+    if (k > 0.01) phone(ctx, t, [['s_home', B(90)]], 1290, lerp(1600, 548, k), 800, { shadow: 0.7 });
     rise(ctx, t, 'Salam app today', 1290, 1040, { size: 32, w: 600, c: C.deep, align: 'center' }, B(90) + 0.15);
   }
   BEYOND.forEach(([n, ic], i) => {
