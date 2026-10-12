@@ -13,7 +13,7 @@ scene(0, 8, (ctx, t) => {
   const lift = spr(t, B(3), 16) * 170;              // card makes room for the headline on beat 3
   const clear = eIn(P(t, B(2) - 0.05, 0.4)) * 900;  // the verb feed clears out once the card lands
   const y0 = 500 - S - up - clear;
-  if (y0 > -260) appIcon(ctx, 960, y0, 200, 1);
+  if (y0 > -260) appIcon(ctx, 960, y0, APP_ICON_S, 1);
   for (let i = 1; i <= 8; i++) {
     const y = 500 + GAP0 + i * PITCH - S - up - clear;
     if (y < -200 || y > 1300) continue;

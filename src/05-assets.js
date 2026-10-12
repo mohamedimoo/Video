@@ -97,15 +97,16 @@ let _wm = null;
 const wmPaths = () => _wm || (_wm = { mark: new Path2D(WM_MARK), letters: WM_LETTERS.map(d => new Path2D(d)) });
 // letters "salam" only; (x, y) is the left of the "s" at the baseline-ish bottom of the x-height box
 // letters span x 35.5..151.2 and y 4.4..33.5 in the 152x43 artboard
-function wordLetters(ctx, x, y, h, col, reveal = [1, 1, 1, 1, 1]) {
+function wordLetters(ctx, x, y, h, col, reveal = [1, 1, 1, 1, 1], bold = 0) {
   const s = h / 29.1;                     // h = height of the "l"
   const order = [4, 0, 3, 1, 2];          // s a l a m  (left to right)
   order.forEach((pi, k) => {
     const r = reveal[k]; if (r <= 0) return;
     ctx.save();
-    ctx.beginPath(); ctx.rect(x - 10, y - h * 1.2, (151.2 - 35.5) * s + 20, h * 1.4); ctx.clip();
+    ctx.beginPath(); ctx.rect(x - 10 - bold, y - h * 1.2 - bold, (151.2 - 35.5) * s + 20 + 2 * bold, h * 1.4 + 2 * bold); ctx.clip();
     ctx.translate(x - 35.5 * s, y - 33.5 * s + (1 - r) * h * 1.3); ctx.scale(s, s);
     ctx.fillStyle = col; ctx.fill(wmPaths().letters[pi]);
+    if (bold > 0) { ctx.strokeStyle = col; ctx.lineJoin = 'round'; ctx.lineWidth = bold / s; ctx.stroke(wmPaths().letters[pi]); }   // a heavier cut of the wordmark
     ctx.restore();
   });
 }
@@ -132,14 +133,15 @@ const markPts = (cx, cy, h, N = 140) => resample(MARK_PTS.map(([x, y]) => [cx + 
 // glass logo image centred at (cx, cy), height h
 function glass(ctx, cx, cy, h, alpha = 1) { pic(ctx, 'l_salam_glass', cx, cy, h, alpha); }
 
-// the app icon: frame 0 and the very last frame
+// the app icon: frame 0 and the very last frame (big, bright tile with a bold white label)
+const APP_ICON_S = 260, ICON_LABEL = { h: 44, dy: 72, bold: 2.5 };
 function appIcon(ctx, cx, cy, s, labelP = 1) {
-  rr(ctx, cx - s / 2, cy - s / 2, s, s, s * 0.26); ctx.fillStyle = C.deep; ctx.fill();
+  rr(ctx, cx - s / 2, cy - s / 2, s, s, s * 0.26); ctx.fillStyle = C.teal; ctx.fill();
   glass(ctx, cx, cy, s * 0.82);
   if (labelP > 0) {
-    ctx.save(); ctx.beginPath(); ctx.rect(cx - 200, cy + s / 2 + 12, 400, 70); ctx.clip();
-    const lh = 30, lw = WORD_W(lh);
-    wordLetters(ctx, cx - lw / 2, cy + s / 2 + 60 + (1 - labelP) * 70, lh, C.dim);
+    ctx.save(); ctx.beginPath(); ctx.rect(cx - 260, cy + s / 2 + 14, 520, 96); ctx.clip();
+    const lh = ICON_LABEL.h, lw = WORD_W(lh);
+    wordLetters(ctx, cx - lw / 2, cy + s / 2 + ICON_LABEL.dy + (1 - labelP) * 90, lh, C.mist, undefined, ICON_LABEL.bold);
     ctx.restore();
   }
 }

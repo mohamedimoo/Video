@@ -299,9 +299,9 @@ scene(120, 134.01, (ctx, t) => {
   {
     const toLabel = eInOut(P(t, BV(164.6), 0.75));
     const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
-    const h = lerp(96 * breathe, 30, toLabel), y = lerp(OC[1] + 48, 660, toLabel);
+    const h = lerp(96 * breathe, ICON_LABEL.h, toLabel), y = lerp(OC[1] + 48, 500 + APP_ICON_S / 2 + ICON_LABEL.dy, toLabel);
     const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
-    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, mixC(C.mist, C.dim, toLabel), rv);
+    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
   }
   // the 3D glass Salam mark turns in above the wordmark, floats, then shrinks away before the app icon returns
   {
@@ -348,6 +348,6 @@ scene(120, 134.01, (ctx, t) => {
   // the app icon returns: last frame == first frame
   {
     const k = spr(t, BV(164.9), 15, 0.86);
-    if (k > 0.01) appIcon(ctx, 960, 500, 200 * k, 0);
+    if (k > 0.01) appIcon(ctx, 960, 500, APP_ICON_S * k, 0);
   }
 });
