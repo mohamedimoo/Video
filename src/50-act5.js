@@ -188,7 +188,7 @@ scene(111.6, 121.4, (ctx, t) => {
       const ph = 960 * (1 + 0.07 * P(t, B(112), B(2))), py = cy - 2 + (1 - k) * 220 - 18 * P(t, B(112), B(2));
       shadowOn(ctx, 0.6); rr(ctx, 1220, top, 600, 770, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
       ctx.save(); rr(ctx, 1220, top, 600, 770, 52); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
-      ctx.save(); ctx.beginPath(); ctx.rect(1100, -200, 900, top + 160 + 200); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(1100, -200, 900, top + 160 + 200); ctx.rect(1700, -200, 300, py + ph * 0.125 + 200); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
     }
   }
   // what life with Salam holds: chips spring onto the orbit and keep drifting around the card
