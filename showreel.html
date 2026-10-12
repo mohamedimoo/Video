@@ -2135,11 +2135,8 @@ scene(111.6, 121.4, (ctx, t) => {
     const k = spr(t, B(114) + 0.25, 14, 0.86), out = eIn(P(t, B(120), 0.4));
     if (k > 0.01 && out < 1) {
       const cy = lerp(1500, 790, k) + out * 900;
-      ctx.save();
-      shadowOn(ctx, 0.5); rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
-      rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.clip();
-      pic(ctx, 'p_beanbag', 925, cy + 40, 440 * (1 + 0.06 * P(t, B(114), B(6))));
-      ctx.restore();
+      // the cutout sits straight on the scene, with no card behind it
+      pic(ctx, 'p_beanbag', 960, cy + 30, 440 * (1 + 0.06 * P(t, B(114), B(6))));
     }
   }
   const ap = eInOut(P(t, B(114) + 0.28, B(1.6)));
