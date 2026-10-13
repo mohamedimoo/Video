@@ -1576,7 +1576,8 @@ const SEGN = 20, SG = 0.013;
 const WHEEL_GREEN = mixC(C.neon, C.green, 0.2);
 function segAngles(i) {
   const up = i < 10, j = up ? i : i - 10;
-  return [(up ? Math.PI : 0) + j * Math.PI / 10 + SG, (up ? Math.PI : 0) + (j + 1) * Math.PI / 10 - SG];
+  const a = (up ? Math.PI : 0) - Math.PI / 2;   // domains on the left (day), capabilities on the right (night)
+  return [a + j * Math.PI / 10 + SG, a + (j + 1) * Math.PI / 10 - SG];
 }
 function wheelRot(t) { return 7 * eIn(P(t, B(86), B(1))); }
 let _WC = null;
@@ -1602,6 +1603,10 @@ function arrowGlyph(ctx, x, y, up, col) {
   const d = up ? 1 : -1;   // head at y - 7d: up points up
   ctx.moveTo(x, y + 7 * d); ctx.lineTo(x, y - 7 * d); ctx.moveTo(x - 5, y - 2 * d); ctx.lineTo(x, y - 7 * d); ctx.lineTo(x + 5, y - 2 * d); ctx.stroke();
 }
+function arrowSide(ctx, x, y, d, col) {   // a short horizontal arrow; d = 1 points right, -1 left
+  ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  ctx.moveTo(x - 7 * d, y); ctx.lineTo(x + 7 * d, y); ctx.moveTo(x + 2 * d, y - 5); ctx.lineTo(x + 7 * d, y); ctx.lineTo(x + 2 * d, y + 5); ctx.stroke();
+}
 // faint dot grid, stronger towards the right edge (texture, not light)
 function dotGrid(ctx, col, x0 = 700, sp = 34) {
   ctx.fillStyle = col;
@@ -1626,19 +1631,18 @@ scene(80, 88.2, (ctx, t) => {
   const out = eIn(P(t, B(86), 0.35));
   // behind-the-scenes band and the divider
   const dv = eInOut(P(t, B(80.25), 0.55)) * (1 - out);
-  // day above the horizon, night below: the sky rises out of the divider, the night band sweeps in under it
+  // day left of the hub, night right of it: the day sky opens leftward out of the divider, the night half fills with stars
   const day = dv, dc = (n, d) => mixC(n, d, day);
-  if (dv > 0) { ctx.fillStyle = C.night; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy); }
   dotGrid(ctx, '#0D2420');
   if (dv > 0) {
-    const top = WH.cy * (1 - dv);
-    ctx.save(); ctx.beginPath(); ctx.rect(0, top, W, WH.cy - top); ctx.clip();
-    ctx.fillStyle = C.mist; ctx.fillRect(0, top, W, WH.cy - top);
-    dotGrid(ctx, '#DCE5DE');
-    // the sun, top right of the day half
+    const left = WH.cx * (1 - dv);
+    ctx.save(); ctx.beginPath(); ctx.rect(left, 0, WH.cx - left, H); ctx.clip();
+    ctx.fillStyle = C.mist; ctx.fillRect(left, 0, WH.cx - left, H);
+    dotGrid(ctx, '#DCE5DE', 0);
+    // the sun, bottom left of the day half
     const sk = spr(t, B(81.3), 14, 0.85) * (1 - out);
     if (sk > 0.01) {
-      ctx.save(); ctx.translate(1748, 330); ctx.rotate((t - B(80)) * 0.15); ctx.scale(sk, sk);
+      ctx.save(); ctx.translate(240, 850); ctx.rotate((t - B(80)) * 0.15); ctx.scale(sk, sk);
       circ(ctx, 0, 0, 30); ctx.fillStyle = C.neon; ctx.fill();
       ctx.strokeStyle = C.green; ctx.lineWidth = 5; ctx.lineCap = 'round';
       for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 44, Math.sin(a) * 44); ctx.lineTo(Math.cos(a) * 58, Math.sin(a) * 58); ctx.stroke(); }
@@ -1646,20 +1650,20 @@ scene(80, 88.2, (ctx, t) => {
     }
     ctx.restore();
     // stars and a crescent moon in the night half
-    ctx.save(); ctx.beginPath(); ctx.rect(0, WH.cy, W * dv, H - WH.cy); ctx.clip();
+    ctx.save(); ctx.beginPath(); ctx.rect(WH.cx, 0, (W - WH.cx) * dv, H); ctx.clip();
     for (let k = 0; k < 90; k++) {
-      const x = (k * 337.7 + 61) % W, y = WH.cy + 24 + (k * 151.3 + 17) % (H - WH.cy - 40);
+      const x = WH.cx + 24 + (k * 337.7 + 61) % (W - WH.cx - 40), y = 24 + (k * 151.3 + 17) % (H - 48);
       const tw = 0.55 + 0.45 * Math.sin(t * (1.3 + (k % 5) * 0.37) + k * 2.1);
       circ(ctx, x, y, (k % 7 === 0 ? 2.2 : 1.3) * tw); ctx.fillStyle = mixC(C.night, C.mist, 0.35 + 0.5 * tw); ctx.fill();
     }
     const mk = spr(t, B(82.3), 14, 0.85) * (1 - out);
     if (mk > 0.01) {
-      ctx.save(); ctx.translate(1748, 800); ctx.scale(mk, mk); ctx.beginPath();
+      ctx.save(); ctx.translate(1760, 360); ctx.scale(mk, mk); ctx.beginPath();
       ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.arc(14, -10, 28, 0, Math.PI * 2, true); ctx.fillStyle = C.mist; ctx.fill('evenodd');
       ctx.restore();
     }
     ctx.restore();
-    ctx.fillStyle = '#22322E'; ctx.fillRect(110, WH.cy - 1, 1700 * dv, 2);
+    ctx.fillStyle = '#22322E'; ctx.fillRect(WH.cx - 1, 60, 2, 960 * dv);
   }
   // core: dark disc, neon ring, dotted inner circle; the neon disc from EAI hollows out into the ring
   const coreK = 1 - eIn(P(t, B(86), 0.4));
@@ -1714,35 +1718,35 @@ scene(80, 88.2, (ctx, t) => {
   // light pulses run from the core outward along the spokes
   if (unroll <= 0) PULSES.forEach(([n, list]) => list.forEach((sp, q) => {
     const p = P(t, B(n) + q * 0.06, 0.45); if (p <= 0 || p >= 1) return;
-    const a = (sp < 10 ? Math.PI : 0) + (sp % 10) * Math.PI / 10 + rot;
+    const a = (sp < 10 ? Math.PI : 0) - Math.PI / 2 + (sp % 10) * Math.PI / 10 + rot;
     const r0 = lerp(WH.r0, WH.r1, eIn(p)), r1 = lerp(WH.r0, WH.r1, eOut(p));
     ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
     ctx.moveTo(WH.cx + Math.cos(a) * r0, WH.cy + Math.sin(a) * r0); ctx.lineTo(WH.cx + Math.cos(a) * r1, WH.cy + Math.sin(a) * r1); ctx.stroke();
   }));
-  // headline (top right) and the two blocks on the left
+  // headline (top right, night side); customer domains top left (day), internal capabilities bottom right (night)
   {
     const o = { size: 54, w: 700, ls: -1.5 }, wa = TW(ctx, 'AI ', o), wb = TW(ctx, 'cross-cuts every', o);
-    rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: dc(C.neon, C.green) }, B(80.5), B(86));
-    rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: dc(C.mist, C.deep) }, B(80.5) + 0.06, B(86));
-    rise(ctx, t, 'capability.', 1810, 172, { ...o, c: dc(C.mist, C.deep), align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
+    rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: C.neon }, B(80.5), B(86));
+    rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: C.mist }, B(80.5) + 0.06, B(86));
+    rise(ctx, t, 'capability.', 1810, 172, { ...o, c: C.mist, align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
   }
-  const block = (y, t0, cap, title, sub, capCol, mark, lit) => {
+  const block = (x, y, t0, cap, title, sub, capCol, mark, lit) => {
     const k = spr(t, t0, 16, 0.85) * (1 - out);
-    if (k > 0.01) { ctx.save(); ctx.translate(119, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
-    rise(ctx, t, cap, 140, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
-    rise(ctx, t, title, 110, y + 62, { size: 40, w: 700, c: lit ? dc(C.mist, C.deep) : C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
-    rise(ctx, t, sub, 110, y + 104, { size: 22, w: 500, c: lit ? dc(C.fog, '#5B6B66') : C.fog }, t0 + 0.16, B(86) + 0.06);
+    if (k > 0.01) { ctx.save(); ctx.translate(x + 9, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
+    rise(ctx, t, cap, x + 30, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
+    rise(ctx, t, title, x, y + 62, { size: 40, w: 700, c: lit ? dc(C.mist, C.deep) : C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
+    rise(ctx, t, sub, x, y + 104, { size: 22, w: 500, c: lit ? dc(C.fog, '#5B6B66') : C.fog }, t0 + 0.16, B(86) + 0.06);
   };
-  block(252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', dc(C.neon, C.green), () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = dc(C.neon, C.green); ctx.fill(); }, true);
-  block(700, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
+  block(110, 252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', dc(C.neon, C.green), () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = dc(C.neon, C.green); ctx.fill(); }, true);
+  block(1400, 790, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
     rr(ctx, -9, -9, 18, 18, 3); ctx.strokeStyle = '#8FA39E'; ctx.lineWidth = 1.6; ctx.stroke(); hatch(ctx, () => rr(ctx, -9, -9, 18, 18, 3), '#8FA39E', 5);
   });
   // front of house / behind the scenes
   const fk = spr(t, B(81.3), 16, 0.85) * (1 - out), bk = spr(t, B(82.3), 16, 0.85) * (1 - out);
-  rise(ctx, t, 'FRONT OF HOUSE', 1788, WH.cy - 20, { size: 17, w: 700, c: dc(C.neon, C.green), ls: 5, align: 'right' }, B(81.3), B(86));
-  if (fk > 0.01) arrowGlyph(ctx, 1804, WH.cy - 26, true, dc(C.neon, C.green));
-  rise(ctx, t, 'BEHIND THE SCENES', 1788, WH.cy + 40, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
-  if (bk > 0.01) arrowGlyph(ctx, 1804, WH.cy + 34, false, '#8FA39E');
+  rise(ctx, t, 'FRONT OF HOUSE', WH.cx - 40, 1000, { size: 17, w: 700, c: dc(C.neon, C.green), ls: 5, align: 'right' }, B(81.3), B(86));
+  if (fk > 0.01) arrowSide(ctx, WH.cx - 40 - TW(ctx, 'FRONT OF HOUSE', { size: 17, w: 700, ls: 5 }) - 20, 994, -1, dc(C.neon, C.green));
+  rise(ctx, t, 'BEHIND THE SCENES', WH.cx + 40, 1000, { size: 17, w: 700, c: '#8FA39E', ls: 5 }, B(82.3), B(86));
+  if (bk > 0.01) arrowSide(ctx, WH.cx + 40 + TW(ctx, 'BEHIND THE SCENES', { size: 17, w: 700, ls: 5 }) + 14, 994, 1, '#8FA39E');
 });
 
 // --- What users do every day vs. the Salam app today (beats 88–92) ---
