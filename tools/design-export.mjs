@@ -12,7 +12,7 @@ const BEAT = 60 / 84;
 const SCENES = [
   [0, 'Hook', 3.4], [4, 'They live on their phones', 6.9], [8, 'Disruption', 14.6], [16, 'Risk to opportunity', 18.6],
   [20, 'Awareness to relevance', 26.6], [28, 'Habit loop', 35.8], [36, 'Thirty days compare', 38.6], [40, '7–15×', 42.7],
-  [44, 'Super-apps globe', 51.4], [53, 'Nafath', 57.6], [59, 'Strategy House', 71.6], [74, 'Three forces · EAI', 81.6],
+  [44, 'Super-apps globe', 51.4], [53, 'Trust', 57.6], [59, 'Strategy House', 71.6], [74, 'Three forces · EAI', 81.6],
   [86, 'Get the right plan', 92.4], [95, 'AI wheel', 101.4], [104, 'Usage chart', 107.6], [108, '72% and barriers', 115.4],
   [116, 'Reason to stay', 117.6], [120, 'One app hub', 125.6], [128, 'Step by step', 137.4], [140, 'Beyond telco · moments', 146.6],
   [148, 'Thirty days lit', 155.6], [156, 'End card', 162.4], [164, 'End title', 165.6]

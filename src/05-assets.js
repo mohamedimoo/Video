@@ -33,30 +33,58 @@ function shadowOff(ctx) { ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; c
 const PHONE_AR = 393 / 852;
 function phone(ctx, t, screens, cx, cy, h, opts = {}) {
   if (h < 4) return;
-  const w = h * PHONE_AR, b = h * 0.024, r = h * 0.118;
+  // a current flagship: the app UI fills the 393x852 display edge to edge, with the display's own corner radius
+  // (55 pt), a thin even bezel, a titanium band, side buttons and the Dynamic Island over the status bar
+  const w = h * PHONE_AR, r = h * 0.0646, b = h * 0.0118, f = h * 0.0068;
+  const X = cx - w / 2, Y = cy - h / 2, rb = r + b, R = rb + f;
+  const lw = v => Math.max(0.6, h * v);
+  const metal = (x0, y0, x1, y1) => {
+    const g = ctx.createLinearGradient(x0, y0, x1, y1);
+    g.addColorStop(0, '#6E7977'); g.addColorStop(0.18, '#323B39'); g.addColorStop(0.5, '#262D2C'); g.addColorStop(0.82, '#3C4644'); g.addColorStop(1, '#7D8886');
+    return g;
+  };
   ctx.save();
   if (opts.rot) { ctx.translate(cx, cy); ctx.rotate(opts.rot); ctx.translate(-cx, -cy); }
-  if (opts.shadow !== false) shadowOn(ctx, opts.shadow || 1);
-  rr(ctx, cx - w / 2 - b, cy - h / 2 - b, w + 2 * b, h + 2 * b, r + b);
-  ctx.fillStyle = '#0D1715'; ctx.fill(); shadowOff(ctx);
-  ctx.strokeStyle = '#3A4744'; ctx.lineWidth = Math.max(1, h * 0.003); ctx.stroke();
+  // side buttons: action and volume on the left, power on the right
+  const bw = Math.max(1.5, h * 0.0042);
+  const btn = (x, y0, len) => { rr(ctx, x, Y + h * y0, bw + f, h * len, bw); ctx.fillStyle = metal(x, 0, x + bw + f, 0); ctx.fill(); };
+  btn(X - b - f - bw, 0.155, 0.038); btn(X - b - f - bw, 0.225, 0.072); btn(X - b - f - bw, 0.315, 0.072);
+  btn(X + w + b, 0.245, 0.105);
+  // shadow: a soft one for lift and a tight contact one, both darker than any background
+  if (opts.shadow !== false) {
+    const k = Math.min(1, opts.shadow || 1);
+    ctx.shadowColor = `rgba(0, 10, 8, ${0.22 * k})`; ctx.shadowBlur = h * 0.045; ctx.shadowOffsetY = h * 0.022;
+    rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = '#1C2221'; ctx.fill();
+    shadowOn(ctx, k);
+    ctx.fill(); shadowOff(ctx);
+  }
+  // the titanium band, lit from the upper left
+  rr(ctx, X - b - f, Y - b - f, w + 2 * (b + f), h + 2 * (b + f), R); ctx.fillStyle = metal(X - b, Y - b, X + w + b, Y + h + b); ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)'; ctx.lineWidth = lw(0.0012); ctx.stroke();
+  // the black glass, with a fine bright edge where the glass meets the frame
+  rr(ctx, X - b, Y - b, w + 2 * b, h + 2 * b, rb); ctx.fillStyle = '#020404'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.10)'; ctx.lineWidth = lw(0.0009); ctx.stroke();
+  // the display
   ctx.save();
-  rr(ctx, cx - w / 2, cy - h / 2, w, h, r); ctx.clip();
-  ctx.fillStyle = C.mist; ctx.fillRect(cx - w / 2, cy - h / 2, w, h);
-  // the newest screen that has arrived slides up over the one before it
+  rr(ctx, X, Y, w, h, r); ctx.clip();
   let cur = 0;
   screens.forEach(([, tIn], i) => { if (t >= tIn) cur = i; });
   const [name, tIn] = screens[cur];
   const p = cur > 0 ? eInOut(P(t, tIn, 0.5)) : 1;
-  if (cur > 0 && p < 1) {
-    const prev = screens[cur - 1][0];
-    ctx.drawImage(IMG[prev], cx - w / 2, cy - h / 2 - p * h * 0.35, w, h);
-  }
-  const sy = (opts.scroll || 0) * h;
-  if (IMG[name]) ctx.drawImage(IMG[name], cx - w / 2, cy - h / 2 + (1 - p) * h - sy, w, h);
+  ctx.fillStyle = C.mist; ctx.fillRect(X, Y, w, h);
+  // the newest screen slides up over the one before it; the status bar stays put, like a real app transition
+  if (cur > 0 && p < 1) ctx.drawImage(IMG[screens[cur - 1][0]], X, Y - p * h * 0.35, w, h);
+  if (IMG[name]) ctx.drawImage(IMG[name], X, Y + (1 - p) * h, w, h);
+  if (IMG[name] && p < 1) { const sb = 0.06; ctx.drawImage(IMG[name], 0, 0, IMG[name].width, IMG[name].height * sb, X, Y, w, h * sb); }
+  // glass: a faint flat reflection across the upper corner and a hairline inner edge
+  ctx.beginPath(); ctx.moveTo(X + w * 0.46, Y); ctx.lineTo(X + w * 0.8, Y); ctx.lineTo(X, Y + h * 0.5); ctx.lineTo(X, Y + h * 0.32); ctx.closePath();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.06)'; ctx.fill();
   ctx.restore();
-  // dynamic island
-  rr(ctx, cx - w * 0.15, cy - h / 2 + h * 0.014, w * 0.3, h * 0.034, h * 0.017); ctx.fillStyle = '#05100E'; ctx.fill();
+  rr(ctx, X, Y, w, h, r); ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)'; ctx.lineWidth = lw(0.0012); ctx.stroke();
+  // Dynamic Island, centred on the status bar between the time and the indicators
+  rr(ctx, cx - w * 0.16, Y + h * 0.0129, w * 0.32, h * 0.0434, h * 0.0217); ctx.fillStyle = '#000000'; ctx.fill();
+  circ(ctx, cx + w * 0.115, Y + h * 0.0346, h * 0.0075); ctx.fillStyle = '#0B1518'; ctx.fill();
+  circ(ctx, cx + w * 0.112, Y + h * 0.0336, h * 0.0025); ctx.fillStyle = '#1E3640'; ctx.fill();
   ctx.restore();
 }
 
@@ -97,15 +125,16 @@ let _wm = null;
 const wmPaths = () => _wm || (_wm = { mark: new Path2D(WM_MARK), letters: WM_LETTERS.map(d => new Path2D(d)) });
 // letters "salam" only; (x, y) is the left of the "s" at the baseline-ish bottom of the x-height box
 // letters span x 35.5..151.2 and y 4.4..33.5 in the 152x43 artboard
-function wordLetters(ctx, x, y, h, col, reveal = [1, 1, 1, 1, 1]) {
+function wordLetters(ctx, x, y, h, col, reveal = [1, 1, 1, 1, 1], bold = 0) {
   const s = h / 29.1;                     // h = height of the "l"
   const order = [4, 0, 3, 1, 2];          // s a l a m  (left to right)
   order.forEach((pi, k) => {
     const r = reveal[k]; if (r <= 0) return;
     ctx.save();
-    ctx.beginPath(); ctx.rect(x - 10, y - h * 1.2, (151.2 - 35.5) * s + 20, h * 1.4); ctx.clip();
+    ctx.beginPath(); ctx.rect(x - 10 - bold, y - h * 1.2 - bold, (151.2 - 35.5) * s + 20 + 2 * bold, h * 1.4 + 2 * bold); ctx.clip();
     ctx.translate(x - 35.5 * s, y - 33.5 * s + (1 - r) * h * 1.3); ctx.scale(s, s);
     ctx.fillStyle = col; ctx.fill(wmPaths().letters[pi]);
+    if (bold > 0) { ctx.strokeStyle = col; ctx.lineJoin = 'round'; ctx.lineWidth = bold / s; ctx.stroke(wmPaths().letters[pi]); }   // a heavier cut of the wordmark
     ctx.restore();
   });
 }
@@ -130,16 +159,27 @@ const MARK_PTS = (() => {
 const markPts = (cx, cy, h, N = 140) => resample(MARK_PTS.map(([x, y]) => [cx + x * h, cy + y * h]), N);
 
 // glass logo image centred at (cx, cy), height h
+// the flat Salam mark (21 x 28 viewBox) with the brand's own gradient; drawn with its bottom-left at (x, y), h tall
+const FLAT_MARK = new Path2D('M8.04955 0.547624C7.08311 -0.0681286 5.87752 -0.17096 4.8211 0.27134C3.76467 0.713641 2.99669 1.62922 2.74152 2.76904C2.48636 3.90886 0.0517631 14.783 0.0517631 14.783C-0.02713 15.1423 -0.0616455 15.5053 -0.0616455 15.8646C-0.0616455 18.0365 1.34734 20.1067 3.20009 20.8922C5.57921 21.9007 19.7775 27.8724 19.7775 27.8724C19.7935 27.8798 19.812 27.8786 19.828 27.8699C19.8428 27.8613 19.8539 27.8464 19.8576 27.829C21.7264 16.9871 17.0766 6.29134 8.05078 0.548863Z');
+const FLAT_MARK_W = 21 / 28;
+function flatMark(ctx, x, y, h) {
+  const s = h / 28;
+  ctx.save(); ctx.translate(x, y - h); ctx.scale(s, s);
+  const g = ctx.createLinearGradient(17.0409, 29.4682, 1.90579, 1.87183);
+  [[0, '#036B34'], [0.14, '#027031'], [0.33, '#02812B'], [0.54, '#019C20'], [0.77, '#01C211'], [1, '#00F000']].forEach(([o, c]) => g.addColorStop(o, c));
+  ctx.fillStyle = g; ctx.fill(FLAT_MARK); ctx.restore();
+}
 function glass(ctx, cx, cy, h, alpha = 1) { pic(ctx, 'l_salam_glass', cx, cy, h, alpha); }
 
-// the app icon: frame 0 and the very last frame
+// the app icon: frame 0 and the very last frame (big, bright tile with a bold white label)
+const APP_ICON_S = 260, ICON_LABEL = { h: 44, dy: 72, bold: 2.5 };
 function appIcon(ctx, cx, cy, s, labelP = 1) {
-  rr(ctx, cx - s / 2, cy - s / 2, s, s, s * 0.26); ctx.fillStyle = C.deep; ctx.fill();
+  rr(ctx, cx - s / 2, cy - s / 2, s, s, s * 0.26); ctx.fillStyle = C.teal; ctx.fill();
   glass(ctx, cx, cy, s * 0.82);
   if (labelP > 0) {
-    ctx.save(); ctx.beginPath(); ctx.rect(cx - 200, cy + s / 2 + 12, 400, 70); ctx.clip();
-    const lh = 30, lw = WORD_W(lh);
-    wordLetters(ctx, cx - lw / 2, cy + s / 2 + 60 + (1 - labelP) * 70, lh, C.dim);
+    ctx.save(); ctx.beginPath(); ctx.rect(cx - 260, cy + s / 2 + 14, 520, 96); ctx.clip();
+    const lh = ICON_LABEL.h, lw = WORD_W(lh);
+    wordLetters(ctx, cx - lw / 2, cy + s / 2 + ICON_LABEL.dy + (1 - labelP) * 90, lh, C.mist, undefined, ICON_LABEL.bold);
     ctx.restore();
   }
 }

@@ -2,22 +2,26 @@
 // Everything is a pure function of t. No state survives between frames.
 const W = 1920, H = 1080;
 const BPM = 84, BEAT = 60 / BPM, BAR = BEAT * 4;
-const DUR = BAR * 41.5;            // ~118.6 s: 41 full bars + final half bar
+const DUR = BAR * 42.5;            // ~121.4 s: 42 full bars + final half bar
 // Scenes are written against "story beats". Bars were inserted in two passes to give sections room:
 // INSERTS maps story beats to v2 beats, INSERTS2 maps v2 beats to real beats.
 // B() addresses story beats, BN() addresses v2 beats, BV() addresses real beats directly.
+// HOLDS then adds reading time inside a sequence, in whole beats that sum to a bar so the grid stays aligned:
+// everything at or after each point moves later by that many beats ("Awareness / Relevance / daily habits").
 const INSERTS = [[36, 4], [72, 4], [106, 4], [112, 4], [132, 4]];
-const INSERTS2 = [[54, 4], [83, 4], [128, 4]];   // Nafath, the AI plan story, step by step
+const INSERTS2 = [[54, 4], [83, 4], [128, 4]];   // trust, the AI plan story, step by step
 const shiftOf = (n, L) => L.reduce((a, [p, k]) => a + (n >= p ? k : 0), 0);
-const BN = n => (n + shiftOf(n, INSERTS2)) * BEAT;  // v2 beat -> seconds
+const HOLDS = [[23, 1], [24, 1], [27, 2]];
+const RB = n => n + shiftOf(n, HOLDS);               // real beat -> beat on the final grid
+const BV = n => RB(n) * BEAT;                        // real beat -> seconds
+const BN = n => BV(n + shiftOf(n, INSERTS2));        // v2 beat -> seconds
 const B = n => BN(n + shiftOf(n, INSERTS));          // story beat -> seconds
-const BV = n => n * BEAT;                            // real beat -> seconds
 // Large wipes are drawn at the frame's own time so they stay crisp (no blur halo)
 const crispT = t => Math.round(t * 60) / 60;
 
 const C = {
-  deep: '#003830', teal: '#005147', night: '#020E0D', leaf: '#52B13C',
-  green: '#00B140', neon: '#54F35D', mist: '#F0F5F0', stone: '#E5DFDC',
+  deep: '#00382D', teal: '#005147', night: '#020E0D', leaf: '#52B13C',
+  green: '#00B140', neon: '#54F35D', mist: '#FFFFFF', stone: '#E5DFDC',
   ink: '#1E1E1E', red: '#E5484D', orange: '#F08A24', purple: '#8E6CEF',
   white: '#FFFFFF', dim: '#6E8F88', line: '#2B5F56', fog: '#9DB5AE'
 };

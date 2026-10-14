@@ -7,7 +7,8 @@ const SEGN = 20, SG = 0.013;
 const WHEEL_GREEN = mixC(C.neon, C.green, 0.2);
 function segAngles(i) {
   const up = i < 10, j = up ? i : i - 10;
-  return [(up ? Math.PI : 0) + j * Math.PI / 10 + SG, (up ? Math.PI : 0) + (j + 1) * Math.PI / 10 - SG];
+  const a = up ? Math.PI : 0;   // domains over the top, capabilities under the bottom, both read left to right like the deck
+  return [a + j * Math.PI / 10 + SG, a + (j + 1) * Math.PI / 10 - SG];
 }
 function wheelRot(t) { return 7 * eIn(P(t, B(86), B(1))); }
 let _WC = null;
@@ -33,6 +34,10 @@ function arrowGlyph(ctx, x, y, up, col) {
   const d = up ? 1 : -1;   // head at y - 7d: up points up
   ctx.moveTo(x, y + 7 * d); ctx.lineTo(x, y - 7 * d); ctx.moveTo(x - 5, y - 2 * d); ctx.lineTo(x, y - 7 * d); ctx.lineTo(x + 5, y - 2 * d); ctx.stroke();
 }
+function arrowSide(ctx, x, y, d, col) {   // a short horizontal arrow; d = 1 points right, -1 left
+  ctx.strokeStyle = col; ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
+  ctx.moveTo(x - 7 * d, y); ctx.lineTo(x + 7 * d, y); ctx.moveTo(x + 2 * d, y - 5); ctx.lineTo(x + 7 * d, y); ctx.lineTo(x + 2 * d, y + 5); ctx.stroke();
+}
 // faint dot grid, stronger towards the right edge (texture, not light)
 function dotGrid(ctx, col, x0 = 700, sp = 34) {
   ctx.fillStyle = col;
@@ -41,6 +46,13 @@ function dotGrid(ctx, col, x0 = 700, sp = 34) {
     const r = 0.5 + 1.1 * (x - x0) / (W - x0);
     for (let y = 18; y < H; y += sp) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
   }
+}
+// a photo cropped to fill a box, centred on focus (0..1 across the source), drawn faintly as a backdrop
+function coverPic(ctx, name, x, y, w, h, focus, a) {
+  const im = IMG[name]; if (!im || a <= 0) return;
+  const s = Math.max(w / im.width, h / im.height), sw = w / s, sh = h / s;
+  const sx = clamp(focus * im.width - sw / 2, 0, im.width - sw), sy = (im.height - sh) / 2;
+  ctx.globalAlpha = a; ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h); ctx.globalAlpha = 1;
 }
 const segFill = (t, i) => {
   const up = i < 10, j = up ? i : i - 10;
@@ -57,11 +69,42 @@ scene(80, 88.2, (ctx, t) => {
   const out = eIn(P(t, B(86), 0.35));
   // behind-the-scenes band and the divider
   const dv = eInOut(P(t, B(80.25), 0.55)) * (1 - out);
-  if (dv > 0) {
-    ctx.fillStyle = '#071613'; ctx.fillRect(0, WH.cy, W * dv, H - WH.cy);
-    ctx.fillStyle = '#22322E'; ctx.fillRect(110, WH.cy - 1, 1700 * dv, 2);
-  }
+  // day left of the hub, night right of it: the day sky opens leftward out of the divider, the night half fills with stars
+  const day = dv, dc = (n, d) => mixC(n, d, day);
   dotGrid(ctx, '#0D2420');
+  if (dv > 0) {
+    const left = WH.cx * (1 - dv);
+    ctx.save(); ctx.beginPath(); ctx.rect(left, 0, WH.cx - left, H); ctx.clip();
+    ctx.fillStyle = C.mist; ctx.fillRect(left, 0, WH.cx - left, H);
+    coverPic(ctx, 'bg_riyadh_day', 0, 0, WH.cx, H, 0.6, 0.16);   // Riyadh by day, barely there
+    dotGrid(ctx, '#DCE5DE', 0);
+    // the sun, bottom left of the day half
+    const sk = spr(t, B(81.3), 14, 0.85) * (1 - out);
+    if (sk > 0.01) {
+      ctx.save(); ctx.translate(240, 850); ctx.rotate((t - B(80)) * 0.15); ctx.scale(sk, sk);
+      circ(ctx, 0, 0, 30); ctx.fillStyle = C.neon; ctx.fill();
+      ctx.strokeStyle = C.green; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      for (let k = 0; k < 8; k++) { const a = k * Math.PI / 4; ctx.beginPath(); ctx.moveTo(Math.cos(a) * 44, Math.sin(a) * 44); ctx.lineTo(Math.cos(a) * 58, Math.sin(a) * 58); ctx.stroke(); }
+      ctx.restore();
+    }
+    ctx.restore();
+    // stars and a crescent moon in the night half
+    ctx.save(); ctx.beginPath(); ctx.rect(WH.cx, 0, (W - WH.cx) * dv, H); ctx.clip();
+    coverPic(ctx, 'bg_riyadh_night', WH.cx, 0, W - WH.cx, H, 0.62, 0.3);   // Riyadh by night
+    for (let k = 0; k < 90; k++) {
+      const x = WH.cx + 24 + (k * 337.7 + 61) % (W - WH.cx - 40), y = 24 + (k * 151.3 + 17) % (H - 48);
+      const tw = 0.55 + 0.45 * Math.sin(t * (1.3 + (k % 5) * 0.37) + k * 2.1);
+      circ(ctx, x, y, (k % 7 === 0 ? 2.2 : 1.3) * tw); ctx.fillStyle = mixC(C.night, C.mist, 0.35 + 0.5 * tw); ctx.fill();
+    }
+    const mk = spr(t, B(82.3), 14, 0.85) * (1 - out);
+    if (mk > 0.01) {
+      ctx.save(); ctx.translate(1760, 360); ctx.scale(mk, mk); ctx.beginPath();
+      ctx.arc(0, 0, 32, 0, Math.PI * 2); ctx.arc(14, -10, 28, 0, Math.PI * 2, true); ctx.fillStyle = C.mist; ctx.fill('evenodd');
+      ctx.restore();
+    }
+    ctx.restore();
+    ctx.fillStyle = '#22322E'; ctx.fillRect(WH.cx - 1, 60, 2, 960 * dv);
+  }
   // core: dark disc, neon ring, dotted inner circle; the neon disc from EAI hollows out into the ring
   const coreK = 1 - eIn(P(t, B(86), 0.4));
   if (coreK > 0) {
@@ -94,7 +137,7 @@ scene(80, 88.2, (ctx, t) => {
       return;
     }
     const base = () => { ctx.beginPath(); poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rOut, a0 + rot, a1 + rot, 60)); };
-    base(); ctx.fillStyle = up ? '#13221F' : '#0F1C19'; ctx.fill();
+    base(); ctx.fillStyle = up ? dc('#13221F', '#DCE5DE') : '#0F1C19'; ctx.fill();
     if (fill > 0) {
       const rf = lerp(WH.r0, rOut, fill);
       const fp = () => poly(ctx, sectorPts(WH.cx, WH.cy, WH.r0, rf, a0 + rot, a1 + rot, 60));
@@ -109,8 +152,9 @@ scene(80, 88.2, (ctx, t) => {
     const am = (a0 + a1) / 2 + rot, ra = WH.r1 + 24;
     const lx = WH.cx + Math.cos(am) * ra, ly = WH.cy + Math.sin(am) * ra + 7 + Math.sin(am) * 12;
     const al = Math.cos(am) < -0.02 ? 'right' : Math.cos(am) > 0.02 ? 'left' : 'center';   // near-vertical pairs split apart
-    const name = up ? DOMAINS[j] : CAPS[j];
-    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: mixC('#41524E', C.mist, clamp(fill * 2)), align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
+    const name = up ? DOMAINS[j] : CAPS[j], onDay = lx < WH.cx;   // ink on the day half, white on the night half
+    const lc = onDay ? mixC(dc('#41524E', '#9AA6A2'), dc(C.mist, C.deep), clamp(fill * 2)) : mixC('#41524E', C.mist, clamp(fill * 2));
+    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: lc, align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
   });
   // light pulses run from the core outward along the spokes
   if (unroll <= 0) PULSES.forEach(([n, list]) => list.forEach((sp, q) => {
@@ -120,30 +164,31 @@ scene(80, 88.2, (ctx, t) => {
     ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
     ctx.moveTo(WH.cx + Math.cos(a) * r0, WH.cy + Math.sin(a) * r0); ctx.lineTo(WH.cx + Math.cos(a) * r1, WH.cy + Math.sin(a) * r1); ctx.stroke();
   }));
-  // headline (top right) and the two blocks on the left
+  // headline (top right, night side); customer domains top left (day), internal capabilities bottom right (night)
   {
     const o = { size: 54, w: 700, ls: -1.5 }, wa = TW(ctx, 'AI ', o), wb = TW(ctx, 'cross-cuts every', o);
     rise(ctx, t, 'AI', 1810 - wb - wa, 112, { ...o, c: C.neon }, B(80.5), B(86));
     rise(ctx, t, 'cross-cuts every', 1810 - wb, 112, { ...o, c: C.mist }, B(80.5) + 0.06, B(86));
     rise(ctx, t, 'capability.', 1810, 172, { ...o, c: C.mist, align: 'right' }, B(80.5) + 0.14, B(86) + 0.04);
   }
-  const block = (y, t0, cap, title, sub, capCol, mark) => {
+  const block = (x, y, t0, cap, title, sub, capCol, mark, lit) => {
     const k = spr(t, t0, 16, 0.85) * (1 - out);
-    if (k > 0.01) { ctx.save(); ctx.translate(119, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
-    rise(ctx, t, cap, 140, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
-    rise(ctx, t, title, 110, y + 62, { size: 40, w: 700, c: C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
-    rise(ctx, t, sub, 110, y + 104, { size: 22, w: 500, c: C.fog }, t0 + 0.16, B(86) + 0.06);
+    if (k > 0.01) { ctx.save(); ctx.translate(x + 9, y - 7); ctx.scale(k, k); mark(); ctx.restore(); }
+    rise(ctx, t, cap, x + 30, y, { size: 17, w: 700, c: capCol, ls: 5 }, t0, B(86));
+    rise(ctx, t, title, x, y + 62, { size: 40, w: 700, c: lit ? dc(C.mist, C.deep) : C.mist, ls: -1 }, t0 + 0.08, B(86) + 0.03);
+    rise(ctx, t, sub, x, y + 104, { size: 22, w: 500, c: lit ? dc(C.fog, '#5B6B66') : C.fog }, t0 + 0.16, B(86) + 0.06);
   };
-  block(252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', C.neon, () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = C.neon; ctx.fill(); });
-  block(700, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
+  block(110, 252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', dc(C.neon, C.green), () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = dc(C.neon, C.green); ctx.fill(); }, true);
+  block(1440, 905, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
     rr(ctx, -9, -9, 18, 18, 3); ctx.strokeStyle = '#8FA39E'; ctx.lineWidth = 1.6; ctx.stroke(); hatch(ctx, () => rr(ctx, -9, -9, 18, 18, 3), '#8FA39E', 5);
   });
   // front of house / behind the scenes
   const fk = spr(t, B(81.3), 16, 0.85) * (1 - out), bk = spr(t, B(82.3), 16, 0.85) * (1 - out);
-  rise(ctx, t, 'FRONT OF HOUSE', 1788, WH.cy - 20, { size: 17, w: 700, c: C.neon, ls: 5, align: 'right' }, B(81.3), B(86));
-  if (fk > 0.01) arrowGlyph(ctx, 1804, WH.cy - 26, true, C.neon);
-  rise(ctx, t, 'BEHIND THE SCENES', 1788, WH.cy + 40, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
-  if (bk > 0.01) arrowGlyph(ctx, 1804, WH.cy + 34, false, '#8FA39E');
+  rise(ctx, t, 'FRONT OF HOUSE', 1780, WH.cy - 26, { size: 17, w: 700, c: C.neon, ls: 5, align: 'right' }, B(81.3), B(86));
+  if (fk > 0.01) arrowGlyph(ctx, 1800, WH.cy - 32, true, C.neon);
+  rise(ctx, t, 'BEHIND THE SCENES', 1780, WH.cy + 44, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
+  if (bk > 0.01) arrowGlyph(ctx, 1800, WH.cy + 38, false, '#8FA39E');
+  if (fk > 0.01) { ctx.fillStyle = '#3A4C47'; ctx.fillRect(WH.cx + WH.r1 + 250, WH.cy, (1780 - WH.cx - WH.r1 - 250 + 30) * fk, 1.5); }
 });
 
 // --- What users do every day vs. the Salam app today (beats 88–92) ---
@@ -199,7 +244,7 @@ scene(88, 102.2, (ctx, t) => {
   ctx.save(); ctx.translate(split * 1300, 0);
   {
     const k = spr(t, B(90), 14, 0.86);
-    if (k > 0.01) phone(ctx, t, [['s_home', B(90)]], 1290, lerp(1600, 548, k), 800, { shadow: 0.7, scroll: 0.08 * eInOut(P(t, B(90.5), B(1.5))) });
+    if (k > 0.01) phone(ctx, t, [['s_home', B(90)]], 1290, lerp(1600, 548, k), 800, { shadow: 0.7 });
     rise(ctx, t, 'Salam app today', 1290, 1040, { size: 32, w: 600, c: C.deep, align: 'center' }, B(90) + 0.15);
   }
   BEYOND.forEach(([n, ic], i) => {
@@ -306,8 +351,16 @@ scene(100, 108.6, (ctx, t) => {
   if (t < B(102)) {
     const y = lerp(1100, CARD.y, grow);
     shadowOn(ctx, 0.6); rr(ctx, CARD.x, y, CARD.w, CARD.h, 44); ctx.fillStyle = C.deep; ctx.fill(); shadowOff(ctx);
-    pic(ctx, 'i_check', CARD.x + 210, y + CARD.h / 2, 250 * spr(t, B(100) + 0.25, 15, 0.8));
+    pic(ctx, 'i_check', CARD.x + 175, y + CARD.h / 2, 190 * spr(t, B(100) + 0.25, 15, 0.8));
     cardText(ctx, t, CARD.x + 120, y);
+    // behind the type: the card sits behind him, his phone and head rise over its top edge
+    const k = eInOut(P(t, B(100.5), 0.6)), out = eIn(P(t, B(101.7), 0.35));
+    if (k > 0 && out < 1) {
+      // mirrored so the phone arm reaches out of frame and the thumbs-up lands on the card
+      ctx.save(); ctx.translate(1770, 0); ctx.scale(-1, 1);
+      pic(ctx, 'p_thumbs', 0, 560 + (1 - k) * 600 + out * 1100, 1000 * (1 + 0.04 * P(t, B(100.5), B(1.5))));
+      ctx.restore();
+    }
   } else {
     // the card breaks into twelve mismatched tiles, then they pour into one app
     TILE_LABELS.forEach((lab, i) => {
@@ -328,7 +381,7 @@ scene(100, 108.6, (ctx, t) => {
         ctx.fillStyle = C.deep; ctx.fill(); ctx.save(); ctx.clip();
         const ox = (i % 4) * tw, oy = Math.floor(i / 4) * th;
         ctx.translate(-w / 2 - ox * w / tw, -h / 2 - oy * h / th); ctx.scale(w / tw, h / th);
-        pic(ctx, 'i_check', 210, CARD.h / 2, 250); cardText(ctx, t, 120, 0); ctx.restore();
+        pic(ctx, 'i_check', 175, CARD.h / 2, 190); cardText(ctx, t, 120, 0); ctx.restore();
       } else {
         shadowOn(ctx, 0.35); ctx.fillStyle = FRAG_COL[i]; ctx.fill(); shadowOff(ctx);
         const dark = [C.teal, C.deep, C.leaf].includes(FRAG_COL[i]);
@@ -398,7 +451,7 @@ const HUB = [
   ['Home', 'Home01', 'Fiber, 5G and your router'], ['Customer care', 'CustomerSupport', '24/7, right in the app'],
 ];
 function cardText(ctx, t, x, y) {
-  const o = { size: 64, w: 700, ls: -1 };
-  rise(ctx, t, 'Turn every reason not to choose us', x + CARD.w / 2 + 60, y + 165, { ...o, c: C.mist, align: 'center' }, B(100) + 0.15);
-  rise(ctx, t, 'into a reason to stay.', x + CARD.w / 2 + 60, y + 262, { ...o, c: C.neon, align: 'center' }, B(101));
+  const o = { size: 54, w: 700, ls: -1 };
+  rise(ctx, t, 'Turn every reason not to choose us', x + 250, y + 172, { ...o, c: C.mist }, B(100) + 0.15);
+  rise(ctx, t, 'into a reason to stay.', x + 250, y + 258, { ...o, c: C.neon }, B(101));
 }

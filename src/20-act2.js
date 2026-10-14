@@ -373,14 +373,14 @@ const PINS = [
   { n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
-const NAFATH_TEAL = '#2F9B95';
+const TRUST_TEAL = '#2F9B95';
 function rrPts(x, y, w, h, r, N) {
   const o = [], c = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
   c.forEach(([cx, cy, a0]) => { for (let i = 0; i <= 10; i++) { const a = a0 + i / 10 * Math.PI / 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } });
   return resample(o, N);
 }
 
-// --- Nafath: the globe's dots stream into concentric identity rings around the Nafath tile ---
+// --- Trust: the globe's dots stream into concentric identity rings around the trust tile ---
 const NF = { cx: 960, cy: 535, ring: 150, tile: 190 };
 const NF_RINGS = [196, 224, 252, 280, 308];
 const NF_SLOTS = (() => {
@@ -397,8 +397,18 @@ function globeFinalCentre() {
   const rp = gProj(RIYADH.lat, RIYADH.lon, RIYADH.lon, GLOBE_TILT, 0, 0, 330);
   return [NF.cx - rp[0], NF.cy - rp[1]];
 }
+// the trust mark on the tile: a filled teal shield with a white check (Hugeicons Shield01 + Tick02)
+function trustMark(ctx, cx, cy, size) {
+  const s = size / 24;
+  ctx.save(); ctx.translate(cx - size / 2, cy - size / 2); ctx.scale(s, s);
+  const sh = iconParts('Shield01')[0].p;
+  ctx.lineJoin = 'round'; ctx.fillStyle = TRUST_TEAL; ctx.fill(sh);
+  ctx.strokeStyle = TRUST_TEAL; ctx.lineWidth = 1.5; ctx.stroke(sh);
+  ctx.restore();
+  icon(ctx, 'Tick02', cx, cy - size * 0.02, size * 0.5, C.white, 2.2);
+}
 let _NFMAP = null;
-function nafathMap() {
+function trustMap() {
   if (_NFMAP) return _NFMAP;
   const [cx, cy] = globeFinalCentre();
   const front = [];
@@ -427,7 +437,7 @@ scene(40, 52.2, (ctx, t) => {
   const [fx, fy] = globeFinalCentre();
   const cx = lerp(960, fx, toRiyadh), cy = lerp(600, fy, toRiyadh);
   const fly0 = BV(53);
-  const map = nafathMap();
+  const map = trustMap();
   // the body and graticule shrink into the identity ring; land dots that are not part of the stream shrink away
   const drop = eIn(P(t, fly0, 0.45));
   const shrink = eInOut(P(t, fly0, 0.6)), bodyOut = eIn(P(crispT(t), BV(58.2), 0.5));
@@ -502,10 +512,10 @@ scene(40, 52.2, (ctx, t) => {
       const g = globeDot(from.z, 1);
       const rad = lerp(g.r, 4.3, p) * (1 - gone);
       if (rad <= 0.05) return;
-      circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, NAFATH_TEAL, p); ctx.fill();
+      circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, TRUST_TEAL, p); ctx.fill();
     });
   }
-  // Riyadh pin -> the white Nafath tile -> a line (the ground of the house)
+  // Riyadh pin -> the white trust tile -> a line (the ground of the house)
   if (t >= B(48.4)) {
     const k = spr(t, B(48.4), 18);
     const toTile = eInOut(P(t, BV(53.15), 0.45));
@@ -518,11 +528,11 @@ scene(40, 52.2, (ctx, t) => {
     if (flat > 0) pts = mixPts(pts, align(tile, rectPts(-20, 538, 1960, 4, NM)), flat);
     poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(C.neon, C.white, toTile); ctx.fill();
     const q = spr(t, BV(53.45), 16, 0.82) * (1 - eIn(P(t, B(51) - 0.12, 0.2)));
-    if (q > 0.01) pic(ctx, 'l_nafath', NF.cx, NF.cy, 205 * q * (1 - 0.15 * gather));
+    if (q > 0.01) trustMark(ctx, NF.cx, NF.cy, 138 * q * (1 - 0.15 * gather));
     // the identity ring draws itself around the tile
     const arc = eInOut(P(t, BV(53.4), 0.75)), ringOut = eIn(P(t, BV(58.2), 0.6));
     if (arc > 0 && ringOut < 1) {
-      ctx.strokeStyle = NAFATH_TEAL; ctx.lineWidth = 3 * (1 - ringOut); ctx.lineCap = 'round';
+      ctx.strokeStyle = TRUST_TEAL; ctx.lineWidth = 3 * (1 - ringOut); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.arc(NF.cx, NF.cy, lerp(NF.ring, 110, gather), -Math.PI / 2, -Math.PI / 2 + arc * Math.PI * 2); ctx.stroke();
     }
     // verified
@@ -530,13 +540,13 @@ scene(40, 52.2, (ctx, t) => {
     if (vk > 0.01) {
       const vx = NF.cx + Math.cos(-Math.PI / 4) * NF.ring, vy = NF.cy + Math.sin(-Math.PI / 4) * NF.ring;
       ctx.save(); ctx.translate(vx, vy); ctx.scale(vk, vk);
-      circ(ctx, 0, 0, 26); ctx.fillStyle = NAFATH_TEAL; ctx.fill(); icon(ctx, 'Tick02', 0, 0, 30, C.white, 1.5);
+      circ(ctx, 0, 0, 26); ctx.fillStyle = TRUST_TEAL; ctx.fill(); icon(ctx, 'Tick02', 0, 0, 30, C.white, 1.5);
       ctx.restore();
     }
     rise(ctx, t, 'RIYADH', 960, 590, { size: 24, w: 700, c: C.leaf, align: 'center', ls: 8 }, B(48.4), B(49));
   }
-  rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: NAFATH_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
-  rise(ctx, t, 'Nafath · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(54.2), BV(58) + 0.04);
+  rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: TRUST_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
+  rise(ctx, t, 'Verified · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(54.2), BV(58) + 0.04);
   rise(ctx, t, 'Telecoms own the identity layer.', 960, 128, { size: 60, w: 700, c: C.mist, align: 'center', ls: -1 }, BV(55), BV(58) + 0.08);
   {
     const o = { size: 36, w: 500 }, a = TW(ctx, 'Trusted identity and connectivity ', o), b = TW(ctx, 'at scale.', o);
