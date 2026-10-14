@@ -366,10 +366,10 @@ function gcPoint(a, b, u, lc, tilt, cx, cy, R, lift) {
   return [cx + q[0], cy + q[1], q[2]];
 }
 const PINS = [
-  { n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
-  { n: 'GRAB', v: 35, s: 'M', lat: 3, lon: 104, sx: 1440, sy: 740, al: 'left' },
-  { n: 'JIO', v: 460, s: 'M', lat: 21, lon: 78, sx: 480, sy: 430, al: 'right', tag: 'The Salam blueprint.' },
-  { n: 'KAKAO', v: 50, s: 'M', lat: 37, lon: 127, sx: 1440, sy: 300, al: 'left' },
+  { logo: 'l_wechat', n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
+  { logo: 'l_grab', n: 'GRAB', v: 35, s: 'M', lat: 3, lon: 104, sx: 1440, sy: 740, al: 'left' },
+  { logo: 'l_jio', n: 'JIO', v: 460, s: 'M', lat: 21, lon: 78, sx: 480, sy: 430, al: 'right', tag: 'The Salam blueprint.' },
+  { logo: 'l_kakao', n: 'KAKAO', v: 50, s: 'M', lat: 37, lon: 127, sx: 1440, sy: 300, al: 'left' },
   { n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
@@ -481,18 +481,31 @@ scene(40, 52.2, (ctx, t) => {
     const t0 = B(42 + i), q = pp[i];
     if (t < t0 || q[2] < 0) return;
     const k = spr(t, t0, 18) * (1 - eIn(P(t, B(48), 0.3)));
+    // apps with a logo get a white rounded tile on the outer side of the line; the text moves out past it
+    const LT = 84, side = p.al === 'left' ? 1 : -1, tx = p.logo ? p.sx + side * (LT + 20) : p.sx;
     const lx = p.al === 'left' ? p.sx - 16 : p.sx + 16, ly = p.sy - 24;
     const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, B(48), 0.3)));
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(lerp(q[0], lx, lp), lerp(q[1], ly, lp)); ctx.stroke();
     circ(ctx, q[0], q[1], 10 * k); ctx.fillStyle = C.neon; ctx.fill();
-    rise(ctx, t, p.n, p.sx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, B(48));
+    if (p.logo) {
+      const lk = spr(t, t0 + 0.06, 18, 0.8) * (1 - eIn(P(t, B(48), 0.3)));
+      if (lk > 0.01) {
+        const cx = p.sx + side * LT / 2, cy = p.sy - 30;
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(lk, lk);
+        rr(ctx, -LT / 2, -LT / 2, LT, LT, 22); ctx.fillStyle = C.white; ctx.fill();
+        const im = IMG[p.logo];
+        if (im) { const s = Math.min(58 / im.height, 64 / im.width); ctx.drawImage(im, -im.width * s / 2, -im.height * s / 2, im.width * s, im.height * s); }
+        ctx.restore();
+      }
+    }
+    rise(ctx, t, p.n, tx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, B(48));
     const v = p.v * eOut(P(t, t0, 0.5));
-    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, p.sx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, B(48) + 0.03);
+    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, tx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, B(48) + 0.03);
     if (p.tag) {
       const tp = spr(t, t0 + 0.25, 16) * (1 - eIn(P(t, B(48), 0.3)));
       if (tp > 0.01) {
         const tw = TW(ctx, p.tag, { size: 26, w: 700 }) + 36;
-        ctx.save(); ctx.translate(p.sx - tw, p.sy + 26); ctx.scale(1, tp);
+        ctx.save(); ctx.translate(tx - tw, p.sy + 26); ctx.scale(1, tp);
         rr(ctx, 0, 0, tw, 48, 24); ctx.fillStyle = C.green; ctx.fill();
         T(ctx, p.tag, 18, 33, { size: 26, w: 700, c: C.night }); ctx.restore();
       }
