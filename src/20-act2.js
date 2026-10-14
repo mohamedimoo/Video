@@ -370,7 +370,7 @@ const PINS = [
   { logo: 'l_grab', n: 'GRAB', v: 35, s: 'M', lat: 3, lon: 104, sx: 1440, sy: 740, al: 'left' },
   { logo: 'l_jio', n: 'JIO', v: 460, s: 'M', lat: 21, lon: 78, sx: 480, sy: 430, al: 'right', tag: 'The Salam blueprint.' },
   { logo: 'l_kakao', n: 'KAKAO', v: 50, s: 'M', lat: 37, lon: 127, sx: 1440, sy: 300, al: 'left' },
-  { n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
+  { logo: 'l_mpesa', n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
 const TRUST_TEAL = '#2F9B95';
