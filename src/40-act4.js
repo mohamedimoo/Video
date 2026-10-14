@@ -7,7 +7,7 @@ const SEGN = 20, SG = 0.013;
 const WHEEL_GREEN = mixC(C.neon, C.green, 0.2);
 function segAngles(i) {
   const up = i < 10, j = up ? i : i - 10;
-  const a = (up ? Math.PI : 0) - Math.PI / 2;   // domains on the left (day), capabilities on the right (night)
+  const a = up ? Math.PI : 0;   // domains over the top, capabilities under the bottom, both read left to right like the deck
   return [a + j * Math.PI / 10 + SG, a + (j + 1) * Math.PI / 10 - SG];
 }
 function wheelRot(t) { return 7 * eIn(P(t, B(86), B(1))); }
@@ -47,6 +47,13 @@ function dotGrid(ctx, col, x0 = 700, sp = 34) {
     for (let y = 18; y < H; y += sp) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); }
   }
 }
+// a photo cropped to fill a box, centred on focus (0..1 across the source), drawn faintly as a backdrop
+function coverPic(ctx, name, x, y, w, h, focus, a) {
+  const im = IMG[name]; if (!im || a <= 0) return;
+  const s = Math.max(w / im.width, h / im.height), sw = w / s, sh = h / s;
+  const sx = clamp(focus * im.width - sw / 2, 0, im.width - sw), sy = (im.height - sh) / 2;
+  ctx.globalAlpha = a; ctx.drawImage(im, sx, sy, sw, sh, x, y, w, h); ctx.globalAlpha = 1;
+}
 const segFill = (t, i) => {
   const up = i < 10, j = up ? i : i - 10;
   return eOut(P(t, B(up ? 81 : 82) + j * 0.075, 0.38));
@@ -69,6 +76,7 @@ scene(80, 88.2, (ctx, t) => {
     const left = WH.cx * (1 - dv);
     ctx.save(); ctx.beginPath(); ctx.rect(left, 0, WH.cx - left, H); ctx.clip();
     ctx.fillStyle = C.mist; ctx.fillRect(left, 0, WH.cx - left, H);
+    coverPic(ctx, 'bg_riyadh_day', 0, 0, WH.cx, H, 0.6, 0.16);   // Riyadh by day, barely there
     dotGrid(ctx, '#DCE5DE', 0);
     // the sun, bottom left of the day half
     const sk = spr(t, B(81.3), 14, 0.85) * (1 - out);
@@ -82,6 +90,7 @@ scene(80, 88.2, (ctx, t) => {
     ctx.restore();
     // stars and a crescent moon in the night half
     ctx.save(); ctx.beginPath(); ctx.rect(WH.cx, 0, (W - WH.cx) * dv, H); ctx.clip();
+    coverPic(ctx, 'bg_riyadh_night', WH.cx, 0, W - WH.cx, H, 0.62, 0.3);   // Riyadh by night
     for (let k = 0; k < 90; k++) {
       const x = WH.cx + 24 + (k * 337.7 + 61) % (W - WH.cx - 40), y = 24 + (k * 151.3 + 17) % (H - 48);
       const tw = 0.55 + 0.45 * Math.sin(t * (1.3 + (k % 5) * 0.37) + k * 2.1);
@@ -143,13 +152,14 @@ scene(80, 88.2, (ctx, t) => {
     const am = (a0 + a1) / 2 + rot, ra = WH.r1 + 24;
     const lx = WH.cx + Math.cos(am) * ra, ly = WH.cy + Math.sin(am) * ra + 7 + Math.sin(am) * 12;
     const al = Math.cos(am) < -0.02 ? 'right' : Math.cos(am) > 0.02 ? 'left' : 'center';   // near-vertical pairs split apart
-    const name = up ? DOMAINS[j] : CAPS[j];
-    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: up ? mixC(dc('#41524E', '#9AA6A2'), dc(C.mist, C.deep), clamp(fill * 2)) : mixC('#41524E', C.mist, clamp(fill * 2)), align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
+    const name = up ? DOMAINS[j] : CAPS[j], onDay = lx < WH.cx;   // ink on the day half, white on the night half
+    const lc = onDay ? mixC(dc('#41524E', '#9AA6A2'), dc(C.mist, C.deep), clamp(fill * 2)) : mixC('#41524E', C.mist, clamp(fill * 2));
+    rise(ctx, t, name, lx, ly, { size: 21, w: 600, c: lc, align: al }, B(80.45) + j * 0.02 + (up ? 0 : 0.1), B(86));
   });
   // light pulses run from the core outward along the spokes
   if (unroll <= 0) PULSES.forEach(([n, list]) => list.forEach((sp, q) => {
     const p = P(t, B(n) + q * 0.06, 0.45); if (p <= 0 || p >= 1) return;
-    const a = (sp < 10 ? Math.PI : 0) - Math.PI / 2 + (sp % 10) * Math.PI / 10 + rot;
+    const a = (sp < 10 ? Math.PI : 0) + (sp % 10) * Math.PI / 10 + rot;
     const r0 = lerp(WH.r0, WH.r1, eIn(p)), r1 = lerp(WH.r0, WH.r1, eOut(p));
     ctx.strokeStyle = C.white; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.beginPath();
     ctx.moveTo(WH.cx + Math.cos(a) * r0, WH.cy + Math.sin(a) * r0); ctx.lineTo(WH.cx + Math.cos(a) * r1, WH.cy + Math.sin(a) * r1); ctx.stroke();
@@ -169,15 +179,16 @@ scene(80, 88.2, (ctx, t) => {
     rise(ctx, t, sub, x, y + 104, { size: 22, w: 500, c: lit ? dc(C.fog, '#5B6B66') : C.fog }, t0 + 0.16, B(86) + 0.06);
   };
   block(110, 252, B(81), 'CUSTOMER DOMAINS', 'What customers use', '10 everyday services, front of house', dc(C.neon, C.green), () => { rr(ctx, -9, -9, 18, 18, 4); ctx.fillStyle = dc(C.neon, C.green); ctx.fill(); }, true);
-  block(1400, 790, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
+  block(1440, 905, B(82), 'INTERNAL CAPABILITIES', 'What powers it', '10 shared platforms, behind the scenes', '#8FA39E', () => {
     rr(ctx, -9, -9, 18, 18, 3); ctx.strokeStyle = '#8FA39E'; ctx.lineWidth = 1.6; ctx.stroke(); hatch(ctx, () => rr(ctx, -9, -9, 18, 18, 3), '#8FA39E', 5);
   });
   // front of house / behind the scenes
   const fk = spr(t, B(81.3), 16, 0.85) * (1 - out), bk = spr(t, B(82.3), 16, 0.85) * (1 - out);
-  rise(ctx, t, 'FRONT OF HOUSE', WH.cx - 40, 1000, { size: 17, w: 700, c: dc(C.neon, C.green), ls: 5, align: 'right' }, B(81.3), B(86));
-  if (fk > 0.01) arrowSide(ctx, WH.cx - 40 - TW(ctx, 'FRONT OF HOUSE', { size: 17, w: 700, ls: 5 }) - 20, 994, -1, dc(C.neon, C.green));
-  rise(ctx, t, 'BEHIND THE SCENES', WH.cx + 40, 1000, { size: 17, w: 700, c: '#8FA39E', ls: 5 }, B(82.3), B(86));
-  if (bk > 0.01) arrowSide(ctx, WH.cx + 40 + TW(ctx, 'BEHIND THE SCENES', { size: 17, w: 700, ls: 5 }) + 14, 994, 1, '#8FA39E');
+  rise(ctx, t, 'FRONT OF HOUSE', 1780, WH.cy - 26, { size: 17, w: 700, c: C.neon, ls: 5, align: 'right' }, B(81.3), B(86));
+  if (fk > 0.01) arrowGlyph(ctx, 1800, WH.cy - 32, true, C.neon);
+  rise(ctx, t, 'BEHIND THE SCENES', 1780, WH.cy + 44, { size: 17, w: 700, c: '#8FA39E', ls: 5, align: 'right' }, B(82.3), B(86));
+  if (bk > 0.01) arrowGlyph(ctx, 1800, WH.cy + 38, false, '#8FA39E');
+  if (fk > 0.01) { ctx.fillStyle = '#3A4C47'; ctx.fillRect(WH.cx + WH.r1 + 250, WH.cy, (1780 - WH.cx - WH.r1 - 250 + 30) * fk, 1.5); }
 });
 
 // --- What users do every day vs. the Salam app today (beats 88–92) ---
