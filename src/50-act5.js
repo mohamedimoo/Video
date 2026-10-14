@@ -327,15 +327,14 @@ scene(120, 134.01, (ctx, t) => {
     const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
     const h = lerp(96 * breathe, ICON_LABEL.h, toLabel), y = lerp(OC[1] + 48, 500 + APP_ICON_S / 2 + ICON_LABEL.dy, toLabel);
     const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
-    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
-  }
-  // the 3D glass Salam mark turns in above the wordmark, floats, then shrinks away before the app icon returns
-  {
-    const k = spr(t, BV(158.7), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
-    if (k > 0.01) {
-      const turn = 1 - eOut(P(t, BV(158.7), 0.9)), fl = Math.sin((t - BV(158.7)) * 1.6) * 6;
-      ctx.save(); ctx.translate(960, 300 + fl + (1 - k) * 40); ctx.scale(k * Math.cos(turn * 1.2), k);
-      glass(ctx, 0, 0, 150);
+    // the flat mark sits beside the wordmark; the pair is centred, and the word slides back to centre as the mark leaves
+    const mh = h * 1.12, gap = h * 0.32, mw = mh * FLAT_MARK_W, shift = (mw + gap) / 2 * (1 - toLabel);
+    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2 + shift, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
+    const mk = spr(t, BV(158.7), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
+    if (mk > 0.01) {
+      const x = 960 - WORD_W(h) / 2 + shift - gap - mw;
+      ctx.save(); ctx.translate(x + mw / 2, y - mh / 2); ctx.scale(mk, mk); ctx.translate(-(x + mw / 2), -(y - mh / 2));
+      flatMark(ctx, x, y + mh * 0.02, mh);
       ctx.restore();
     }
   }

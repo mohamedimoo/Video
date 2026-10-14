@@ -172,6 +172,16 @@ const MARK_PTS = (() => {
 const markPts = (cx, cy, h, N = 140) => resample(MARK_PTS.map(([x, y]) => [cx + x * h, cy + y * h]), N);
 
 // glass logo image centred at (cx, cy), height h
+// the flat Salam mark (21 x 28 viewBox) with the brand's own gradient; drawn with its bottom-left at (x, y), h tall
+const FLAT_MARK = new Path2D('M8.04955 0.547624C7.08311 -0.0681286 5.87752 -0.17096 4.8211 0.27134C3.76467 0.713641 2.99669 1.62922 2.74152 2.76904C2.48636 3.90886 0.0517631 14.783 0.0517631 14.783C-0.02713 15.1423 -0.0616455 15.5053 -0.0616455 15.8646C-0.0616455 18.0365 1.34734 20.1067 3.20009 20.8922C5.57921 21.9007 19.7775 27.8724 19.7775 27.8724C19.7935 27.8798 19.812 27.8786 19.828 27.8699C19.8428 27.8613 19.8539 27.8464 19.8576 27.829C21.7264 16.9871 17.0766 6.29134 8.05078 0.548863Z');
+const FLAT_MARK_W = 21 / 28;
+function flatMark(ctx, x, y, h) {
+  const s = h / 28;
+  ctx.save(); ctx.translate(x, y - h); ctx.scale(s, s);
+  const g = ctx.createLinearGradient(17.0409, 29.4682, 1.90579, 1.87183);
+  [[0, '#036B34'], [0.14, '#027031'], [0.33, '#02812B'], [0.54, '#019C20'], [0.77, '#01C211'], [1, '#00F000']].forEach(([o, c]) => g.addColorStop(o, c));
+  ctx.fillStyle = g; ctx.fill(FLAT_MARK); ctx.restore();
+}
 function glass(ctx, cx, cy, h, alpha = 1) { pic(ctx, 'l_salam_glass', cx, cy, h, alpha); }
 
 // the app icon: frame 0 and the very last frame (big, bright tile with a bold white label)
