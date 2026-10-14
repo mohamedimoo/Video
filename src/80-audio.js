@@ -12,7 +12,7 @@ function sonicEvents() {
   [4, 5, 6, 7, 8].forEach((d, i) => ev.push([B(10 + i), d, 0.5, 'pluck']));
   [[95, 32], [30, 33], [1, 34], [1, 35]].forEach(([v, n], i) => ev.push([B(n), [9, 6, 3, 10][i], 0.5, 'pluck']));
   ev.push([B(36), 7, 0.5, 'pluck'], [B(37), 5, 0.5, 'pluck'], [B(38), 10, 0.5, 'pluck']);
-  [1300, 35, 460, 50, 51].forEach((v, i) => ev.push([B(42 + i), Math.round(Math.log10(v) * 3) + 2, 0.55, 'pluck']));
+  [1300, 35, 460, 50, 51].forEach((v, i) => ev.push([B(42 + i * PIN_STEP), Math.round(Math.log10(v) * 3) + 2, 0.55, 'pluck']));
   [0, 1, 2, 3, 4].forEach(i => ev.push([B(52 + i * 0.25 + (i > 2 ? 0.25 : 0)), 2 + i, 0.3, 'pluck']));
   [0, 1, 2, 3, 4].forEach(i => ev.push([B(55) + i * 0.08, 5 + i, 0.35, 'pluck']));
   [93, 80, 65, 57, 50].forEach((v, i) => ev.push([B(88 + Math.floor(i / 2)) + (i % 2) * 0.15, Math.round(v / 9), 0.5, 'pluck']));
@@ -28,6 +28,7 @@ function sonicEvents() {
   for (let L = 0; ; L += 1 / 3) { const tt = knTimeOf(L); if (tt > BN(39.3)) break; ev.push([tt, [4, 7, 9][Math.round(L * 3) % 3], 0.16, 'pluck']); }
   [0, 1, 2, 3, 4, 5].forEach(i => ev.push([BN(113 + Math.floor(i / 2)) + (i % 2) * 0.1, 5 + i, 0.4, 'pluck']));
   // Trust: the rings form, the ID is scanned, stamped, the profile verified
+  ev.push([RIYADH_IN, 12, 0.5, 'pluck'], [RIYADH_IN + 0.42, 9, 0.35, 'pluck']);   // arriving in Riyadh
   [0, 1, 2, 3, 4].forEach(i => ev.push([BV(53) + i * 0.12, 4 + i * 2, 0.4, 'pluck']));
   ev.push([BV(54), 9, 0.4, 'pluck'], [BV(55.5), 0, 0.5, 'tick'], [BV(56.95), 12, 0.45, 'pluck']);   // the stamp lands, the profile is verified
   // AI wheel: domains fill up the scale, capabilities come back down, pulses tick

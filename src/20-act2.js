@@ -373,6 +373,8 @@ const PINS = [
   { logo: 'l_mpesa', n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
+// the pins land three to every four beats, leave at PIN_OUT, and the thread reaches Riyadh at RIYADH_IN
+const PIN_STEP = 0.75, PIN_OUT = B(46.6), RIYADH_IN = B(47);
 const TRUST_TEAL = '#2F9B95';
 function rrPts(x, y, w, h, r, N) {
   const o = [], c = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
@@ -449,7 +451,7 @@ scene(40, 52.2, (ctx, t) => {
   bg(ctx, C.night);
   if (t >= BV(52.6)) dotGrid(ctx, '#0B201D', 1100);
   const f = eOut(P(t, B(40), 0.7));
-  const toRiyadh = eInOut(P(t, B(48), 0.7));
+  const toRiyadh = eInOut(P(t, PIN_OUT, 0.7));
   const lc = lerp(lerp(112, 84, eInOut(P(t, B(40), B(8)))), RIYADH.lon, toRiyadh);   // the globe keeps turning
   const tilt = GLOBE_TILT, R = 330;
   const [fx, fy] = globeFinalCentre();
@@ -472,23 +474,23 @@ scene(40, 52.2, (ctx, t) => {
 
   {
     const o = { size: 60, w: 600 }, a = TW(ctx, 'The world is moving to ', o), b = TW(ctx, 'super-apps.', o);
-    rise(ctx, t, 'The world is moving to', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, B(41), B(48));
-    rise(ctx, t, 'super-apps.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, B(41) + 0.12, B(48));
+    rise(ctx, t, 'The world is moving to', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, B(41), PIN_OUT);
+    rise(ctx, t, 'super-apps.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, B(41) + 0.12, PIN_OUT);
   }
   // pins
   const pp = PINS.map(p => gProj(p.lat, p.lon, lc, tilt, cx, cy, R));
   PINS.forEach((p, i) => {
-    const t0 = B(42 + i), q = pp[i];
+    const t0 = B(42 + i * PIN_STEP), q = pp[i];
     if (t < t0 || q[2] < 0) return;
-    const k = spr(t, t0, 18) * (1 - eIn(P(t, B(48), 0.3)));
+    const k = spr(t, t0, 18) * (1 - eIn(P(t, PIN_OUT, 0.3)));
     // apps with a logo get a white rounded tile on the outer side of the line; the text moves out past it
     const LT = 84, side = p.al === 'left' ? 1 : -1, tx = p.logo ? p.sx + side * (LT + 20) : p.sx;
     const lx = p.al === 'left' ? p.sx - 16 : p.sx + 16, ly = p.sy - 24;
-    const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, B(48), 0.3)));
+    const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, PIN_OUT, 0.3)));
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(lerp(q[0], lx, lp), lerp(q[1], ly, lp)); ctx.stroke();
     circ(ctx, q[0], q[1], 10 * k); ctx.fillStyle = C.neon; ctx.fill();
     if (p.logo) {
-      const lk = spr(t, t0 + 0.06, 18, 0.8) * (1 - eIn(P(t, B(48), 0.3)));
+      const lk = spr(t, t0 + 0.06, 18, 0.8) * (1 - eIn(P(t, PIN_OUT, 0.3)));
       if (lk > 0.01) {
         const cx = p.sx + side * LT / 2, cy = p.sy - 30;
         ctx.save(); ctx.translate(cx, cy); ctx.scale(lk, lk);
@@ -498,11 +500,11 @@ scene(40, 52.2, (ctx, t) => {
         ctx.restore();
       }
     }
-    rise(ctx, t, p.n, tx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, B(48));
+    rise(ctx, t, p.n, tx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, PIN_OUT);
     const v = p.v * eOut(P(t, t0, 0.5));
-    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, tx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, B(48) + 0.03);
+    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, tx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, PIN_OUT + 0.03);
     if (p.tag) {
-      const tp = spr(t, t0 + 0.25, 16) * (1 - eIn(P(t, B(48), 0.3)));
+      const tp = spr(t, t0 + 0.25, 16) * (1 - eIn(P(t, PIN_OUT, 0.3)));
       if (tp > 0.01) {
         const tw = TW(ctx, p.tag, { size: 26, w: 700 }) + 36;
         ctx.save(); ctx.translate(tx - tw, p.sy + 26); ctx.scale(1, tp);
@@ -514,9 +516,9 @@ scene(40, 52.2, (ctx, t) => {
   // the light thread jumps pin to pin, then to Riyadh
   const rq = gProj(RIYADH.lat, RIYADH.lon, lc, tilt, cx, cy, R);
   const routeLL = [0, 1, 2, 3, 4].map(i => [PINS[i].lat, PINS[i].lon]).concat([[RIYADH.lat, RIYADH.lon]]);
-  const tp = eInOut(P(t, B(47), B(1.4))) * (routeLL.length - 1);
-  const th = eIn(P(t, B(49), 0.3));
-  if (tp > 0 && t < B(49.4)) {
+  const tp = eInOut(P(t, B(45.6), RIYADH_IN - B(45.6))) * (routeLL.length - 1);
+  const th = eIn(P(t, RIYADH_IN + 0.1, 0.3));
+  if (tp > 0 && t < RIYADH_IN + 0.4) {
     ctx.strokeStyle = C.neon; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     const tail = Math.max(0, tp - 1.6 + th * 2);
     let pen = false;
@@ -546,9 +548,34 @@ scene(40, 52.2, (ctx, t) => {
       circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, TRUST_TEAL, p); ctx.fill();
     });
   }
+  // arriving in Riyadh: the pin pings twice and a white location tag opens beside it
+  if (t >= RIYADH_IN && t < BV(53.4)) {
+    const gone = eIn(P(t, BV(52.85), 0.3));
+    [0, 0.42].forEach(d => {
+      const u = P(t, RIYADH_IN + d, 0.9);
+      if (u > 0 && u < 1) { ctx.strokeStyle = `rgba(84, 243, 93, ${0.9 * (1 - u) * (1 - gone)})`; ctx.lineWidth = 3; circ(ctx, rq[0], rq[1], lerp(14, 120, eOut(u))); ctx.stroke(); }
+    });
+    const tk = spr(t, RIYADH_IN + 0.12, 17, 0.8) * (1 - gone);
+    if (tk > 0.01) {
+      const o = { size: 30, w: 700 }, w = TW(ctx, 'RIYADH', { ...o, ls: 6 }) + 92, h = 64;
+      const x = rq[0] + 34, y = rq[1] - h / 2;
+      ctx.strokeStyle = C.mist; ctx.lineWidth = 2; ctx.globalAlpha = tk;
+      ctx.beginPath(); ctx.moveTo(rq[0] + 14, rq[1]); ctx.lineTo(x, rq[1]); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.save(); ctx.translate(x, rq[1]); ctx.scale(tk, tk);
+      rr(ctx, 0, -h / 2, w, h, h / 2); ctx.fillStyle = C.white; ctx.fill();
+      icon(ctx, 'Location01', 38, 0, 32, C.green, 1.4);
+      T(ctx, 'RIYADH', 66, 11, { ...o, c: C.night, ls: 6 });
+      ctx.restore();
+    }
+  }
+  {
+    const o = { size: 60, w: 600 }, a = TW(ctx, 'And now, ', o), b = TW(ctx, 'Riyadh.', o);
+    rise(ctx, t, 'And now,', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, RIYADH_IN, BV(52.9));
+    rise(ctx, t, 'Riyadh.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, RIYADH_IN + 0.12, BV(52.9));
+  }
   // Riyadh pin -> the white trust tile -> a line (the ground of the house)
-  if (t >= B(48.4)) {
-    const k = spr(t, B(48.4), 18);
+  if (t >= RIYADH_IN) {
+    const k = spr(t, RIYADH_IN, 18) * (1 + 0.6 * (1 - eInOut(P(t, BV(52.7), 0.4))));
     const toTile = eInOut(P(t, BV(53.15), 0.45));
     const flat = eInOut(P(t, B(51), 0.42));
     const gather = eIn(P(t, BV(58), 0.75));
@@ -624,7 +651,6 @@ scene(40, 52.2, (ctx, t) => {
       circ(ctx, 0, 0, 30); ctx.fillStyle = C.white; ctx.fill(); duo(ctx, 'verify', 0, 0, 68, C.green);
       ctx.restore();
     }
-    rise(ctx, t, 'RIYADH', 960, 590, { size: 24, w: 700, c: C.leaf, align: 'center', ls: 8 }, B(48.4), B(49));
   }
   rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: TRUST_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
   rise(ctx, t, 'Verified · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(55.5), BV(58) + 0.04);
