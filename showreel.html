@@ -1174,52 +1174,61 @@ scene(40, 52.2, (ctx, t) => {
     const gather = eIn(P(t, BV(58), 0.75));
     const c0 = circlePts(rq[0], rq[1], 12 * k, NM);
     const ts = NF.tile * (1 - 0.15 * gather);
-    // the tile is the ID card: scanned, stamped verified, then it becomes the verified profile
-    const hit = BV(55.5), squash = 1 - 0.06 * Math.sin(Math.PI * P(t, hit, 0.22));
-    const toAv = eInOut(P(t, BV(56.3), 0.5));
-    const tile = align(c0, rrPts(NF.cx - ts * squash / 2, NF.cy - ts * squash / 2, ts * squash, ts * squash, lerp(ts * 0.23, ts / 2, toAv) * squash, NM));
+    // the tile is the ID card: scanned, stamped verified, then it flips over to the verified profile
+    const hit = BV(55.5), squash = 1 - 0.08 * Math.sin(Math.PI * P(t, hit, 0.2));
+    const fp = eInOut(P(t, BV(56.15), 0.55)), back = fp >= 0.5, flipX = Math.max(0.002, Math.abs(Math.cos(Math.PI * fp)));
+    const tile = align(c0, rrPts(NF.cx - ts * squash / 2, NF.cy - ts * squash / 2, ts * squash, ts * squash, (back ? ts / 2 : ts * 0.23) * squash, NM));
     let pts = mixPts(c0, tile, toTile);
     if (flat > 0) pts = mixPts(pts, align(tile, rectPts(-20, 538, 1960, 4, NM)), flat);
-    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(C.neon, C.white, toTile); ctx.fill();
     const out = 1 - eIn(P(t, B(51) - 0.12, 0.2));
-    // 1. the ID card on the tile, swept by the scanner
-    const idk = spr(t, BV(53.45), 16, 0.82) * (1 - eIn(P(t, hit - 0.08, 0.1)));
-    if (idk > 0.01) duo(ctx, 'id', NF.cx, NF.cy, 128 * idk, TRUST_TEAL);
-    const fk = spr(t, BV(53.9), 18, 0.8) * (1 - eIn(P(t, hit - 0.15, 0.2)));
-    if (fk > 0.01) {
-      // viewfinder corners close in around the card
-      const h = lerp(150, 122, fk), L = 34;
-      ctx.save(); ctx.globalAlpha = fk; ctx.strokeStyle = C.neon; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
-        ctx.beginPath(); ctx.moveTo(NF.cx + sx * h, NF.cy + sy * (h - L)); ctx.lineTo(NF.cx + sx * h, NF.cy + sy * h); ctx.lineTo(NF.cx + sx * (h - L), NF.cy + sy * h); ctx.stroke();
-      });
-      ctx.restore();
-    }
-    const sp = P(t, BV(54.1), BV(55.3) - BV(54.1));
+    // after the stamp the card turns Salam green; its back is the profile photo
+    const ink = eOut(P(t, hit, 0.14)) * (back ? 0 : 1);
+    ctx.save(); ctx.translate(NF.cx, NF.cy); ctx.scale(flipX, 1); ctx.translate(-NF.cx, -NF.cy);
+    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(mixC(C.neon, C.white, toTile), C.green, ink); ctx.fill();
+    // 1. the ID card, swept by the scanner; it is pulled into the tile before the stamp arrives
+    const idk = spr(t, BV(53.45), 16, 0.82) * (1 - eIn3(P(t, hit - 0.42, 0.2)));
+    if (idk > 0.01) duo(ctx, 'id', NF.cx, NF.cy, 128 * idk, TRUST_TEAL, Math.min(1, idk * 1.5));
+    const sp = P(t, BV(54.05), BV(55.05) - BV(54.05));
     if (sp > 0 && sp < 1) {
       // one pass down and back up, with a soft band trailing the line
-      const u = sp < 0.5 ? eInOut(sp * 2) : 1 - eInOut(sp * 2 - 2 * 0.5), dir = sp < 0.5 ? 1 : -1;
+      const u = sp < 0.5 ? eInOut(sp * 2) : 1 - eInOut(sp * 2 - 1), dir = sp < 0.5 ? 1 : -1;
       const y = NF.cy - ts / 2 + 10 + u * (ts - 20), x0 = NF.cx - ts / 2 - 18, x1 = NF.cx + ts / 2 + 18;
       const g = ctx.createLinearGradient(0, y, 0, y - dir * 70);
       g.addColorStop(0, 'rgba(84, 243, 93, 0.38)'); g.addColorStop(1, 'rgba(84, 243, 93, 0)');
       ctx.save(); poly(ctx, tile); ctx.clip(); ctx.fillStyle = g; ctx.fillRect(x0, Math.min(y, y - dir * 70), x1 - x0, 70); ctx.restore();
       ctx.fillStyle = C.green; rr(ctx, x0, y - 2.5, x1 - x0, 5, 2.5); ctx.fill();
     }
-    // 2. the stamp drops onto the card and leaves it verified
-    if (t >= hit - 0.3 && toAv < 1) {
-      const d = eIn3(P(t, hit - 0.3, 0.3)), land = spr(t, hit, 20, 0.7);
-      const k = t < hit ? 1.7 - 0.7 * d : 1 + 0.04 * (1 - land);
-      const rot = t < hit ? 0.35 * (1 - d) : 0;
-      ctx.save(); ctx.globalAlpha = (t < hit ? d : 1) * (1 - toAv);
-      ctx.translate(NF.cx, NF.cy); ctx.rotate(rot); duo(ctx, 'stamp', 0, 0, 132 * k, C.green); ctx.restore();
+    // 2. the stamp comes down onto the empty card and presses it green; the mark stays, in white
+    if (t >= hit - 0.24 && !back) {
+      const d = eIn3(P(t, hit - 0.24, 0.24)), land = spr(t, hit, 22, 0.6);
+      const k = t < hit ? 2.1 - 1.1 * d : 1 + 0.08 * (1 - land);
+      ctx.save(); ctx.globalAlpha = t < hit ? d : 1;
+      duo(ctx, 'stamp', NF.cx, NF.cy, 124 * k, mixC(C.green, C.white, ink)); ctx.restore();
     }
-    // 3. the account, verified: the profile photo fills the circle and the check lands on it
-    if (toAv > 0 && out > 0) {
+    // 3. the account, verified: the back of the card is the profile photo
+    if (back && out > 0) {
       const im = IMG.p_avatar;
-      ctx.save(); poly(ctx, pts); ctx.clip(); ctx.globalAlpha = toAv * out;
-      const z = ts * squash * lerp(1.12, 1, eOut(P(t, BV(56.3), 0.9)));
+      ctx.save(); poly(ctx, pts); ctx.clip(); ctx.globalAlpha = out;
+      const z = ts * squash * lerp(1.1, 1, eOut(P(t, BV(56.45), 0.9)));
       if (im) ctx.drawImage(im, NF.cx - z / 2, NF.cy - z / 2, z, z);
       ctx.restore();
+    }
+    ctx.restore();
+    // scanner corners: close in during the scan, lock onto the card edge, then let go as the stamp comes
+    const fk = spr(t, BV(53.9), 18, 0.8), lock = eInOut(P(t, BV(55.05), 0.2)), fo = 1 - eIn(P(t, hit - 0.3, 0.16));
+    if (fk > 0.01 && fo > 0) {
+      const h = lerp(lerp(150, 122, fk), ts / 2 + 8, lock), L = 34;
+      ctx.save(); ctx.globalAlpha = Math.min(1, fk) * fo; ctx.strokeStyle = C.neon; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
+        ctx.beginPath(); ctx.moveTo(NF.cx + sx * h, NF.cy + sy * (h - L)); ctx.lineTo(NF.cx + sx * h, NF.cy + sy * h); ctx.lineTo(NF.cx + sx * (h - L), NF.cy + sy * h); ctx.stroke();
+      });
+      ctx.restore();
+    }
+    // the stamp's shockwave runs out through the rings
+    const sw = P(t, hit, 0.7);
+    if (sw > 0 && sw < 1) {
+      ctx.strokeStyle = `rgba(84, 243, 93, ${0.85 * (1 - sw)})`; ctx.lineWidth = 3 + 5 * (1 - sw);
+      circ(ctx, NF.cx, NF.cy, lerp(ts / 2 + 6, 340, eOut(sw))); ctx.stroke();
     }
     // the identity ring draws itself around the tile
     const arc = eInOut(P(t, BV(53.4), 0.75)), ringOut = eIn(P(t, BV(58.2), 0.6));
@@ -1228,7 +1237,7 @@ scene(40, 52.2, (ctx, t) => {
       ctx.beginPath(); ctx.arc(NF.cx, NF.cy, lerp(NF.ring, 110, gather), -Math.PI / 2, -Math.PI / 2 + arc * Math.PI * 2); ctx.stroke();
     }
     // verified badge on the photo, bottom right
-    const vk = spr(t, BV(56.75), 17, 0.8) * (1 - eIn(P(t, BV(58), 0.3)));
+    const vk = spr(t, BV(56.95), 15, 0.7) * (1 - eIn(P(t, BV(58), 0.3)));
     if (vk > 0.01) {
       const r = ts / 2, vx = NF.cx + Math.cos(Math.PI / 4) * r, vy = NF.cy + Math.sin(Math.PI / 4) * r;
       ctx.save(); ctx.translate(vx, vy); ctx.scale(vk, vk);
@@ -2505,7 +2514,7 @@ function sonicEvents() {
   [0, 1, 2, 3, 4, 5].forEach(i => ev.push([BN(113 + Math.floor(i / 2)) + (i % 2) * 0.1, 5 + i, 0.4, 'pluck']));
   // Trust: the rings form, the ID is scanned, stamped, the profile verified
   [0, 1, 2, 3, 4].forEach(i => ev.push([BV(53) + i * 0.12, 4 + i * 2, 0.4, 'pluck']));
-  ev.push([BV(54), 9, 0.4, 'pluck'], [BV(55.5), 0, 0.5, 'tick'], [BV(56.75), 12, 0.45, 'pluck']);   // the stamp lands, the profile is verified
+  ev.push([BV(54), 9, 0.4, 'pluck'], [BV(55.5), 0, 0.5, 'tick'], [BV(56.95), 12, 0.45, 'pluck']);   // the stamp lands, the profile is verified
   // AI wheel: domains fill up the scale, capabilities come back down, pulses tick
   for (let j = 0; j < 10; j++) ev.push([B(81) + j * 0.075, 2 + j, 0.28, 'pluck'], [B(82) + j * 0.075, 11 - j, 0.24, 'pluck']);
   [83, 84, 85].forEach(n => ev.push([B(n), 0, 0.3, 'tick']));
