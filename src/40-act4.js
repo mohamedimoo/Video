@@ -337,16 +337,19 @@ const SCAT = TILE_LABELS.map((_, i) => {
 scene(100, 108.6, (ctx, t) => {
   if (t >= B(100.7)) bg(ctx, C.mist);
   const grow = spr(t, B(100), 15, 0.85);
-  // full bleed behind the card: a happy customer, washed into the mist so the card stays the hero
-  {
-    const k = eInOut(P(t, B(100.5), 0.7)), out = eIn(P(t, B(101.75), 0.35));
-    if (k > 0 && out < 1 && t >= B(100.7)) pic(ctx, 'p_thumbs_duo', 1180, 560 + (1 - k) * 200 + out * 1300, 1500 * (1 + 0.05 * P(t, B(100.5), B(1.5))));
-  }
   if (t < B(102)) {
     const y = lerp(1100, CARD.y, grow);
     shadowOn(ctx, 0.6); rr(ctx, CARD.x, y, CARD.w, CARD.h, 44); ctx.fillStyle = C.deep; ctx.fill(); shadowOff(ctx);
-    pic(ctx, 'i_check', CARD.x + 210, y + CARD.h / 2, 250 * spr(t, B(100) + 0.25, 15, 0.8));
+    pic(ctx, 'i_check', CARD.x + 175, y + CARD.h / 2, 190 * spr(t, B(100) + 0.25, 15, 0.8));
     cardText(ctx, t, CARD.x + 120, y);
+    // behind the type: the card sits behind him, his phone and head rise over its top edge
+    const k = eInOut(P(t, B(100.5), 0.6)), out = eIn(P(t, B(101.7), 0.35));
+    if (k > 0 && out < 1) {
+      // mirrored so the phone arm reaches out of frame and the thumbs-up lands on the card
+      ctx.save(); ctx.translate(1770, 0); ctx.scale(-1, 1);
+      pic(ctx, 'p_thumbs', 0, 560 + (1 - k) * 600 + out * 1100, 1000 * (1 + 0.04 * P(t, B(100.5), B(1.5))));
+      ctx.restore();
+    }
   } else {
     // the card breaks into twelve mismatched tiles, then they pour into one app
     TILE_LABELS.forEach((lab, i) => {
@@ -367,7 +370,7 @@ scene(100, 108.6, (ctx, t) => {
         ctx.fillStyle = C.deep; ctx.fill(); ctx.save(); ctx.clip();
         const ox = (i % 4) * tw, oy = Math.floor(i / 4) * th;
         ctx.translate(-w / 2 - ox * w / tw, -h / 2 - oy * h / th); ctx.scale(w / tw, h / th);
-        pic(ctx, 'i_check', 210, CARD.h / 2, 250); cardText(ctx, t, 120, 0); ctx.restore();
+        pic(ctx, 'i_check', 175, CARD.h / 2, 190); cardText(ctx, t, 120, 0); ctx.restore();
       } else {
         shadowOn(ctx, 0.35); ctx.fillStyle = FRAG_COL[i]; ctx.fill(); shadowOff(ctx);
         const dark = [C.teal, C.deep, C.leaf].includes(FRAG_COL[i]);
@@ -437,7 +440,7 @@ const HUB = [
   ['Home', 'Home01', 'Fiber, 5G and your router'], ['Customer care', 'CustomerSupport', '24/7, right in the app'],
 ];
 function cardText(ctx, t, x, y) {
-  const o = { size: 64, w: 700, ls: -1 };
-  rise(ctx, t, 'Turn every reason not to choose us', x + CARD.w / 2 + 60, y + 165, { ...o, c: C.mist, align: 'center' }, B(100) + 0.15);
-  rise(ctx, t, 'into a reason to stay.', x + CARD.w / 2 + 60, y + 262, { ...o, c: C.neon, align: 'center' }, B(101));
+  const o = { size: 54, w: 700, ls: -1 };
+  rise(ctx, t, 'Turn every reason not to choose us', x + 250, y + 172, { ...o, c: C.mist }, B(100) + 0.15);
+  rise(ctx, t, 'into a reason to stay.', x + 250, y + 258, { ...o, c: C.neon }, B(101));
 }
