@@ -10,6 +10,24 @@ async function loadImages() {
   await Promise.all(Object.entries(src).map(async ([k, uri]) => {
     const im = new Image(); im.src = uri; await im.decode(); IMG[k] = im;
   }));
+  // editorial duotones for the full-bleed people: shadows in brand green, highlights in soft white
+  duotone('p_coffee', 'p_coffee_duo', [0, 26, 21], [236, 248, 240]);
+  duotone('p_thumbs', 'p_thumbs_duo', [0, 56, 45], [255, 255, 255]);
+}
+// builds a graded copy once at load: luminance through a soft S-curve, mapped from one colour to another
+function duotone(name, out, dark, light) {
+  const im = IMG[name]; if (!im) return;
+  const c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height), px = d.data;
+  for (let i = 0; i < px.length; i += 4) {
+    let l = (0.2126 * px[i] + 0.7152 * px[i + 1] + 0.0722 * px[i + 2]) / 255;
+    l = l * l * (3 - 2 * l) * 0.6 + l * 0.4;
+    px[i] = dark[0] + (light[0] - dark[0]) * l;
+    px[i + 1] = dark[1] + (light[1] - dark[1]) * l;
+    px[i + 2] = dark[2] + (light[2] - dark[2]) * l;
+  }
+  g.putImageData(d, 0, 0); IMG[out] = c;
 }
 // draw an image centred at (cx, cy) with height h
 function pic(ctx, name, cx, cy, h, alpha = 1) {

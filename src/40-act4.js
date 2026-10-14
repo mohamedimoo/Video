@@ -340,7 +340,7 @@ scene(100, 108.6, (ctx, t) => {
   // full bleed behind the card: a happy customer, washed into the mist so the card stays the hero
   {
     const k = eInOut(P(t, B(100.5), 0.7)), out = eIn(P(t, B(101.75), 0.35));
-    if (k > 0 && out < 1 && t >= B(100.7)) tintPic(ctx, 'p_thumbs', 1180, 560 + (1 - k) * 200 + out * 1300, 1500 * (1 + 0.05 * P(t, B(100.5), B(1.5))), C.mist, 0.35);
+    if (k > 0 && out < 1 && t >= B(100.7)) pic(ctx, 'p_thumbs_duo', 1180, 560 + (1 - k) * 200 + out * 1300, 1500 * (1 + 0.05 * P(t, B(100.5), B(1.5))));
   }
   if (t < B(102)) {
     const y = lerp(1100, CARD.y, grow);
