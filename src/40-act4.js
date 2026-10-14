@@ -340,15 +340,8 @@ scene(100, 108.6, (ctx, t) => {
   if (t < B(102)) {
     const y = lerp(1100, CARD.y, grow);
     shadowOn(ctx, 0.6); rr(ctx, CARD.x, y, CARD.w, CARD.h, 44); ctx.fillStyle = C.deep; ctx.fill(); shadowOff(ctx);
-    pic(ctx, 'i_check', CARD.x + 150, y + CARD.h / 2, 230 * spr(t, B(100) + 0.25, 15, 0.8));
+    pic(ctx, 'i_check', CARD.x + 210, y + CARD.h / 2, 250 * spr(t, B(100) + 0.25, 15, 0.8));
     cardText(ctx, t, CARD.x + 120, y);
-    // a happy customer rises out of the card, phone up and a thumbs up, then sinks back before the card breaks apart
-    const mk = spr(t, B(100) + 0.4, 13, 0.86), mo = eIn(P(t, B(101.7), 0.3));
-    if (mk > 0.01 && mo < 1) {
-      ctx.save(); ctx.beginPath(); ctx.rect(0, -200, W, y + CARD.h + 200); ctx.clip();
-      pic(ctx, 'p_thumbs', 1645, y + CARD.h - 310 + (1 - mk) * 700 + mo * 700, 620);
-      ctx.restore();
-    }
   } else {
     // the card breaks into twelve mismatched tiles, then they pour into one app
     TILE_LABELS.forEach((lab, i) => {
@@ -369,7 +362,7 @@ scene(100, 108.6, (ctx, t) => {
         ctx.fillStyle = C.deep; ctx.fill(); ctx.save(); ctx.clip();
         const ox = (i % 4) * tw, oy = Math.floor(i / 4) * th;
         ctx.translate(-w / 2 - ox * w / tw, -h / 2 - oy * h / th); ctx.scale(w / tw, h / th);
-        pic(ctx, 'i_check', 150, CARD.h / 2, 230); cardText(ctx, t, 120, 0); ctx.restore();
+        pic(ctx, 'i_check', 210, CARD.h / 2, 250); cardText(ctx, t, 120, 0); ctx.restore();
       } else {
         shadowOn(ctx, 0.35); ctx.fillStyle = FRAG_COL[i]; ctx.fill(); shadowOff(ctx);
         const dark = [C.teal, C.deep, C.leaf].includes(FRAG_COL[i]);
@@ -439,7 +432,7 @@ const HUB = [
   ['Home', 'Home01', 'Fiber, 5G and your router'], ['Customer care', 'CustomerSupport', '24/7, right in the app'],
 ];
 function cardText(ctx, t, x, y) {
-  const o = { size: 56, w: 700, ls: -1 };
-  rise(ctx, t, 'Turn every reason not to choose us', x + 615, y + 165, { ...o, c: C.mist, align: 'center' }, B(100) + 0.15);
-  rise(ctx, t, 'into a reason to stay.', x + 615, y + 262, { ...o, c: C.neon, align: 'center' }, B(101));
+  const o = { size: 64, w: 700, ls: -1 };
+  rise(ctx, t, 'Turn every reason not to choose us', x + CARD.w / 2 + 60, y + 165, { ...o, c: C.mist, align: 'center' }, B(100) + 0.15);
+  rise(ctx, t, 'into a reason to stay.', x + CARD.w / 2 + 60, y + 262, { ...o, c: C.neon, align: 'center' }, B(101));
 }
