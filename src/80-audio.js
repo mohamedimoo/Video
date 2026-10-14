@@ -27,9 +27,9 @@ function sonicEvents() {
   // the habit loop: a soft note each time the light passes a node, quickening with the loop
   for (let L = 0; ; L += 1 / 3) { const tt = knTimeOf(L); if (tt > BN(39.3)) break; ev.push([tt, [4, 7, 9][Math.round(L * 3) % 3], 0.16, 'pluck']); }
   [0, 1, 2, 3, 4, 5].forEach(i => ev.push([BN(113 + Math.floor(i / 2)) + (i % 2) * 0.1, 5 + i, 0.4, 'pluck']));
-  // Trust: the rings form, the labels land, verified
+  // Trust: the rings form, the ID is scanned, stamped, the profile verified
   [0, 1, 2, 3, 4].forEach(i => ev.push([BV(53) + i * 0.12, 4 + i * 2, 0.4, 'pluck']));
-  ev.push([BV(54), 9, 0.4, 'pluck'], [BV(56), 0, 0.5, 'tick'], [BV(56) + 0.08, 12, 0.45, 'pluck']);
+  ev.push([BV(54), 9, 0.4, 'pluck'], [BV(55.5), 0, 0.5, 'tick'], [BV(56.75), 12, 0.45, 'pluck']);   // the stamp lands, the profile is verified
   // AI wheel: domains fill up the scale, capabilities come back down, pulses tick
   for (let j = 0; j < 10; j++) ev.push([B(81) + j * 0.075, 2 + j, 0.28, 'pluck'], [B(82) + j * 0.075, 11 - j, 0.24, 'pluck']);
   [83, 84, 85].forEach(n => ev.push([B(n), 0, 0.3, 'tick']));
