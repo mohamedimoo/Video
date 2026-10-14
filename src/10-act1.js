@@ -135,13 +135,29 @@ scene(8, 20, (ctx, t) => {
 });
 
 // --- "Awareness isn't the problem. Relevance is." / "daily habits" (beats 20–28) ---
-const HAB_SIZE = 240;
+const HAB_SIZE = 210;
 function habitsLayout() {
   const run = glyphRun('daily habits', HAB_SIZE);
-  return { run, x: 960 - run.w / 2, y: 650 };
+  return { run, x: 760 - run.w / 2, y: 650 };
 }
 scene(20, 28, (ctx, t) => {
   bg(ctx, C.deep);
+  // full bleed: she fills the frame behind the type, graded deep green while awareness is struck out;
+  // a hard wipe from below brings her back in full colour as relevance lands
+  {
+    const k = eInOut(P(t, B(20), 0.7)), po = eIn(P(t, B(24) - 0.12, 0.4));
+    if (k > 0 && po < 1) {
+      const push = 1 + 0.06 * P(t, B(20), B(4)), dy = (1 - k) * 260 - po * 1300;
+      tintPic(ctx, 'p_woman_a', 1450, 1150 + dy, 2500 * push, C.deep, 0.55);
+      const f = eInOut(P(crispT(t), B(23) - 0.1, 0.4));
+      if (f > 0) {
+        ctx.save(); ctx.beginPath(); ctx.rect(0, lerp(H, 0, f), W, H); ctx.clip();
+        bg(ctx, C.deep);
+        tintPic(ctx, 'p_woman_b', 1580, 1250 + dy, 2500 * push, C.deep, 0.18);
+        ctx.restore();
+      }
+    }
+  }
   const o = { size: 150, w: 700, ls: -5, c: C.mist };
   rise(ctx, t, 'Awareness', 150, 420, o, B(20), B(23) - 0.36);
   rise(ctx, t, "isn't the problem.", 150, 590, o, B(21), B(23) - 0.32);
@@ -151,26 +167,31 @@ scene(20, 28, (ctx, t) => {
     ctx.fillStyle = C.neon; ctx.fillRect(140, y - 52 - po * 200, (w + 20) * p, 14);
   });
   if (t >= B(23) && t < B(24.6)) {
-    const so = { size: 230, w: 800, ls: -8 };
+    const so = { size: 160, w: 800, ls: -6 };
     const wa = TW(ctx, 'Relevance ', so), wb = TW(ctx, 'is.', so);
     const p = eOut(P(t, B(23), 0.24)), po = eIn(P(t, B(24) - 0.12, 0.32));
     const k = lerp(2.4, 1, p);
-    ctx.save(); ctx.translate(960, 600 - po * 900); ctx.scale(k, k);
+    ctx.save(); ctx.translate(590, 600 - po * 900); ctx.scale(k, k);
     T(ctx, 'Relevance ', -(wa + wb) / 2, 80, { ...so, c: C.leaf });
     T(ctx, 'is.', -(wa + wb) / 2 + wa, 80, { ...so, c: C.mist });
     ctx.restore();
   }
-  rise(ctx, t, 'Winning apps are built on', 960, 340, { size: 66, w: 500, c: C.fog, align: 'center' }, B(24) + 0.2, B(27));
-  rise(ctx, t, 'not monthly utility.', 960, 850, { size: 66, w: 500, c: C.fog, align: 'center' }, B(26), B(27) + 0.05);
+  rise(ctx, t, 'Winning apps are built on', 760, 340, { size: 66, w: 500, c: C.fog, align: 'center' }, B(24) + 0.2, B(27));
+  rise(ctx, t, 'not monthly utility.', 760, 850, { size: 66, w: 500, c: C.fog, align: 'center' }, B(26), B(27) + 0.05);
   {
     const sw = TW(ctx, 'not monthly utility.', { size: 66, w: 500 });
     const p = eOut(P(t, B(26) + 0.25, 0.3)), po = eIn(P(t, B(27) + 0.05, 0.3));
-    if (p > 0 && po < 1) { ctx.fillStyle = C.neon; ctx.fillRect(960 - sw / 2 - 10, 828 - po * 100, (sw + 20) * p, 8); }
+    if (p > 0 && po < 1) { ctx.fillStyle = C.neon; ctx.fillRect(760 - sw / 2 - 10, 828 - po * 100, (sw + 20) * p, 8); }
+  }
+  // a daily habit, full bleed behind the type: coffee in one hand, the phone in the other
+  {
+    const k = eInOut(P(t, B(24) + 0.1, 0.7)), out = eIn(P(t, B(27), 0.45));
+    if (k > 0 && out < 1) tintPic(ctx, 'p_coffee', 1490, 660 + (1 - k) * 240 + out * 1200, 1380 * (1 + 0.06 * P(t, B(24), B(3.5))), C.deep, 0.45);
   }
   if (t >= B(25) && t < B(28)) {
     const { run, x, y } = habitsLayout();
     const p = eOut(P(t, B(25), 0.24)), k = lerp(2.4, 1, p);
-    ctx.save(); ctx.translate(960, y - 80); ctx.scale(k, k); ctx.translate(-960, -(y - 80));
+    ctx.save(); ctx.translate(760, y - 80); ctx.scale(k, k); ctx.translate(-760, -(y - 80));
     run.gl.forEach((g, i) => {
       if (i < 6) {
         const q = eIn(P(t, B(27) + i * 0.03, 0.3));
