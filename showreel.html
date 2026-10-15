@@ -2851,6 +2851,36 @@ window.renderAudio = async function () {
   }
   { const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = outroBuf; g.gain.value = 1.6; s.connect(g); g.connect(out); s.start(OUTRO); }
 
+  // ---------- end tag: once the Salam sound has rung out, small sounds follow the closing type ----------
+  {
+    const END = BV(170), tag = ac.createGain(); tag.connect(out); sendTo(tag, 0.5);
+    tag.gain.setValueAtTime(1, END - 0.25); tag.gain.linearRampToValueAtTime(0, END);
+    // its own panners: the shared pan busses feed the music bus, which is silent by now
+    const tplay = (buf, t, gain, p = 0) => { const s = ac.createBufferSource(), g = ac.createGain(), n = ac.createStereoPanner(); s.buffer = buf; g.gain.value = gain; n.pan.value = p; s.connect(g); g.connect(n); n.connect(tag); s.start(t); };
+    const echo = (buf, t, gain, p) => { tplay(buf, t, gain, p); tplay(buf, t + MB * 0.75, gain * 0.35, -p); tplay(buf, t + MB * 1.5, gain * 0.12, p); };
+    // a soft Dbmaj9 bed fades in under "Making the joy of technology"
+    [37, 49, 56, 60, 63, 65].forEach((m, i) => {
+      const o = ac.createOscillator(), o2 = ac.createOscillator(), f = ac.createBiquadFilter(), g = ac.createGain();
+      o.type = o2.type = i ? 'sawtooth' : 'sine'; o.frequency.value = o2.frequency.value = mtof(m); o2.detune.value = 9;
+      f.type = 'lowpass'; f.frequency.setValueAtTime(500, BV(160)); f.frequency.exponentialRampToValueAtTime(2200, BV(164.9));
+      const v = i ? 0.01 : 0.04; g.gain.setValueAtTime(0.0001, BV(160)); g.gain.exponentialRampToValueAtTime(v, BV(161.5)); g.gain.setValueAtTime(v, BV(164.3));
+      g.gain.exponentialRampToValueAtTime(v * 0.3, BV(164.85)); g.gain.exponentialRampToValueAtTime(v, BV(165.3));
+      o.connect(f); o2.connect(f); f.connect(g); g.connect(tag); [o, o2].forEach(x => { x.start(BV(160)); x.stop(END); });
+    });
+    // the highlight sweeps across "the joy of technology"
+    swish(snap16(BV(160.5)), 0.07); echo(await pluckBuf(degMidi(7)), snap16(BV(160.5)), 0.22, 0.3);
+    echo(await bellBuf(degMidi(5)), snap16(BV(161.25)), 0.26, -0.25);            // "accessible for everyone, everyday."
+    [0, 1, 2].forEach(i => tplay(RIM, snap16(BV(162)) + i * M16, 0.1 - i * 0.03, 0.4));   // BEYOND TELCO · CLOSER TO LIFE
+    echo(await bellBuf(degMidi(8)), snap16(BV(162)), 0.2, 0.35);
+    swish(snap16(BV(162.5)), 0.05); echo(await bellBuf(degMidi(10)), snap16(BV(162.5)), 0.24, -0.3);   // "everyday." underlined
+    tplay(SHAKER, snap16(BV(163)), 0.1, -0.3); tplay(CONGA_LO, snap16(BV(163)), 0.12);     // the guides pulse
+    // the type lifts away and the app icon returns, closing the loop to the first frame
+    riser(BV(163.9), BV(164.9), 0.08);
+    const pop = snap16(BV(164.9));
+    tplay(KICK, pop, 0.4);
+    for (const [m, l] of [[61, 0.2], [65, 0.15], [68, 0.15], [72, 0.12], [75, 0.09]]) echo(await bellBuf(m), pop + (m - 61) * 0.004, l, (m - 68) / 20);
+  }
+
   // ---------- sonification, snapped to the music's 16ths (stops at the outro) ----------
   for (const [t0, d, l, kind] of sonicEvents()) {
     const t = snap16(t0); if (t >= OUTRO - 0.1) continue;
