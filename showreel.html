@@ -2448,7 +2448,7 @@ scene(120, 134.01, (ctx, t) => {
     let size = lerp(40, GRIDC.r * 2, form) * pop;
     // to the orbit
     const m = clamp(spr(t, BV(156.4) + d * 0.012, 7, 0.92));
-    const sp = eIn(P(t, BV(157.6) + d * 0.018, 1.05));
+    const sp = eIn(P(t, BV(157) + d * 0.012, 0.85));
     const orbit = 0.18 * Math.max(0, t - BV(156.6)) + 2.4 * sp;
     const th = -Math.PI / 2 + d / 30 * Math.PI * 2 + orbit, R = 400 * (1 - sp);
     x = lerp(x, OC[0] + Math.cos(th) * R, m); y = lerp(y, OC[1] + Math.sin(th) * R, m);
@@ -2478,11 +2478,11 @@ scene(120, 134.01, (ctx, t) => {
     const toLabel = eInOut(P(t, BV(164.6), 0.75));
     const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
     const h = lerp(96 * breathe, ICON_LABEL.h, toLabel), y = lerp(OC[1] + 48, 500 + APP_ICON_S / 2 + ICON_LABEL.dy, toLabel);
-    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(158.3) + i * 0.055, 0.4)));
     // the flat mark sits beside the wordmark; the pair is centred, and the word slides back to centre as the mark leaves
     const mh = h * 1.12, gap = h * 0.32, mw = mh * FLAT_MARK_W, shift = (mw + gap) / 2 * (1 - toLabel);
     if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2 + shift, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
-    const mk = spr(t, BV(158.7), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
+    const mk = spr(t, BV(158), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
     if (mk > 0.01) {
       const x = 960 - WORD_W(h) / 2 + shift - gap - mw;
       ctx.save(); ctx.translate(x + mw / 2, y - mh / 2); ctx.scale(mk, mk); ctx.translate(-(x + mw / 2), -(y - mh / 2));
@@ -2534,7 +2534,7 @@ scene(120, 134.01, (ctx, t) => {
 // (assets/audio/outro.ogg), which plays alone over the end card.
 // the story's scene changes; the camera pushes in on these (src/90-main.js)
 const SCENE_HITS = [4, 8, 16, 20, 28, 31, 36, 40, 48, 52, 60, 66, 68, 72, 80, 86, 88, 92, 100, 102, 104, 108, 112, 116, 120, 128, 132];
-const SCENE_HITS_V = [36, 53, 80, 87, 91, 129, 131.5, 134, 136.5, 138.6, 157.6, 160.5];   // real beats: inserted bars, step-by-step phases, end card
+const SCENE_HITS_V = [36, 53, 80, 87, 91, 129, 131.5, 134, 136.5, 138.6, 157, 160.5];   // real beats: inserted bars, step-by-step phases, end card
 const MB = 60 / 126, M16 = MB / 4;
 const snap16 = t => Math.round(t / M16) * M16;
 // [seconds, strength]: the biggest frame-to-frame changes in the rendered film (30 fps), one per half second
@@ -2587,7 +2587,7 @@ function sonicEvents() {
   [132, 132.6, 134.5, 135.1].forEach(n => [0, 1, 2].forEach(i => ev.push([BV(n) + i * 0.08, 0, 0.22, 'tick'])));
   ev.push([BV(138.6), 0, 0.5, 'whoosh']);
   // end card: the spiral, the wordmark, the line
-  ev.push([BV(157.6), 0, 0.45, 'whoosh'], [BV(159), 7, 0.5, 'pluck'], [BV(160), 9, 0.45, 'pluck'], [BV(161.25), 11, 0.4, 'pluck'], [BV(162), 12, 0.35, 'pluck'], [BV(162.5), 14, 0.35, 'pluck']);
+  ev.push([BV(157), 0, 0.45, 'whoosh'], [BV(158.3), 7, 0.5, 'pluck'], [BV(160), 9, 0.45, 'pluck'], [BV(161.25), 11, 0.4, 'pluck'], [BV(162), 12, 0.35, 'pluck'], [BV(162.5), 14, 0.35, 'pluck']);
   // soft UI ticks on cards and tiles
   [10, 11, 12, 13, 14, 29, 30, 42, 43, 44, 45, 46, 90, 91, 103, 105, 106, 108, 109, 110, 116, 117, 118, 119].forEach(n => ev.push([B(n) + 0.02, 0, 0.25, 'tick']));
   return ev;

@@ -8,7 +8,7 @@
 // (assets/audio/outro.ogg), which plays alone over the end card.
 // the story's scene changes; the camera pushes in on these (src/90-main.js)
 const SCENE_HITS = [4, 8, 16, 20, 28, 31, 36, 40, 48, 52, 60, 66, 68, 72, 80, 86, 88, 92, 100, 102, 104, 108, 112, 116, 120, 128, 132];
-const SCENE_HITS_V = [36, 53, 80, 87, 91, 129, 131.5, 134, 136.5, 138.6, 157.6, 160.5];   // real beats: inserted bars, step-by-step phases, end card
+const SCENE_HITS_V = [36, 53, 80, 87, 91, 129, 131.5, 134, 136.5, 138.6, 157, 160.5];   // real beats: inserted bars, step-by-step phases, end card
 const MB = 60 / 126, M16 = MB / 4;
 const snap16 = t => Math.round(t / M16) * M16;
 // [seconds, strength]: the biggest frame-to-frame changes in the rendered film (30 fps), one per half second
@@ -61,7 +61,7 @@ function sonicEvents() {
   [132, 132.6, 134.5, 135.1].forEach(n => [0, 1, 2].forEach(i => ev.push([BV(n) + i * 0.08, 0, 0.22, 'tick'])));
   ev.push([BV(138.6), 0, 0.5, 'whoosh']);
   // end card: the spiral, the wordmark, the line
-  ev.push([BV(157.6), 0, 0.45, 'whoosh'], [BV(159), 7, 0.5, 'pluck'], [BV(160), 9, 0.45, 'pluck'], [BV(161.25), 11, 0.4, 'pluck'], [BV(162), 12, 0.35, 'pluck'], [BV(162.5), 14, 0.35, 'pluck']);
+  ev.push([BV(157), 0, 0.45, 'whoosh'], [BV(158.3), 7, 0.5, 'pluck'], [BV(160), 9, 0.45, 'pluck'], [BV(161.25), 11, 0.4, 'pluck'], [BV(162), 12, 0.35, 'pluck'], [BV(162.5), 14, 0.35, 'pluck']);
   // soft UI ticks on cards and tiles
   [10, 11, 12, 13, 14, 29, 30, 42, 43, 44, 45, 46, 90, 91, 103, 105, 106, 108, 109, 110, 116, 117, 118, 119].forEach(n => ev.push([B(n) + 0.02, 0, 0.25, 'tick']));
   return ev;

@@ -296,7 +296,7 @@ scene(120, 134.01, (ctx, t) => {
     let size = lerp(40, GRIDC.r * 2, form) * pop;
     // to the orbit
     const m = clamp(spr(t, BV(156.4) + d * 0.012, 7, 0.92));
-    const sp = eIn(P(t, BV(157.6) + d * 0.018, 1.05));
+    const sp = eIn(P(t, BV(157) + d * 0.012, 0.85));
     const orbit = 0.18 * Math.max(0, t - BV(156.6)) + 2.4 * sp;
     const th = -Math.PI / 2 + d / 30 * Math.PI * 2 + orbit, R = 400 * (1 - sp);
     x = lerp(x, OC[0] + Math.cos(th) * R, m); y = lerp(y, OC[1] + Math.sin(th) * R, m);
@@ -326,11 +326,11 @@ scene(120, 134.01, (ctx, t) => {
     const toLabel = eInOut(P(t, BV(164.6), 0.75));
     const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
     const h = lerp(96 * breathe, ICON_LABEL.h, toLabel), y = lerp(OC[1] + 48, 500 + APP_ICON_S / 2 + ICON_LABEL.dy, toLabel);
-    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(158.3) + i * 0.055, 0.4)));
     // the flat mark sits beside the wordmark; the pair is centred, and the word slides back to centre as the mark leaves
     const mh = h * 1.12, gap = h * 0.32, mw = mh * FLAT_MARK_W, shift = (mw + gap) / 2 * (1 - toLabel);
     if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2 + shift, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
-    const mk = spr(t, BV(158.7), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
+    const mk = spr(t, BV(158), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
     if (mk > 0.01) {
       const x = 960 - WORD_W(h) / 2 + shift - gap - mw;
       ctx.save(); ctx.translate(x + mw / 2, y - mh / 2); ctx.scale(mk, mk); ctx.translate(-(x + mw / 2), -(y - mh / 2));
