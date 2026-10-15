@@ -25,7 +25,7 @@ The 3D renders from the Salam file appear at hero moments only: the threat cards
 | **36–39** | The loop, still lapping, shrinks to the top. Thirty days of "Winning apps" (every day lit) against the "Telco app" (only bill day lit). The days fly into the loop. |
 | **40–43** | The loop retracts into its nodes, and the three nodes become "1", "5" and "×". "7–" rises in, then "more lifetime value". The × turns into a crosshair, and a night disc opens. |
 | **44–52** | A dotted world map on a globe, with real continents from Natural Earth, a graticule, a rim, and an orbit with a satellite. "The world is moving to **super-apps.**" Five markets land with their numbers (WeChat, Grab, Jio "the Salam blueprint", Kakao, M-Pesa). A light thread flies great-circle arcs from market to market, and the globe turns to Riyadh. |
-| **53–58** (Nafath) | The Riyadh pin becomes a white tile with the real Nafath logo. The globe's front land dots sweep clockwise into five identity rings, and a teal ring draws around the tile. "IDENTITY LAYER / Nafath · Riyadh", then "Telecoms own the identity layer." A verified tick lands, then "Trusted identity and connectivity **at scale.**" The rings gather into the tile. |
+| **53–58** (Identity layer) | The Riyadh pin becomes a white tile with a teal trust shield and check. The globe's front land dots sweep clockwise into five identity rings, and a teal ring draws around the tile. "IDENTITY LAYER / Verified · Riyadh", then "Telecoms own the identity layer." A verified tick lands, then "Trusted identity and connectivity **at scale.**" The rings gather into the tile. |
 
 ## ACT III: The Strategy House and EAI, all flat (beats 59–95)
 | Beats | What happens |
