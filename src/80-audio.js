@@ -74,10 +74,12 @@ window.renderAudio = async function () {
   comp.threshold.value = -18; comp.knee.value = 8; comp.ratio.value = 3; comp.attack.value = 0.003; comp.release.value = 0.12;
   const clip = ac.createWaveShaper(); { const c = new Float32Array(2048); for (let i = 0; i < 2048; i++) { const x = i / 1023.5 - 1; c[i] = Math.tanh(1.4 * x) / Math.tanh(1.4); } clip.curve = c; }
   out.connect(comp); comp.connect(clip); clip.connect(ac.destination);
-  const drums = ac.createGain(); drums.gain.value = 0.9; drums.connect(out);
-  const duck = ac.createGain(); duck.connect(out);                 // music, pumped by the kick
+  // the bed (drums, music, effects) dips under the Salam outro sting
+  const bed = ac.createGain(); bed.connect(out);
+  const drums = ac.createGain(); drums.gain.value = 0.9; drums.connect(bed);
+  const duck = ac.createGain(); duck.connect(bed);                 // music, pumped by the kick
   const music = ac.createGain(); music.gain.value = 1.15; music.connect(duck);
-  const fx = ac.createGain(); fx.gain.value = 0.9; fx.connect(out);
+  const fx = ac.createGain(); fx.gain.value = 0.9; fx.connect(bed);
   // deterministic noise
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const nb = ac.createBuffer(1, SR * 2, SR), nd = nb.getChannelData(0);
@@ -301,11 +303,20 @@ window.renderAudio = async function () {
     og.gain.setValueAtTime(0.0001, t0); og.gain.exponentialRampToValueAtTime(v * 0.25, t1 - 0.02); og.gain.linearRampToValueAtTime(0.0001, t1 + 0.01);
     o.connect(of); of.connect(og); og.connect(fx); o.start(t0); o.stop(t1 + 0.02);
   };
-  const BIG = [4, A2, A3, A4, A5, DROP].map(n => n * BEAT);
+  const OUTRO = DROP * BEAT, OUTRO_END = BV(160) - 0.05;   // the outro sting opens the end section
+  const BIG = [4, A2, A3, A4, A5].map(n => n * BEAT);
   const hits = SCENE_HITS.map(B).concat(SCENE_HITS_V.map(BV)).filter(t => t < DUR - 0.5).sort((a, b) => a - b)
-    .filter((t, i, a) => i === 0 || t - a[i - 1] > 0.2);
+    .filter((t, i, a) => i === 0 || t - a[i - 1] > 0.2).filter(t => t < OUTRO - 0.05 || t > OUTRO_END);
   hits.forEach(t => { const big = BIG.some(b => Math.abs(b - t) < 0.05); if (!big) { whooshIn(t, 0.45, 0.16); impact(t, false); } });
   BIG.forEach(t => { whooshIn(t, 0.7, 0.28); impact(t, true); });
+  whooshIn(OUTRO, 0.7, 0.28);
+  {
+    const bytes = Uint8Array.from(atob(window.__AUDIO.outro), c => c.charCodeAt(0));
+    const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = await ac.decodeAudioData(bytes.buffer); g.gain.value = 1.5;
+    s.connect(g); g.connect(out); s.start(OUTRO);
+    bed.gain.setValueAtTime(1, OUTRO - 0.02); bed.gain.linearRampToValueAtTime(0.28, OUTRO + 0.03);
+    bed.gain.setValueAtTime(0.28, OUTRO_END - 0.5); bed.gain.linearRampToValueAtTime(1, OUTRO_END);
+  }
   riser(2 * BEAT, 4 * BEAT, 0.22);
   riser((A2 - 4) * BEAT, A2 * BEAT, 0.26);
   riser((A4 - 4) * BEAT, A4 * BEAT, 0.28);
