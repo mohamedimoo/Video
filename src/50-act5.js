@@ -154,12 +154,6 @@ scene(107.4, 112.8, (ctx, t) => {
       T(ctx, n, NX[i], NY + 42, { size: 18, w: 600, c: mixC('#8A9692', C.deep, clamp(on)), align: 'center' });
     });
   }
-  // progress bar along the bottom
-  {
-    const prog = 0.04 + 0.29 * eOut(P(t, BV(SB.core), 0.6)) + 0.29 * eOut(P(t, BV(SB.beyond), 0.6)) + 0.29 * eOut(P(t, BV(SB.eco), 0.6)) + 0.09 * eOut(P(t, BV(SB.sum), 0.6));
-    ctx.fillStyle = '#DCE5DE'; ctx.fillRect(72, 1050, 1776, 3);
-    ctx.fillStyle = C.green; ctx.fillRect(72, 1050, 1776 * prog * eOut(P(t, BV(128), 0.5)), 3);
-  }
   // a deep green disc opens from the rings into the next scene
   const dg = eIn(P(crispT(t), BV(SB.out), BV(1)));
   if (dg > 0) { circ(ctx, cx, cy, lerp(ecoR + 30, 2300, dg)); ctx.fillStyle = C.deep; ctx.fill(); }
@@ -172,20 +166,52 @@ const momentPos = i => { const a = lerp(ARC.a0, ARC.a1, i / 6); return [ARC.cx +
 scene(111.6, 121.4, (ctx, t) => {
   if (t >= B(112)) bg(ctx, C.deep);
   if (t < B(112)) return;
-  // Beyond Telco: a real customer, on a mist card
+  // Beyond Telco: a drifting dot texture, a teal disc and an orbit open behind the card
+  const bOut = eIn(P(t, B(114), 0.4));
   {
-    const k = spr(t, B(112) + 0.15, 14, 0.86), out = eIn(P(t, B(114), 0.4));
-    if (k > 0.01 && out < 1) {
-      const cy = lerp(1500, 560, k) - out * 1300;
-      ctx.save();
-      rr(ctx, 1220, cy - 440, 600, 880, 52); ctx.fillStyle = C.mist; ctx.fill(); ctx.clip();
-      pic(ctx, 'p_friends', 1520, cy + 120 + (1 - k) * 160, 1130 * (1 + 0.06 * P(t, B(112), B(2))));
-      ctx.restore();
+    const kd = spr(t, B(112) + 0.05, 12, 0.85), dy = -bOut * 1300;
+    if (bOut < 1) {
+      ctx.save(); ctx.globalAlpha = clamp(kd); dotGrid(ctx, '#145F4E', 900); ctx.restore();
+      if (kd > 0.01) { circ(ctx, 1520, 540 + dy, 430 * kd); ctx.fillStyle = C.teal; ctx.fill(); }
+      const op = eInOut(P(t, B(112) + 0.2, 0.9));
+      if (op > 0) {
+        ctx.save(); ctx.setLineDash([6, 10]); ctx.lineDashOffset = -FRAME_T * 30; ctx.strokeStyle = '#2E7A5E'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.ellipse(1520, 560 + dy, 470, 470, 0, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * op); ctx.stroke(); ctx.restore();
+      }
     }
   }
+  // a real customer, on a mist card: the selfie arm and the heads break out over its top edge
+  {
+    const k = spr(t, B(112) + 0.15, 14, 0.86), out = bOut;
+    if (k > 0.01 && out < 1) {
+      const cy = lerp(1500, 560, k) - out * 1300, top = cy - 330;
+      const ph = 960 * (1 + 0.07 * P(t, B(112), B(2))), py = cy - 2 + (1 - k) * 220 - 18 * P(t, B(112), B(2));
+      shadowOn(ctx, 0.6); rr(ctx, 1220, top, 600, 770, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
+      ctx.save(); rr(ctx, 1220, top, 600, 770, 52); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
+      ctx.save(); ctx.beginPath(); ctx.rect(1100, -200, 900, top + 160 + 200); ctx.rect(1700, -200, 300, py + ph * 0.125 + 200); ctx.clip(); pic(ctx, 'p_friends', 1520, py, ph); ctx.restore();
+    }
+  }
+  // what life with Salam holds: chips spring onto the orbit and keep drifting around the card
+  [['Shahid VIP', 'PlayCircle', -2.45], ['GCC roaming', 'Airplane01', 0.95], ['5G Home', 'Home01', 2.55]].forEach(([lab, ic, a0], i) => {
+    const k = spr(t, B(112.5) + i * 0.16, 15, 0.84);
+    if (k <= 0.01 || bOut >= 1) return;
+    const a = a0 + 0.05 * (t - B(112)), x0 = 1520 + Math.cos(a) * 470, y = 560 + Math.sin(a) * 470 - bOut * (1300 + i * 160);
+    ctx.font = '700 26px Geist'; const w = ctx.measureText(lab).width + 96, x = Math.min(x0, 1880 - w / 2);
+    ctx.save(); ctx.translate(x, y); ctx.scale(k, k);
+    shadowOn(ctx, 0.8); rr(ctx, -w / 2, -34, w, 68, 34); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
+    circ(ctx, -w / 2 + 36, 0, 24); ctx.fillStyle = C.deep; ctx.fill(); icon(ctx, ic, -w / 2 + 36, 0, 26, C.neon, 1.1);
+    T(ctx, lab, -w / 2 + 72, 9, { size: 26, w: 700, c: C.deep });
+    ctx.restore();
+  });
   const o = { size: 160, w: 800, ls: -6 };
-  rise(ctx, t, 'Beyond Telco.', 110, 470, { ...o, c: C.mist }, B(112), B(114));
-  rise(ctx, t, 'Closer to Life.', 110, 670, { ...o, c: C.leaf }, B(113), B(114) + 0.05);
+  rise(ctx, t, 'LIFE WITH SALAM', 114, 300, { size: 22, w: 700, c: C.neon, ls: 7 }, B(112) + 0.05, B(114) - 0.1);
+  riseWords(ctx, t, [['Beyond'], ['Telco.']], 110, 470, { ...o, c: C.mist }, [B(112), B(112) + 0.2], B(114));
+  riseWords(ctx, t, [['Closer'], ['to'], ['Life.']], 110, 670, { ...o, c: C.leaf }, [B(113), B(113) + 0.14, B(113) + 0.28], B(114) + 0.05);
+  // "Closer to Life." is underlined in neon on the beat after it lands
+  {
+    const up = eOut(P(t, B(113.6), 0.35)), uo = eIn(P(t, B(114) + 0.05, 0.3));
+    if (up > 0 && uo < 1) { const w = TW(ctx, 'Closer to Life.', o) - 30; ctx.fillStyle = C.neon; ctx.fillRect(114 + uo * w, 712, w * up * (1 - uo), 10); }
+  }
   // everyday moments, light themed: Mist rises from the arc like a sunrise
   const sun = eIn(P(crispT(t), B(114) - 0.3, 0.5));
   if (sun > 0) { circ(ctx, ARC.cx, ARC.cy, lerp(0, 2400, sun)); ctx.fillStyle = C.mist; ctx.fill(); }
@@ -194,11 +220,8 @@ scene(111.6, 121.4, (ctx, t) => {
     const k = spr(t, B(114) + 0.25, 14, 0.86), out = eIn(P(t, B(120), 0.4));
     if (k > 0.01 && out < 1) {
       const cy = lerp(1500, 790, k) + out * 900;
-      ctx.save();
-      shadowOn(ctx, 0.5); rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.fillStyle = C.white; ctx.fill(); shadowOff(ctx);
-      rr(ctx, 960 - 240, cy - 300, 480, 600, 48); ctx.clip();
-      pic(ctx, 'p_family', 960, cy + 120, 780 * (1 + 0.06 * P(t, B(114), B(6))));
-      ctx.restore();
+      // the cutout sits straight on the scene, with no card behind it; it fills the space inside the arc
+      pic(ctx, 'p_beanbag', 800, cy + 130, 768 * (1 + 0.06 * P(t, B(114), B(6))));
     }
   }
   const ap = eInOut(P(t, B(114) + 0.28, B(1.6)));
@@ -273,7 +296,7 @@ scene(120, 134.01, (ctx, t) => {
     let size = lerp(40, GRIDC.r * 2, form) * pop;
     // to the orbit
     const m = clamp(spr(t, BV(156.4) + d * 0.012, 7, 0.92));
-    const sp = eIn(P(t, BV(157.6) + d * 0.018, 1.05));
+    const sp = eIn(P(t, BV(157) + d * 0.012, 0.85));
     const orbit = 0.18 * Math.max(0, t - BV(156.6)) + 2.4 * sp;
     const th = -Math.PI / 2 + d / 30 * Math.PI * 2 + orbit, R = 400 * (1 - sp);
     x = lerp(x, OC[0] + Math.cos(th) * R, m); y = lerp(y, OC[1] + Math.sin(th) * R, m);
@@ -302,9 +325,18 @@ scene(120, 134.01, (ctx, t) => {
   {
     const toLabel = eInOut(P(t, BV(164.6), 0.75));
     const breathe = 1 + 0.02 * eInOut(P(t, BV(160), BV(4)));
-    const h = lerp(96 * breathe, 30, toLabel), y = lerp(OC[1] + 48, 660, toLabel);
-    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(159) + i * 0.07, 0.45)));
-    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2, y, h, mixC(C.mist, C.dim, toLabel), rv);
+    const h = lerp(96 * breathe, ICON_LABEL.h, toLabel), y = lerp(OC[1] + 48, 500 + APP_ICON_S / 2 + ICON_LABEL.dy, toLabel);
+    const rv = [0, 1, 2, 3, 4].map(i => eOut(P(t, BV(158.3) + i * 0.055, 0.4)));
+    // the flat mark sits beside the wordmark; the pair is centred, and the word slides back to centre as the mark leaves
+    const mh = h * 1.12, gap = h * 0.32, mw = mh * FLAT_MARK_W, shift = (mw + gap) / 2 * (1 - toLabel);
+    if (rv[0] > 0) wordLetters(ctx, 960 - WORD_W(h) / 2 + shift, y, h, C.mist, rv, ICON_LABEL.bold * toLabel);
+    const mk = spr(t, BV(158), 13, 0.85) * (1 - eIn(P(t, BV(164.35), 0.3)));
+    if (mk > 0.01) {
+      const x = 960 - WORD_W(h) / 2 + shift - gap - mw;
+      ctx.save(); ctx.translate(x + mw / 2, y - mh / 2); ctx.scale(mk, mk); ctx.translate(-(x + mw / 2), -(y - mh / 2));
+      flatMark(ctx, x, y + mh * 0.02, mh);
+      ctx.restore();
+    }
   }
   // "Making [the joy of technology]" / "accessible for everyone, everyday."
   {
@@ -332,15 +364,9 @@ scene(120, 134.01, (ctx, t) => {
     }
     rise(ctx, t, 'BEYOND TELCO · CLOSER TO LIFE', 960, 826, { size: 20, w: 700, c: C.fog, align: 'center', ls: 7 }, BV(162), BV(164.5));
   }
-  // the progress line along the bottom completes with the film (as in the reference end card)
-  if (t >= BV(156.6) && endOut < 1) {
-    const pg = eOut(P(t, BV(156.6), 0.6)), fill = 0.06 + 0.94 * eInOut(P(t, BV(157), BV(7.4)));
-    ctx.fillStyle = '#0E4D43'; ctx.fillRect(72, 1050, 1776 * pg, 3);
-    ctx.fillStyle = C.neon; ctx.fillRect(72, 1050, 1776 * pg * fill, 3);
-  }
   // the app icon returns: last frame == first frame
   {
     const k = spr(t, BV(164.9), 15, 0.86);
-    if (k > 0.01) appIcon(ctx, 960, 500, 200 * k, 0);
+    if (k > 0.01) appIcon(ctx, 960, 500, APP_ICON_S * k, 0);
   }
 });

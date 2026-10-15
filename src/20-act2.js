@@ -218,7 +218,7 @@ scene(27.5, 40.2, (ctx, t) => {
   if (t >= B(28)) bg(ctx, C.deep);
   const toGlyph = eInOut(P(t, B(36), 0.55));
 
-  // 1) letters of "habits" -> circles
+  // 1) letters of "usage" -> circles
   if (t < B(28.9)) {
     M.letters.forEach((L, i) => {
       const p = eInOut(P(t, B(27.5) + i * 0.035, 0.75));
@@ -366,21 +366,23 @@ function gcPoint(a, b, u, lc, tilt, cx, cy, R, lift) {
   return [cx + q[0], cy + q[1], q[2]];
 }
 const PINS = [
-  { n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
-  { n: 'GRAB', v: 35, s: 'M', lat: 3, lon: 104, sx: 1440, sy: 740, al: 'left' },
-  { n: 'JIO', v: 460, s: 'M', lat: 21, lon: 78, sx: 480, sy: 430, al: 'right', tag: 'The Salam blueprint.' },
-  { n: 'KAKAO', v: 50, s: 'M', lat: 37, lon: 127, sx: 1440, sy: 300, al: 'left' },
-  { n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
+  { logo: 'l_wechat', n: 'WECHAT', v: 1.3, s: 'B', d: 1, lat: 35, lon: 105, sx: 1440, sy: 470, al: 'left' },
+  { logo: 'l_grab', n: 'GRAB', v: 35, s: 'M', lat: 3, lon: 104, sx: 1440, sy: 740, al: 'left' },
+  { logo: 'l_jio', n: 'JIO', v: 460, s: 'M', lat: 21, lon: 78, sx: 480, sy: 430, al: 'right', tag: 'The Salam blueprint.' },
+  { logo: 'l_kakao', n: 'KAKAO', v: 50, s: 'M', lat: 37, lon: 127, sx: 1440, sy: 300, al: 'left' },
+  { logo: 'l_mpesa', n: 'M-PESA', v: 51, s: 'M', lat: -1, lon: 37, sx: 480, sy: 760, al: 'right' },
 ];
 const RIYADH = { lat: 24.7, lon: 46.7 };
-const NAFATH_TEAL = '#2F9B95';
+// the pins land three to every four beats, leave at PIN_OUT, and the thread reaches Riyadh at RIYADH_IN
+const PIN_STEP = 0.75, PIN_OUT = B(46.6), RIYADH_IN = B(47);
+const TRUST_TEAL = '#2F9B95';
 function rrPts(x, y, w, h, r, N) {
   const o = [], c = [[x + w - r, y + r, -Math.PI / 2], [x + w - r, y + h - r, 0], [x + r, y + h - r, Math.PI / 2], [x + r, y + r, Math.PI]];
   c.forEach(([cx, cy, a0]) => { for (let i = 0; i <= 10; i++) { const a = a0 + i / 10 * Math.PI / 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } });
   return resample(o, N);
 }
 
-// --- Nafath: the globe's dots stream into concentric identity rings around the Nafath tile ---
+// --- Trust: the globe's dots stream into concentric identity rings around the trust tile ---
 const NF = { cx: 960, cy: 535, ring: 150, tile: 190 };
 const NF_RINGS = [196, 224, 252, 280, 308];
 const NF_SLOTS = (() => {
@@ -397,8 +399,38 @@ function globeFinalCentre() {
   const rp = gProj(RIYADH.lat, RIYADH.lon, RIYADH.lon, GLOBE_TILT, 0, 0, 330);
   return [NF.cx - rp[0], NF.cy - rp[1]];
 }
+// the trust mark on the tile: a filled teal shield with a white check (Hugeicons Shield01 + Tick02)
+function trustMark(ctx, cx, cy, size) {
+  const s = size / 24;
+  ctx.save(); ctx.translate(cx - size / 2, cy - size / 2); ctx.scale(s, s);
+  const sh = iconParts('Shield01')[0].p;
+  ctx.lineJoin = 'round'; ctx.fillStyle = TRUST_TEAL; ctx.fill(sh);
+  ctx.strokeStyle = TRUST_TEAL; ctx.lineWidth = 1.5; ctx.stroke(sh);
+  ctx.restore();
+  icon(ctx, 'Tick02', cx, cy - size * 0.02, size * 0.5, C.white, 2.2);
+}
+// the verified sequence: duotone icons from the Salam set (a 40% layer under a solid one)
+const DUO = {
+  id: { vb: 24, a: 'M10 3.5H14C17.7712 3.5 19.6569 3.5 20.8284 4.67157C22 5.84315 22 7.72876 22 11.5V12.5C22 16.2712 22 18.1569 20.8284 19.3284C19.6569 20.5 17.7712 20.5 14 20.5H10C6.22876 20.5 4.34315 20.5 3.17157 19.3284C2 18.1569 2 16.2712 2 12.5V11.5C2 7.72876 2 5.84315 3.17157 4.67157C4.34315 3.5 6.22876 3.5 10 3.5ZM8 11.5C8.9665 11.5 9.75 10.7165 9.75 9.75C9.75 8.7835 8.9665 8 8 8C7.0335 8 6.25 8.7835 6.25 9.75C6.25 10.7165 7.0335 11.5 8 11.5Z',
+    b: 'M14.0566 2.75C15.8943 2.74998 17.3501 2.75016 18.4893 2.90332C19.6616 3.06096 20.6101 3.39329 21.3584 4.1416C22.1067 4.88991 22.439 5.83844 22.5967 7.01074C22.7498 8.14991 22.75 9.60571 22.75 11.4434V12.5566C22.75 14.3943 22.7498 15.8501 22.5967 16.9893C22.439 18.1616 22.1067 19.1101 21.3584 19.8584C20.6101 20.6067 19.6616 20.939 18.4893 21.0967C17.3501 21.2498 15.8943 21.25 14.0566 21.25H9.94336C8.10571 21.25 6.64991 21.2498 5.51074 21.0967C4.33844 20.939 3.38991 20.6067 2.6416 19.8584C1.89329 19.1101 1.56096 18.1616 1.40332 16.9893C1.25016 15.8501 1.24998 14.3943 1.25 12.5566V11.4434C1.24998 9.60571 1.25016 8.14991 1.40332 7.01074C1.56096 5.83844 1.89329 4.88991 2.6416 4.1416C3.38991 3.39329 4.33844 3.06096 5.51074 2.90332C6.64991 2.75016 8.10571 2.74998 9.94336 2.75H14.0566ZM10 4.25C8.09324 4.25 6.73859 4.2515 5.71094 4.38965C4.70485 4.52491 4.12536 4.77894 3.70215 5.20215C3.27894 5.62536 3.02491 6.20485 2.88965 7.21094C2.7515 8.23859 2.75 9.59324 2.75 11.5V12.5C2.75 14.4068 2.7515 15.7614 2.88965 16.7891C3.02491 17.7952 3.27894 18.3746 3.70215 18.7979C4.12536 19.2211 4.70485 19.4751 5.71094 19.6104C6.73859 19.7485 8.09324 19.75 10 19.75H14C15.9068 19.75 17.2614 19.7485 18.2891 19.6104C19.2952 19.4751 19.8746 19.2211 20.2979 18.7979C20.7211 18.3746 20.9751 17.7952 21.1104 16.7891C21.2485 15.7614 21.25 14.4068 21.25 12.5V11.5C21.25 9.59324 21.2485 8.23859 21.1104 7.21094C20.9751 6.20485 20.7211 5.62536 20.2979 5.20215C19.8746 4.77894 19.2952 4.52491 18.2891 4.38965C17.2614 4.2515 15.9068 4.25 14 4.25H10ZM4.30371 15.7207C5.57399 12.5553 10.3233 12.2997 11.6963 15.7207C11.8505 16.1051 11.6637 16.542 11.2793 16.6963C10.8949 16.8504 10.4579 16.6637 10.3037 16.2793C9.46867 14.1993 6.49755 14.2832 5.69629 16.2793C5.54204 16.6637 5.10512 16.8505 4.7207 16.6963C4.33641 16.542 4.14948 16.1051 4.30371 15.7207ZM16.5 14.75C16.9142 14.75 17.25 15.0858 17.25 15.5C17.25 15.9142 16.9142 16.25 16.5 16.25H14C13.5858 16.25 13.25 15.9142 13.25 15.5C13.25 15.0858 13.5858 14.75 14 14.75H16.5ZM19 11.25C19.4142 11.25 19.75 11.5858 19.75 12C19.75 12.4142 19.4142 12.75 19 12.75H14C13.5858 12.75 13.25 12.4142 13.25 12C13.25 11.5858 13.5858 11.25 14 11.25H19ZM8 7.25C9.38071 7.25 10.5 8.36929 10.5 9.75C10.5 11.1307 9.38071 12.25 8 12.25C6.61929 12.25 5.5 11.1307 5.5 9.75C5.5 8.36929 6.61929 7.25 8 7.25ZM8 8.75C7.44772 8.75 7 9.19772 7 9.75C7 10.3023 7.44772 10.75 8 10.75C8.55228 10.75 9 10.3023 9 9.75C9 9.19772 8.55228 8.75 8 8.75ZM19 7.75C19.4142 7.75 19.75 8.08579 19.75 8.5C19.75 8.91421 19.4142 9.25 19 9.25H14C13.5858 9.25 13.25 8.91421 13.25 8.5C13.25 8.08579 13.5858 7.75 14 7.75H19Z' },
+  stamp: { vb: 24, a: 'M17.6005 2.74984C18.6105 1.74484 20.2405 1.74484 21.2505 2.74984C22.2505 3.75584 22.2505 5.38686 21.2505 6.39286C21.1305 6.51086 21.0005 6.61385 20.8705 6.70385C20.2305 7.13685 19.4605 7.34384 18.8205 7.77084L17.6005 8.57885L19.3005 11.2478C19.8005 12.0298 19.6905 13.0528 19.0305 13.7088C18.6405 14.0948 18.0205 14.0948 17.6305 13.7088L10.2905 6.36386C9.90055 5.97786 9.90055 5.35183 10.2905 4.96483C10.9505 4.30983 11.9705 4.19786 12.7505 4.69486L15.4205 6.39286L16.2305 5.18085C16.6505 4.53985 16.8605 3.76184 17.2905 3.12484C17.3805 2.99284 17.4905 2.86784 17.6005 2.74984Z',
+    b: 'M6.89648 7.27746C7.29337 7.15972 7.71116 7.38547 7.82812 7.78234C7.94602 8.17922 7.72004 8.59689 7.32324 8.71398C4.63038 9.51394 2.75019 12.036 2.75 14.8468C2.75 18.3748 5.62139 21.2452 9.15039 21.2452C11.9582 21.2451 14.4793 19.3658 15.2812 16.6749C15.3994 16.2782 15.817 16.0522 16.2139 16.17C16.6109 16.288 16.8367 16.7066 16.7188 17.1036C16.2427 18.7015 15.247 20.1377 13.9131 21.1476C12.5332 22.1924 10.8862 22.7451 9.15039 22.7452V22.7462C4.79439 22.7462 1.25 19.2028 1.25 14.8478C1.2501 13.111 1.80179 11.4639 2.84668 10.0851C3.85768 8.75008 5.29648 7.75346 6.89648 7.27746ZM11.7334 12.295C12.1203 12.1483 12.5532 12.3437 12.7002 12.7316C12.8469 13.1185 12.6515 13.5514 12.2637 13.6984C11.1597 14.1166 9.60953 16.1791 8.8916 17.381C8.7556 17.608 8.51104 17.7472 8.24805 17.7472L8.25 17.7462H8.21094C7.93415 17.7322 7.68741 17.5653 7.56934 17.3136C7.24103 16.6081 6.96218 16.4379 6.90039 16.4073C6.5324 16.3593 6.24904 16.0442 6.24902 15.6632C6.24902 15.2492 6.58502 14.9132 6.99902 14.9132C7.18502 14.9132 7.69984 14.9784 8.25684 15.6114C9.03684 14.4944 10.3894 12.804 11.7334 12.295ZM17.0723 2.21886C18.3703 0.927135 20.4824 0.926955 21.7803 2.21886C23.0712 3.51782 23.071 5.62598 21.7832 6.92199C21.6372 7.06599 21.4759 7.1984 21.2979 7.3214C20.9151 7.58019 20.5233 7.75694 20.1445 7.92883C19.8145 8.07783 19.5033 8.2196 19.2383 8.3966L18.6299 8.79894L19.9336 10.8468C20.6296 11.9348 20.4756 13.3323 19.5596 14.2433C19.2206 14.5791 18.7759 14.7462 18.3311 14.7462L18.3301 14.7443C17.8852 14.7443 17.4415 14.5771 17.1035 14.2423L9.75977 6.89367C9.43097 6.5687 9.24805 6.13098 9.24805 5.66613C9.24805 5.20013 9.42972 4.76173 9.76172 4.43273C10.6757 3.52478 12.0713 3.3736 13.1533 4.06359L15.2041 5.3673L15.6074 4.76476C15.7763 4.50685 15.9156 4.1971 16.0625 3.86828C16.2345 3.48332 16.413 3.08513 16.6689 2.70617C16.7939 2.52228 16.9388 2.36035 17.0518 2.23937L17.0723 2.21886ZM11.6895 5.13488C11.3725 5.13488 11.0593 5.25828 10.8184 5.49718C10.7594 5.55518 10.7471 5.62015 10.7471 5.66515C10.7471 5.70915 10.7594 5.77419 10.8174 5.83117L18.1602 13.1788C18.2562 13.2728 18.404 13.2739 18.502 13.1759C18.9118 12.768 18.9808 12.1414 18.668 11.6525L17.0107 9.0509L14.9473 6.98254L12.3467 5.32922C12.1439 5.19938 11.9162 5.13595 11.6895 5.13586V5.13488ZM20.7168 3.27941C20.0088 2.57441 18.8527 2.57155 18.1367 3.27355C18.0628 3.35344 17.9721 3.45417 17.9082 3.54797C17.7272 3.81697 17.5817 4.14056 17.4287 4.48156C17.2638 4.84929 17.0942 5.22918 16.8564 5.59191L16.3838 6.29894H16.3848L17.6973 7.61535L18.4053 7.1466C18.7713 6.9026 19.1544 6.72961 19.5244 6.56261C19.8614 6.41064 20.1783 6.2661 20.4492 6.08312C20.55 6.01326 20.6448 5.93635 20.7227 5.85851C21.4246 5.15153 21.4248 3.99142 20.7168 3.27941Z' },
+  seal: { vb: 24, rule: 'evenodd', a: 'M9.73799 3.59805C9.09799 4.23805 8.464 4.53501 7.552 4.53501C6.756 4.53501 5.622 4.38101 5 5.00801C4.382 5.63101 4.53599 6.75998 4.53599 7.55098C4.53599 8.46298 4.23902 9.09701 3.59902 9.73701C2.53302 10.803 2 11.337 2 11.999C2 12.661 2.53302 13.195 3.59902 14.261C4.31602 14.978 4.53599 15.4401 4.53599 16.4471C4.53599 17.2431 4.38198 18.377 5.00898 18.999C5.63198 19.616 6.761 19.463 7.552 19.463C8.523 19.463 8.99101 19.653 9.68501 20.346C10.275 20.936 11.066 21.999 12 21.999C12.934 21.999 13.725 20.936 14.315 20.346C15.009 19.653 15.477 19.463 16.448 19.463C17.239 19.463 18.368 19.616 18.991 18.999C19.618 18.377 19.464 17.2431 19.464 16.4471C19.464 15.4401 19.684 14.978 20.401 14.261C21.467 13.195 22 12.661 22 11.999C22 11.337 21.467 10.803 20.401 9.73701C19.684 9.02001 19.464 8.55798 19.464 7.55098C19.464 6.75498 19.618 5.62102 18.991 4.99902C18.368 4.38102 17.239 4.53501 16.448 4.53501C15.535 4.53501 14.902 4.23805 14.262 3.59805C13.196 2.53205 12.662 1.99902 12 1.99902C11.338 1.99902 10.804 2.53205 9.73799 3.59805Z',
+    b: 'M9.46215 21.2001C10.0701 21.8541 10.9021 22.749 12 22.749C13.0979 22.749 13.9299 21.8541 14.5379 21.2001L14.538 21.2L14.5535 21.1833C14.6578 21.0715 14.7564 20.9657 14.845 20.8771C15.398 20.3251 15.667 20.213 16.448 20.213C16.563 20.213 16.6864 20.2167 16.8136 20.2206L16.827 20.221C17.646 20.245 18.767 20.277 19.519 19.532C20.277 18.78 20.245 17.6511 20.221 16.8271L20.2206 16.8137C20.2167 16.6864 20.213 16.563 20.213 16.448C20.213 15.667 20.333 15.389 20.93 14.792C22.103 13.62 22.749 12.973 22.749 12C22.749 11.0271 22.103 10.3811 20.9302 9.20819L20.93 9.20801C20.334 8.61101 20.213 8.33305 20.213 7.55205C20.213 7.43707 20.2167 7.31369 20.2206 7.18642L20.221 7.17305C20.245 6.34805 20.277 5.22004 19.519 4.46704C18.767 3.72204 17.647 3.75403 16.828 3.77803L16.8091 3.7786C16.6829 3.7824 16.5623 3.78604 16.448 3.78604C15.764 3.78604 15.315 3.59204 14.792 3.06904C13.62 1.89604 12.973 1.25 12 1.25C11.0271 1.25 10.3811 1.89598 9.20819 3.06886L9.20801 3.06904C8.68501 3.59204 8.236 3.78604 7.552 3.78604C7.43684 3.78604 7.31522 3.78234 7.18892 3.77851L7.173 3.77803C6.348 3.75403 5.21899 3.72203 4.46699 4.48003C3.72199 5.23203 3.75398 6.35304 3.77798 7.17104L3.77855 7.19008C3.78235 7.31617 3.78599 7.43672 3.78599 7.55098C3.78599 8.23498 3.59199 8.68403 3.06899 9.20703C1.89599 10.379 1.25 11.026 1.25 11.999C1.25 12.972 1.89599 13.618 3.06899 14.791L3.06899 14.791C3.66499 15.388 3.78599 15.6661 3.78599 16.4471C3.78599 16.562 3.78225 16.6853 3.77839 16.8125L3.77798 16.826C3.75398 17.65 3.72201 18.779 4.48101 19.532C5.23301 20.277 6.354 20.245 7.173 20.221L7.18637 20.2206C7.31364 20.2167 7.43703 20.213 7.552 20.213C8.333 20.213 8.60298 20.324 9.15498 20.876C9.24798 20.97 9.35201 21.081 9.46201 21.2L9.46215 21.2001ZM10.215 19.815C9.37899 18.981 8.732 18.713 7.552 18.713L7.55 18.712C7.42194 18.712 7.28552 18.7157 7.14434 18.7196L7.12798 18.72L7.12135 18.7202C6.5435 18.7362 5.82889 18.7559 5.53501 18.465C5.23901 18.17 5.25898 17.448 5.27598 16.867L5.27642 16.8507C5.28027 16.7095 5.28398 16.5731 5.28398 16.445C5.28398 15.265 4.987 14.59 4.127 13.729L4.11489 13.7169C3.26213 12.8631 2.748 12.3484 2.748 11.9971C2.748 11.6441 3.267 11.125 4.127 10.265C4.927 9.46604 5.28398 8.62802 5.28398 7.54902C5.28398 7.42076 5.28031 7.28514 5.27649 7.14397L5.27598 7.125C5.25898 6.548 5.23801 5.82903 5.53101 5.53403C5.82601 5.23803 6.548 5.258 7.129 5.275L7.1453 5.27544C7.2865 5.27929 7.4229 5.28301 7.55098 5.28301C8.62898 5.28301 9.46699 4.92603 10.267 4.12603C11.127 3.26603 11.646 2.74702 11.999 2.74702C12.352 2.74702 12.8709 3.26596 13.7309 4.12588L13.731 4.12603C14.53 4.92603 15.368 5.28301 16.447 5.28301C16.5752 5.28301 16.7108 5.27934 16.8519 5.27552L16.871 5.275C17.448 5.258 18.167 5.23703 18.462 5.53003C18.758 5.82503 18.738 6.54703 18.721 7.12803L18.7205 7.14452C18.7167 7.28565 18.713 7.42198 18.713 7.55C18.713 8.73 19.01 9.40502 19.87 10.266L19.8814 10.2774C20.7346 11.1316 21.249 11.6466 21.249 11.998C21.249 12.351 20.746 12.855 19.87 13.73C18.994 14.605 18.713 15.265 18.713 16.446C18.713 16.5741 18.7167 16.7106 18.7206 16.8518L18.721 16.8681C18.738 17.4481 18.758 18.17 18.462 18.465C18.167 18.758 17.447 18.737 16.869 18.72L16.8525 18.7196C16.7114 18.7157 16.575 18.712 16.447 18.712C15.267 18.712 14.62 18.98 13.784 19.815C13.6785 19.9206 13.5721 20.035 13.4597 20.1557L13.439 20.178L13.4349 20.1824C13.0153 20.6331 12.4426 21.248 12 21.248C11.556 21.248 10.981 20.63 10.561 20.178C10.5441 20.16 10.5274 20.1422 10.5108 20.1244C10.4092 20.0159 10.3121 19.9122 10.215 19.815ZM10.3011 15.058C10.4381 15.182 10.6161 15.249 10.8001 15.249C10.8181 15.249 10.8361 15.248 10.8541 15.247C11.0571 15.232 11.2451 15.136 11.3751 14.981L15.5751 9.98103C15.8411 9.66403 15.8001 9.191 15.4831 8.924C15.1661 8.658 14.6921 8.69899 14.4261 9.01599L10.7231 13.424L9.50008 12.332C9.19108 12.056 8.71709 12.083 8.44109 12.392C8.16509 12.701 8.19205 13.175 8.50105 13.451L10.3011 15.058Z' },
+  verify: { vb: 74, a: 'M67.8327 37C67.8327 19.9708 54.0286 6.16669 36.9993 6.16669C19.9701 6.16669 6.16602 19.9708 6.16602 37C6.16602 54.0293 19.9701 67.8333 36.9993 67.8333C54.0286 67.8333 67.8327 54.0293 67.8327 37Z',
+    b: 'M36.999 3.85419C55.2769 3.85419 70.1453 18.7218 70.1455 36.9997C70.1455 55.2777 55.277 70.1462 36.999 70.1462C18.7212 70.146 3.85352 55.2776 3.85352 36.9997C3.85369 18.722 18.7213 3.85436 36.999 3.85419ZM36.999 8.47919C21.2743 8.47936 8.47869 21.275 8.47852 36.9997C8.47852 52.7246 21.2742 65.521 36.999 65.5212C52.724 65.5212 65.5205 52.7247 65.5205 36.9997C65.5203 21.2748 52.7239 8.47919 36.999 8.47919ZM48.2256 22.6374C49.3448 22.0241 50.7507 22.4372 51.3643 23.5563C51.9778 24.6755 51.5644 26.0814 50.4453 26.695C41.3847 31.6489 34.2544 47.0325 34.1719 47.2116C33.8143 47.9916 33.0524 48.5098 32.1953 48.5593C32.1521 48.5593 32.1084 48.5622 32.0684 48.5622H32.0654C31.2546 48.5622 30.4993 48.137 30.083 47.4372C27.9714 43.9096 23.5761 41.3531 23.5186 41.32C22.4118 40.6849 22.0294 39.2726 22.6611 38.1657C23.2963 37.0588 24.7056 36.6733 25.8125 37.3054C25.9801 37.4016 28.9981 39.1436 31.6523 41.9489C34.4705 36.7257 40.5635 26.8276 48.2256 22.6374Z' },
+};
+const _duo = {};
+function duo(ctx, name, cx, cy, size, col, alpha = 1) {
+  const d = DUO[name], p = _duo[name] || (_duo[name] = { a: new Path2D(d.a), b: new Path2D(d.b) });
+  const s = size / d.vb;
+  ctx.save(); ctx.translate(cx - size / 2, cy - size / 2); ctx.scale(s, s); ctx.fillStyle = col;
+  ctx.globalAlpha = 0.4 * alpha; ctx.fill(p.a, 'evenodd');
+  ctx.globalAlpha = alpha; ctx.fill(p.b, d.rule || 'nonzero');
+  ctx.restore();
+}
 let _NFMAP = null;
-function nafathMap() {
+function trustMap() {
   if (_NFMAP) return _NFMAP;
   const [cx, cy] = globeFinalCentre();
   const front = [];
@@ -412,7 +444,7 @@ function nafathMap() {
   return (_NFMAP = map);
 }
 function ringR(t, k) {
-  const ripple = Math.sin(Math.PI * P(t, BV(56) + k * 0.06, 0.38)) * 12;
+  const ripple = Math.sin(Math.PI * P(t, BV(55.5) + k * 0.06, 0.38)) * 12;   // the stamp lands
   const gather = eIn(P(t, BV(58), 0.75));
   return lerp(NF_RINGS[k] + ripple, 96, gather);
 }
@@ -421,13 +453,13 @@ scene(40, 52.2, (ctx, t) => {
   bg(ctx, C.night);
   if (t >= BV(52.6)) dotGrid(ctx, '#0B201D', 1100);
   const f = eOut(P(t, B(40), 0.7));
-  const toRiyadh = eInOut(P(t, B(48), 0.7));
+  const toRiyadh = eInOut(P(t, PIN_OUT, 0.7));
   const lc = lerp(lerp(112, 84, eInOut(P(t, B(40), B(8)))), RIYADH.lon, toRiyadh);   // the globe keeps turning
   const tilt = GLOBE_TILT, R = 330;
   const [fx, fy] = globeFinalCentre();
   const cx = lerp(960, fx, toRiyadh), cy = lerp(600, fy, toRiyadh);
   const fly0 = BV(53);
-  const map = nafathMap();
+  const map = trustMap();
   // the body and graticule shrink into the identity ring; land dots that are not part of the stream shrink away
   const drop = eIn(P(t, fly0, 0.45));
   const shrink = eInOut(P(t, fly0, 0.6)), bodyOut = eIn(P(crispT(t), BV(58.2), 0.5));
@@ -444,27 +476,40 @@ scene(40, 52.2, (ctx, t) => {
 
   {
     const o = { size: 60, w: 600 }, a = TW(ctx, 'The world is moving to ', o), b = TW(ctx, 'super-apps.', o);
-    rise(ctx, t, 'The world is moving to', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, B(41), B(48));
-    rise(ctx, t, 'super-apps.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, B(41) + 0.12, B(48));
+    rise(ctx, t, 'The world is moving to', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, B(41), PIN_OUT);
+    rise(ctx, t, 'super-apps.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, B(41) + 0.12, PIN_OUT);
   }
   // pins
   const pp = PINS.map(p => gProj(p.lat, p.lon, lc, tilt, cx, cy, R));
   PINS.forEach((p, i) => {
-    const t0 = B(42 + i), q = pp[i];
+    const t0 = B(42 + i * PIN_STEP), q = pp[i];
     if (t < t0 || q[2] < 0) return;
-    const k = spr(t, t0, 18) * (1 - eIn(P(t, B(48), 0.3)));
+    const k = spr(t, t0, 18) * (1 - eIn(P(t, PIN_OUT, 0.3)));
+    // apps with a logo get a white rounded tile on the outer side of the line; the text moves out past it
+    const LT = 84, side = p.al === 'left' ? 1 : -1, tx = p.logo ? p.sx + side * (LT + 20) : p.sx;
     const lx = p.al === 'left' ? p.sx - 16 : p.sx + 16, ly = p.sy - 24;
-    const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, B(48), 0.3)));
+    const lp = eOut(P(t, t0, 0.35)) * (1 - eIn(P(t, PIN_OUT, 0.3)));
     ctx.strokeStyle = C.line; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(q[0], q[1]); ctx.lineTo(lerp(q[0], lx, lp), lerp(q[1], ly, lp)); ctx.stroke();
     circ(ctx, q[0], q[1], 10 * k); ctx.fillStyle = C.neon; ctx.fill();
-    rise(ctx, t, p.n, p.sx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, B(48));
+    if (p.logo) {
+      const lk = spr(t, t0 + 0.06, 18, 0.8) * (1 - eIn(P(t, PIN_OUT, 0.3)));
+      if (lk > 0.01) {
+        const cx = p.sx + side * LT / 2, cy = p.sy - 30;
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(lk, lk);
+        rr(ctx, -LT / 2, -LT / 2, LT, LT, 22); ctx.fillStyle = C.white; ctx.fill();
+        const im = IMG[p.logo];
+        if (im) { const s = Math.min(58 / im.height, 64 / im.width); ctx.drawImage(im, -im.width * s / 2, -im.height * s / 2, im.width * s, im.height * s); }
+        ctx.restore();
+      }
+    }
+    rise(ctx, t, p.n, tx, p.sy - 64, { size: 24, w: 700, c: C.leaf, align: p.al, ls: 6 }, t0, PIN_OUT);
     const v = p.v * eOut(P(t, t0, 0.5));
-    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, p.sx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, B(48) + 0.03);
+    rise(ctx, t, (p.d ? v.toFixed(1) : Math.round(v)) + p.s, tx, p.sy, { size: 62, w: 700, c: C.mist, align: p.al }, t0 + 0.04, PIN_OUT + 0.03);
     if (p.tag) {
-      const tp = spr(t, t0 + 0.25, 16) * (1 - eIn(P(t, B(48), 0.3)));
+      const tp = spr(t, t0 + 0.25, 16) * (1 - eIn(P(t, PIN_OUT, 0.3)));
       if (tp > 0.01) {
         const tw = TW(ctx, p.tag, { size: 26, w: 700 }) + 36;
-        ctx.save(); ctx.translate(p.sx - tw, p.sy + 26); ctx.scale(1, tp);
+        ctx.save(); ctx.translate(tx - tw, p.sy + 26); ctx.scale(1, tp);
         rr(ctx, 0, 0, tw, 48, 24); ctx.fillStyle = C.green; ctx.fill();
         T(ctx, p.tag, 18, 33, { size: 26, w: 700, c: C.night }); ctx.restore();
       }
@@ -473,9 +518,9 @@ scene(40, 52.2, (ctx, t) => {
   // the light thread jumps pin to pin, then to Riyadh
   const rq = gProj(RIYADH.lat, RIYADH.lon, lc, tilt, cx, cy, R);
   const routeLL = [0, 1, 2, 3, 4].map(i => [PINS[i].lat, PINS[i].lon]).concat([[RIYADH.lat, RIYADH.lon]]);
-  const tp = eInOut(P(t, B(47), B(1.4))) * (routeLL.length - 1);
-  const th = eIn(P(t, B(49), 0.3));
-  if (tp > 0 && t < B(49.4)) {
+  const tp = eInOut(P(t, B(45.6), RIYADH_IN - B(45.6))) * (routeLL.length - 1);
+  const th = eIn(P(t, RIYADH_IN + 0.1, 0.3));
+  if (tp > 0 && t < RIYADH_IN + 0.4) {
     ctx.strokeStyle = C.neon; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.beginPath();
     const tail = Math.max(0, tp - 1.6 + th * 2);
     let pen = false;
@@ -502,41 +547,115 @@ scene(40, 52.2, (ctx, t) => {
       const g = globeDot(from.z, 1);
       const rad = lerp(g.r, 4.3, p) * (1 - gone);
       if (rad <= 0.05) return;
-      circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, NAFATH_TEAL, p); ctx.fill();
+      circ(ctx, NF.cx + Math.cos(a) * r, NF.cy + Math.sin(a) * r, rad); ctx.fillStyle = mixC(g.c, TRUST_TEAL, p); ctx.fill();
     });
   }
-  // Riyadh pin -> the white Nafath tile -> a line (the ground of the house)
-  if (t >= B(48.4)) {
-    const k = spr(t, B(48.4), 18);
+  // arriving in Riyadh: the pin pings twice and a white location tag opens beside it
+  if (t >= RIYADH_IN && t < BV(53.4)) {
+    const gone = eIn(P(t, BV(52.85), 0.3));
+    [0, 0.42].forEach(d => {
+      const u = P(t, RIYADH_IN + d, 0.9);
+      if (u > 0 && u < 1) { ctx.strokeStyle = `rgba(84, 243, 93, ${0.9 * (1 - u) * (1 - gone)})`; ctx.lineWidth = 3; circ(ctx, rq[0], rq[1], lerp(14, 120, eOut(u))); ctx.stroke(); }
+    });
+    const tk = spr(t, RIYADH_IN + 0.12, 17, 0.8) * (1 - gone);
+    if (tk > 0.01) {
+      const o = { size: 30, w: 700 }, w = TW(ctx, 'RIYADH', { ...o, ls: 6 }) + 92, h = 64;
+      const x = rq[0] + 34, y = rq[1] - h / 2;
+      ctx.strokeStyle = C.mist; ctx.lineWidth = 2; ctx.globalAlpha = tk;
+      ctx.beginPath(); ctx.moveTo(rq[0] + 14, rq[1]); ctx.lineTo(x, rq[1]); ctx.stroke(); ctx.globalAlpha = 1;
+      ctx.save(); ctx.translate(x, rq[1]); ctx.scale(tk, tk);
+      rr(ctx, 0, -h / 2, w, h, h / 2); ctx.fillStyle = C.white; ctx.fill();
+      icon(ctx, 'Location01', 38, 0, 32, C.green, 1.4);
+      T(ctx, 'RIYADH', 66, 11, { ...o, c: C.night, ls: 6 });
+      ctx.restore();
+    }
+  }
+  {
+    const o = { size: 60, w: 600 }, a = TW(ctx, 'And now, ', o), b = TW(ctx, 'Riyadh.', o);
+    rise(ctx, t, 'And now,', 960 - (a + b) / 2, 140, { ...o, c: C.mist }, RIYADH_IN, BV(52.9));
+    rise(ctx, t, 'Riyadh.', 960 - (a + b) / 2 + a, 140, { ...o, c: C.neon }, RIYADH_IN + 0.12, BV(52.9));
+  }
+  // Riyadh pin -> the white trust tile -> a line (the ground of the house)
+  if (t >= RIYADH_IN) {
+    const k = spr(t, RIYADH_IN, 18) * (1 + 0.6 * (1 - eInOut(P(t, BV(52.7), 0.4))));
     const toTile = eInOut(P(t, BV(53.15), 0.45));
     const flat = eInOut(P(t, B(51), 0.42));
     const gather = eIn(P(t, BV(58), 0.75));
     const c0 = circlePts(rq[0], rq[1], 12 * k, NM);
     const ts = NF.tile * (1 - 0.15 * gather);
-    const tile = align(c0, rrPts(NF.cx - ts / 2, NF.cy - ts / 2, ts, ts, ts * 0.23, NM));
+    // the tile is the ID card: scanned, stamped verified, then it flips over to the verified profile
+    const hit = BV(55.5), squash = 1 - 0.08 * Math.sin(Math.PI * P(t, hit, 0.2));
+    const fp = eInOut(P(t, BV(56.15), 0.55)), back = fp >= 0.5, flipX = Math.max(0.002, Math.abs(Math.cos(Math.PI * fp)));
+    const tile = align(c0, rrPts(NF.cx - ts * squash / 2, NF.cy - ts * squash / 2, ts * squash, ts * squash, (back ? ts / 2 : ts * 0.23) * squash, NM));
     let pts = mixPts(c0, tile, toTile);
     if (flat > 0) pts = mixPts(pts, align(tile, rectPts(-20, 538, 1960, 4, NM)), flat);
-    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(C.neon, C.white, toTile); ctx.fill();
-    const q = spr(t, BV(53.45), 16, 0.82) * (1 - eIn(P(t, B(51) - 0.12, 0.2)));
-    if (q > 0.01) pic(ctx, 'l_nafath', NF.cx, NF.cy, 205 * q * (1 - 0.15 * gather));
+    const out = 1 - eIn(P(t, B(51) - 0.12, 0.2));
+    // after the stamp the card turns Salam green; its back is the profile photo
+    const ink = eOut(P(t, hit, 0.14)) * (back ? 0 : 1);
+    ctx.save(); ctx.translate(NF.cx, NF.cy); ctx.scale(flipX, 1); ctx.translate(-NF.cx, -NF.cy);
+    poly(ctx, pts); ctx.fillStyle = flat > 0 ? mixC(C.white, C.mist, flat) : mixC(mixC(C.neon, C.white, toTile), C.green, ink); ctx.fill();
+    // 1. the ID card, swept by the scanner; it is pulled into the tile before the stamp arrives
+    const idk = spr(t, BV(53.45), 16, 0.82) * (1 - eIn3(P(t, hit - 0.42, 0.2)));
+    if (idk > 0.01) duo(ctx, 'id', NF.cx, NF.cy, 128 * idk, TRUST_TEAL, Math.min(1, idk * 1.5));
+    const sp = P(t, BV(54.05), BV(55.05) - BV(54.05));
+    if (sp > 0 && sp < 1) {
+      // one pass down and back up, with a soft band trailing the line
+      const u = sp < 0.5 ? eInOut(sp * 2) : 1 - eInOut(sp * 2 - 1), dir = sp < 0.5 ? 1 : -1;
+      const y = NF.cy - ts / 2 + 10 + u * (ts - 20), x0 = NF.cx - ts / 2 - 18, x1 = NF.cx + ts / 2 + 18;
+      const g = ctx.createLinearGradient(0, y, 0, y - dir * 70);
+      g.addColorStop(0, 'rgba(84, 243, 93, 0.38)'); g.addColorStop(1, 'rgba(84, 243, 93, 0)');
+      ctx.save(); poly(ctx, tile); ctx.clip(); ctx.fillStyle = g; ctx.fillRect(x0, Math.min(y, y - dir * 70), x1 - x0, 70); ctx.restore();
+      ctx.fillStyle = C.green; rr(ctx, x0, y - 2.5, x1 - x0, 5, 2.5); ctx.fill();
+    }
+    // 2. the verified seal comes down onto the empty card and presses it green; the seal stays, in white
+    if (t >= hit - 0.24 && !back) {
+      const d = eIn3(P(t, hit - 0.24, 0.24)), land = spr(t, hit, 22, 0.6);
+      const k = t < hit ? 2.1 - 1.1 * d : 1 + 0.08 * (1 - land);
+      ctx.save(); ctx.globalAlpha = t < hit ? d : 1;
+      duo(ctx, 'seal', NF.cx, NF.cy, 128 * k, mixC(C.green, C.white, ink)); ctx.restore();
+    }
+    // 3. the account, verified: the back of the card is the profile photo
+    if (back && out > 0) {
+      const im = IMG.p_avatar;
+      ctx.save(); poly(ctx, pts); ctx.clip(); ctx.globalAlpha = out;
+      const z = ts * squash * lerp(1.1, 1, eOut(P(t, BV(56.45), 0.9)));
+      if (im) ctx.drawImage(im, NF.cx - z / 2, NF.cy - z / 2, z, z);
+      ctx.restore();
+    }
+    ctx.restore();
+    // scanner corners: close in during the scan, lock onto the card edge, then let go as the stamp comes
+    const fk = spr(t, BV(53.9), 18, 0.8), lock = eInOut(P(t, BV(55.05), 0.2)), fo = 1 - eIn(P(t, hit - 0.3, 0.16));
+    if (fk > 0.01 && fo > 0) {
+      const h = lerp(lerp(150, 122, fk), ts / 2 + 8, lock), L = 34;
+      ctx.save(); ctx.globalAlpha = Math.min(1, fk) * fo; ctx.strokeStyle = C.neon; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      [[-1, -1], [1, -1], [1, 1], [-1, 1]].forEach(([sx, sy]) => {
+        ctx.beginPath(); ctx.moveTo(NF.cx + sx * h, NF.cy + sy * (h - L)); ctx.lineTo(NF.cx + sx * h, NF.cy + sy * h); ctx.lineTo(NF.cx + sx * (h - L), NF.cy + sy * h); ctx.stroke();
+      });
+      ctx.restore();
+    }
+    // the stamp's shockwave runs out through the rings
+    const sw = P(t, hit, 0.7);
+    if (sw > 0 && sw < 1) {
+      ctx.strokeStyle = `rgba(84, 243, 93, ${0.85 * (1 - sw)})`; ctx.lineWidth = 3 + 5 * (1 - sw);
+      circ(ctx, NF.cx, NF.cy, lerp(ts / 2 + 6, 340, eOut(sw))); ctx.stroke();
+    }
     // the identity ring draws itself around the tile
     const arc = eInOut(P(t, BV(53.4), 0.75)), ringOut = eIn(P(t, BV(58.2), 0.6));
     if (arc > 0 && ringOut < 1) {
-      ctx.strokeStyle = NAFATH_TEAL; ctx.lineWidth = 3 * (1 - ringOut); ctx.lineCap = 'round';
+      ctx.strokeStyle = TRUST_TEAL; ctx.lineWidth = 3 * (1 - ringOut); ctx.lineCap = 'round';
       ctx.beginPath(); ctx.arc(NF.cx, NF.cy, lerp(NF.ring, 110, gather), -Math.PI / 2, -Math.PI / 2 + arc * Math.PI * 2); ctx.stroke();
     }
-    // verified
-    const vk = spr(t, BV(56), 17, 0.8) * (1 - eIn(P(t, BV(58), 0.3)));
+    // verified badge on the photo, bottom right
+    const vk = spr(t, BV(56.95), 15, 0.7) * (1 - eIn(P(t, BV(58), 0.3)));
     if (vk > 0.01) {
-      const vx = NF.cx + Math.cos(-Math.PI / 4) * NF.ring, vy = NF.cy + Math.sin(-Math.PI / 4) * NF.ring;
+      const r = ts / 2, vx = NF.cx + Math.cos(Math.PI / 4) * r, vy = NF.cy + Math.sin(Math.PI / 4) * r;
       ctx.save(); ctx.translate(vx, vy); ctx.scale(vk, vk);
-      circ(ctx, 0, 0, 26); ctx.fillStyle = NAFATH_TEAL; ctx.fill(); icon(ctx, 'Tick02', 0, 0, 30, C.white, 1.5);
+      circ(ctx, 0, 0, 30); ctx.fillStyle = C.white; ctx.fill(); duo(ctx, 'verify', 0, 0, 68, C.green);
       ctx.restore();
     }
-    rise(ctx, t, 'RIYADH', 960, 590, { size: 24, w: 700, c: C.leaf, align: 'center', ls: 8 }, B(48.4), B(49));
   }
-  rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: NAFATH_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
-  rise(ctx, t, 'Nafath · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(54.2), BV(58) + 0.04);
+  rise(ctx, t, 'IDENTITY LAYER', 960, 902, { size: 22, w: 700, c: TRUST_TEAL, align: 'center', ls: 8 }, BV(54), BV(58));
+  rise(ctx, t, 'Verified · Riyadh', 960, 962, { size: 46, w: 700, c: C.mist, align: 'center' }, BV(55.5), BV(58) + 0.04);
   rise(ctx, t, 'Telecoms own the identity layer.', 960, 128, { size: 60, w: 700, c: C.mist, align: 'center', ls: -1 }, BV(55), BV(58) + 0.08);
   {
     const o = { size: 36, w: 500 }, a = TW(ctx, 'Trusted identity and connectivity ', o), b = TW(ctx, 'at scale.', o);

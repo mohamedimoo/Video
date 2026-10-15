@@ -1,17 +1,17 @@
 # Salam — "30 Days Lit"
 
-A 119-second (118.6 s) motion showreel for Salam, built as code.
+A 121-second (121.4 s) motion showreel for Salam, built as code.
 
 **Concept, in one line:** Salam turns the one day a month people open their telco app into all thirty, so the film runs from "Last opened 29 days ago" to thirty days lit.
 
 - `showreel.html`: the whole film in one self-contained 1920×1080 file. Open it and call `window.seek(t)` to render any moment. Every style is computed from `t`. There are no CSS animations, no timers and no state carried between frames.
-- `salam-30-days-lit.mp4`: the final render at 1920×1080 and 60 fps, 118.6 s long, with motion blur and the code-generated soundtrack.
+- `salam-30-days-lit.mp4`: the final render at 1920×1080 and 60 fps, 121.4 s long, with motion blur and the code-generated soundtrack.
 - `STORYBOARD.md`: the beat-by-beat storyboard.
 
 ## Rules the film follows
 - **Real brand assets:** the logo, app screens, people photos, 3D icons and partner logos come from the Salam Figma file (`assets/packed/*.webp`), and every line icon comes from the team's Hugeicons library (`assets/icons.json`). The "salam" wordmark and its mark are the original vector paths. The 3D renders are kept for hero moments only (the threat cards, the check on "a reason to stay", and the glass logo in the hook, the roof and the app icon). Everything else, including the Strategy House and the habit loop, uses simple line icons. The Step by step section has no app screens, and the Everyday moments section is light themed.
 - **Type and colour:** one typeface, Geist. The Salam palette only, used as flat colour: Deep Green, Forest Teal, Night, Leaf, Salam Green, Neon, Mist and Warm Stone. Off-palette colour appears in two places only. Alert red marks the barriers that are still open on the barrier chart. The clashing peach, lilac and pink of the "fragmented today" tiles show the problem before one app resolves it.
-- **No cuts or fades:** each shot is built from the previous one. Letters become circles, the circles become the nodes of one continuous loop, the nodes become "15×", the × becomes the globe's crosshair, the globe's own land dots stream into Nafath's identity rings, the Nafath tile becomes a line, the line becomes the ground of the house, the house's ribbons curl into the EAI Venn, its circles merge into one orb that becomes the AI wheel's core, the step rings open into the end card, and the thirty days become the icons that spiral into the wordmark. Background changes are always a shape growing, never a crossfade.
+- **No cuts or fades:** each shot is built from the previous one. Letters become circles, the circles become the nodes of one continuous loop, the nodes become "15×", the × becomes the globe's crosshair, the globe's own land dots stream into the identity rings, the trust tile becomes a line, the line becomes the ground of the house, the house's ribbons curl into the EAI Venn, its circles merge into one orb that becomes the AI wheel's core, the step rings open into the end card, and the thirty days become the icons that spiral into the wordmark. Background changes are always a shape growing, never a crossfade.
 - **Range:** each technique gets about a fifth of the running time:
   - kinetic type (bars 1–7)
   - shape morphing (bars 8–15)
@@ -47,17 +47,17 @@ A 119-second (118.6 s) motion showreel for Salam, built as code.
   - *Sonification:* every number on screen also plays as a note in the score. Each lit day of the month is an ascending note, and each time the light passes a node of the habit loop, a note plays, quickening as the loop speeds up.
   - *A real knot:* the habit loop is a trefoil, one continuous path through Content, Community and Commerce. Its strands really pass over and under each other at the three crossings. A light draws the loop on its first lap, then keeps lapping faster and faster, and each node fires as the light passes through it.
   - *A Venn in dots:* Experience, AI and Value-added services are three circles over a fixed dot matrix. Each dot lights by how many circles contain it: dim for one, brighter for two, neon where all three meet, which is EAI. When the circles merge, the whole field turns neon and becomes the orb.
-  - *One set of dots, two meanings:* the globe is a dotted world map. Natural Earth land is sampled on a 1.8° grid (3,298 dots), and each dot is shaded by how directly it faces the camera. A graticule, an orbit with a satellite, and great-circle flight arcs between the super-app markets complete the globe. The exact land dots on its face then stream clockwise into Nafath's identity rings.
+  - *One set of dots, two meanings:* the globe is a dotted world map. Natural Earth land is sampled on a 1.8° grid (3,298 dots), and each dot is shaded by how directly it faces the camera. A graticule, an orbit with a satellite, and great-circle flight arcs between the super-app markets complete the globe. The exact land dots on its face then stream clockwise into the identity rings.
   - *Thirty days, thirty icons:* the month's thirty day-dots become thirty icon tiles that orbit the end card and spiral into the wordmark.
   - *Glyph-outline morphing:* letters of real Geist outlines, parsed with opentype.js, turn into shapes, and the loop's nodes turn back into the glyphs of "15×".
 - **Rhythm:** 84 BPM, slow enough to read, with something happening on every beat. Bar 1 is the hook. A riser lifts into the beat where all thirty days light up, and a second riser lands on the last full bar, the strongest moment: a neon highlight sweeps behind "the joy of technology" on the end card. The final half bar is the end title. The last frame matches the first (60 dB PSNR, one frame of the camera float apart), so the film loops.
 - **Timing map:** bars were inserted in two passes:
   - `INSERTS` in `src/00-core.js` adds bars at the habit loop, EAI, the hub, the step section and the outro.
-  - `INSERTS2` adds the Nafath bar, the "Get the right plan" story and the step-by-step build.
+  - `INSERTS2` adds the identity-layer bar, the "Get the right plan" story and the step-by-step build.
 
   `B()` addresses story beats, `BN()` the first-pass beats, and `BV()` real beats.
 - **Reference-led sections:** each follows the team's reference recordings.
-  - *Nafath:* a dot globe streams into identity rings around the Nafath tile.
+  - *Identity layer:* a dot globe streams into identity rings around a trust tile (a shield with a check).
   - *The AI wheel:* neon front of house, hatched behind the scenes, a dotted core and spoke pulses.
   - *The step-by-step build:* concentric Core → Beyond → Ecosystem rings with phase text, a stepper, callouts and a progress line.
   - *The end card:* orbiting icon tiles spiral into the wordmark, with a highlight on "the joy of technology".
@@ -85,4 +85,4 @@ ffmpeg -f concat -safe 0 -i out/render/list.txt -i out/soundtrack.wav \
 ## Notes
 - **Assets:** the Figma exports are packed as WebP and embedded in `showreel.html`. The originals stay in `assets/figma/`, which is not committed. To refresh them, re-export from the Figma file and run `tools/build.mjs`.
 - **Confidential figures:** the 72% figure, the barrier percentages and the usage percentages come from Ipsos BHT Wave 4. Keep the film internal.
-- **Partner logos:** the TikTok, Spotify, Starbucks, Alipay and Nafath logos come from the team's Figma file. Clear usage rights before showing the film externally.
+- **Partner logos:** the TikTok, Spotify, Starbucks, and Alipay logos come from the team's Figma file. Clear usage rights before showing the film externally.

@@ -13,7 +13,7 @@ scene(0, 8, (ctx, t) => {
   const lift = spr(t, B(3), 16) * 170;              // card makes room for the headline on beat 3
   const clear = eIn(P(t, B(2) - 0.05, 0.4)) * 900;  // the verb feed clears out once the card lands
   const y0 = 500 - S - up - clear;
-  if (y0 > -260) appIcon(ctx, 960, y0, 200, 1);
+  if (y0 > -260) appIcon(ctx, 960, y0, APP_ICON_S, 1);
   for (let i = 1; i <= 8; i++) {
     const y = 500 + GAP0 + i * PITCH - S - up - clear;
     if (y < -200 || y > 1300) continue;
@@ -51,11 +51,11 @@ scene(4, 8, (ctx, t) => {
   // photo card on the right
   const k = spr(t, B(4) + 0.05, 14, 0.85);
   const cy = lerp(1500, 580, k);
-  ctx.save();
   shadowOn(ctx, 0.6); rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.fillStyle = C.mist; ctx.fill(); shadowOff(ctx);
-  rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.clip();
-  pic(ctx, 'p_headphones', 1530, cy + 70 + (1 - k) * 120, 1000 * (1 + 0.07 * P(t, B(4), B(4))));   // slow push-in
-  ctx.restore();
+  const hpH = 960 * (1 + 0.07 * P(t, B(4), B(4))), hpY = cy + 52 + (1 - k) * 120 - 0.02 * (hpH - 960);   // slow push-in
+  ctx.save(); rr(ctx, 1250, cy - 420, 560, 840, 52); ctx.clip(); pic(ctx, 'p_headphones', 1530, hpY, hpH); ctx.restore();
+  // above his waist the photo is a cutout: his head, elbow and outstretched hand break out of the card
+  ctx.save(); ctx.beginPath(); ctx.rect(0, -200, W, hpY + hpH * 0.2 + 200); ctx.clip(); pic(ctx, 'p_headphones', 1530, hpY, hpH); ctx.restore();
   CHIPS.forEach(([ic, label], i) => {
     const q = spr(t, B(5 + i) + 0.08, 17);
     if (q <= 0.01) return;
@@ -134,11 +134,11 @@ scene(8, 20, (ctx, t) => {
   }
 });
 
-// --- "Awareness isn't the problem. Relevance is." / "daily habits" (beats 20–28) ---
-const HAB_SIZE = 240;
+// --- "Awareness isn't the problem. Relevance is." / "daily usage" (beats 20–28) ---
+const HAB_SIZE = 285;
 function habitsLayout() {
-  const run = glyphRun('daily habits', HAB_SIZE);
-  return { run, x: 960 - run.w / 2, y: 650 };
+  const run = glyphRun('Daily Usage', HAB_SIZE);
+  return { run, x: 960 - run.w / 2, y: 470 };
 }
 scene(20, 28, (ctx, t) => {
   bg(ctx, C.deep);
@@ -160,17 +160,17 @@ scene(20, 28, (ctx, t) => {
     T(ctx, 'is.', -(wa + wb) / 2 + wa, 80, { ...so, c: C.mist });
     ctx.restore();
   }
-  rise(ctx, t, 'Winning apps are built on', 960, 340, { size: 66, w: 500, c: C.fog, align: 'center' }, B(24) + 0.2, B(27));
-  rise(ctx, t, 'not monthly utility.', 960, 850, { size: 66, w: 500, c: C.fog, align: 'center' }, B(26), B(27) + 0.05);
+  rise(ctx, t, 'Winning apps are built on', 130, 150, { size: 50, w: 500, c: C.fog }, B(24) + 0.2, B(27));
+  rise(ctx, t, 'not monthly utility.', 130, 1000, { size: 46, w: 500, c: C.fog }, B(26), B(27) + 0.05);
   {
-    const sw = TW(ctx, 'not monthly utility.', { size: 66, w: 500 });
+    const sw = TW(ctx, 'not monthly utility.', { size: 46, w: 500 });
     const p = eOut(P(t, B(26) + 0.25, 0.3)), po = eIn(P(t, B(27) + 0.05, 0.3));
-    if (p > 0 && po < 1) { ctx.fillStyle = C.neon; ctx.fillRect(960 - sw / 2 - 10, 828 - po * 100, (sw + 20) * p, 8); }
+    if (p > 0 && po < 1) { ctx.fillStyle = C.neon; ctx.fillRect(122, 984 - po * 100, (sw + 16) * p, 6); }
   }
   if (t >= B(25) && t < B(28)) {
     const { run, x, y } = habitsLayout();
     const p = eOut(P(t, B(25), 0.24)), k = lerp(2.4, 1, p);
-    ctx.save(); ctx.translate(960, y - 80); ctx.scale(k, k); ctx.translate(-960, -(y - 80));
+    ctx.save(); ctx.translate(960, y - 110); ctx.scale(k, k); ctx.translate(-960, -(y - 110));
     run.gl.forEach((g, i) => {
       if (i < 6) {
         const q = eIn(P(t, B(27) + i * 0.03, 0.3));
@@ -181,5 +181,10 @@ scene(20, 28, (ctx, t) => {
       } else if (t < B(27.5)) fillContours(ctx, g.cs, x, y, C.mist);
     });
     ctx.restore();
+  }
+  // behind the type: the giant headline sits behind him, his head cuts into the letters like a cover
+  {
+    const k = eInOut(P(t, B(24) + 0.1, 0.7)), out = eIn(P(t, B(27), 0.4));
+    if (k > 0 && out < 1) pic(ctx, 'p_coffee', 1000, 580 + (1 - k) * 500 + out * 1100, 1000 * (1 + 0.04 * P(t, B(24), B(3.5))));
   }
 });
