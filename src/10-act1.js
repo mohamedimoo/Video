@@ -134,10 +134,10 @@ scene(8, 20, (ctx, t) => {
   }
 });
 
-// --- "Awareness isn't the problem. Relevance is." / "daily habits" (beats 20–28) ---
+// --- "Awareness isn't the problem. Relevance is." / "daily usage" (beats 20–28) ---
 const HAB_SIZE = 285;
 function habitsLayout() {
-  const run = glyphRun('daily habits', HAB_SIZE);
+  const run = glyphRun('daily usage', HAB_SIZE);
   return { run, x: 960 - run.w / 2, y: 470 };
 }
 scene(20, 28, (ctx, t) => {

@@ -218,7 +218,7 @@ scene(27.5, 40.2, (ctx, t) => {
   if (t >= B(28)) bg(ctx, C.deep);
   const toGlyph = eInOut(P(t, B(36), 0.55));
 
-  // 1) letters of "habits" -> circles
+  // 1) letters of "usage" -> circles
   if (t < B(28.9)) {
     M.letters.forEach((L, i) => {
       const p = eInOut(P(t, B(27.5) + i * 0.035, 0.75));
